@@ -1,11 +1,27 @@
 //Setup
+const fs = require('fs');
 const Discord = require('discord.js');
-const config = require('./config.json');
-const bot = new Discord.Client();
+const cooldowns = new Discord.Collection();
 
 //Config
-const token = config.token;
-const prefix = config.prefix;
+const {
+	prefix,
+	token
+} = require('./config.json');
+
+//Creates the bot client
+const bot = new Discord.Client();
+
+//Dynamically adds commands
+bot.commands = new Discord.Collection();
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js')); //Retrieves all the comamnd files
+
+//Adds the commands to the bot.comamnds array
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	bot.commands.set(command.name, command);
+}
+
 
 //Sets the bot's activity status
 bot.on('ready', () => {
@@ -18,79 +34,61 @@ bot.on('ready', () => {
 
 //Command Handeling
 bot.on('message', (message) => {
-	let args = message.content.substring(prefix.length).split(' ');
+	if (!message.content.startsWith(prefix) || message.author.not) return;
 
-	switch (args[0]) {
-		case 'pasta':
-			message.channel.send('yum');
-			break;
-
-		case 'help':
+	//Splits the message into arguments
+	const args = message.content.slice(prefix.length).trim().split('/ +/');
+	const commandName = args.shift().toLowerCase();
 
 
-			//Creates the embed for the help page
-			const helpEmbed = new Discord.MessageEmbed()
-				.setTitle('Commands')
-				.setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-				.setColor(0xd40d12)
-				.setDescription("A list of all the current commands")
-				.addFields({
-					name: prefix + 'pasta',
-					value: '`Pasta is good`',
-					inline: true
-				}, {
-					name: prefix + 'help',
-					value: '`Displays this help message`',
-					inline: true
-				}, {
-					name: prefix + 'spaghet',
-					value: '`Nobody toacha the spaghet`',
-					inline: true
-				}, {
-					name: prefix + 'info',
-					value: "`Displays some info about the bot's current status`",
-					inline: true
-				}, )
-				.setFooter("Version 0.1")
-			message.channel.send(helpEmbed);
-			break;
+	//If the message isn't a command, don't continue futher
+	const command = bot.commands.get(commandName) || bot.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-		case 'spaghet':
-			message.channel.send('somebody toucha my spghet');
-			break;
+	if (!command) return;
 
-		case 'info':
-			const infoEmbed = new Discord.MessageEmbed()
-				.setTitle('Information')
-				.setColor(0x0088ff)
-				.addFields({
-					name: 'Version',
-					value: '0.01',
-				}, {
-					name: 'Creator',
-					value: 'Creeperman1524'
-				})
-				.setDescription('All the information you need for this bot')
-				.setFooter('Version 0.1')
-			message.channel.send(infoEmbed);
-			break;
-		case 'ping':
-			message.channel.send("Pinging... :ping_pong: ").then(m => {
+	if (command.guildOnly && message.channel.type === "dm") {
+		return message.reply("I can't execute that command inside DMs!");
+	}
 
-				var ping = bot.ws.ping;
-				const pingEmbed = new Discord.MessageEmbed()
-					.setTitle('Ping')
-					.setColor(0xff00ff)
-					.addFields({
-						name: "Your Ping",
-						value: m.createdTimestamp - message.createdTimestamp + " ms",
-					}, {
-						name: "Bot Ping",
-						value: Math.round(bot.ws.ping) + " ms",
-					})
 
-				m.edit(pingEmbed);
-			})
+	//Checks if the user needs more arguments
+	if (command.args && !args.length) {
+		let reply = `You didn't provide any arguments, ${message.author}`;
+
+		if (command.usage) {
+			reply += `\nThe proper useage would be: \`${prefix}${commandName} ${command.usage}\``;
+		}
+
+		return message.channel.send(reply);
+	}
+
+	//Checks if the command is on cooldown
+	if (!cooldowns.has(command.name)) {
+		cooldowns.set(command.name, new Discord.Collection());
+	}
+
+	const now = Date.now();
+	const timestamps = cooldowns.get(command.name);
+	const cooldownAmount = (command.cooldown || 3) * 1000;
+
+	if (timestamps.has(message.author.id)) {
+		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+		if (now < expirationTime) {
+			const timeLeft = (expirationTime - now) / 1000;
+			return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`)
+		}
+	}
+
+	timestamps.set(message.author.id, now);
+	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+	//Checks to see if it can run the command, if not, error
+	try {
+		command.execute(message, args, bot);
+	} catch (error) {
+		console.error(error);
+		message.reply('There was an error trying to execute that commmand!');
 	}
 });
 
