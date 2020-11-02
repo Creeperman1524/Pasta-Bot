@@ -3,6 +3,8 @@ const {
     version
 } = require('../config.json');
 
+const buildDate = new Date()
+
 module.exports = {
     name: 'info',
     description: "Displays some info about the bot's current stats",
@@ -12,12 +14,13 @@ module.exports = {
             .setColor(0x0088ff)
             .addFields({
                 name: 'Version',
-                value: '0.01',
+                value: `${version}`,
             }, {
                 name: 'Creator',
                 value: 'Creeperman1524'
             })
             .setDescription('All the information you need for this bot')
+            .setTimestamp(buildDate)
             .setFooter(`Version ${version}`)
         message.channel.send(infoEmbed);
     }

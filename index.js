@@ -36,7 +36,7 @@ bot.on('ready', () => {
 bot.on('message', (message) => {
 	if (!message.content.startsWith(prefix) || message.author.bot) return; //Return if message doesn't start with prefix or is from a bot
 
-	const args = message.content.slice(prefix.length).trim().split('/ +/'); //Splits the message into arguments
+	const args = message.content.slice(prefix.length).trim().split(/ +/); //Splits the message into arguments
 	const commandName = args.shift().toLowerCase(); //Lowercases everything
 
 	const command = bot.commands.get(commandName) || bot.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName)); //Determines the command using the aliases
