@@ -1,4 +1,7 @@
 const Discord = require('discord.js');
+const {
+    version
+} = require('../config.json');
 
 module.exports = {
     name: 'info',
@@ -15,7 +18,7 @@ module.exports = {
                 value: 'Creeperman1524'
             })
             .setDescription('All the information you need for this bot')
-            .setFooter('Version 0.1')
+            .setFooter(`Version ${version}`)
         message.channel.send(infoEmbed);
     }
 };

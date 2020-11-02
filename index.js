@@ -34,18 +34,16 @@ bot.on('ready', () => {
 
 //Command Handeling
 bot.on('message', (message) => {
-	if (!message.content.startsWith(prefix) || message.author.not) return;
+	if (!message.content.startsWith(prefix) || message.author.bot) return; //Return if message doesn't start with prefix or is from a bot
 
-	//Splits the message into arguments
-	const args = message.content.slice(prefix.length).trim().split('/ +/');
-	const commandName = args.shift().toLowerCase();
+	const args = message.content.slice(prefix.length).trim().split('/ +/'); //Splits the message into arguments
+	const commandName = args.shift().toLowerCase(); //Lowercases everything
 
+	const command = bot.commands.get(commandName) || bot.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName)); //Determines the command using the aliases
 
-	//If the message isn't a command, don't continue futher
-	const command = bot.commands.get(commandName) || bot.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+	if (!command) return; //If the command doesn't exist, return
 
-	if (!command) return;
-
+	//DM command handler
 	if (command.guildOnly && message.channel.type === "dm") {
 		return message.reply("I can't execute that command inside DMs!");
 	}
@@ -55,7 +53,7 @@ bot.on('message', (message) => {
 	if (command.args && !args.length) {
 		let reply = `You didn't provide any arguments, ${message.author}`;
 
-		if (command.usage) {
+		if (command.usage) { //If the command usage is avaliable, tell the user
 			reply += `\nThe proper useage would be: \`${prefix}${commandName} ${command.usage}\``;
 		}
 
@@ -80,6 +78,7 @@ bot.on('message', (message) => {
 		}
 	}
 
+	//Cooldown cleanup
 	timestamps.set(message.author.id, now);
 	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
