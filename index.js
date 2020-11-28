@@ -7,6 +7,7 @@ const cooldowns = new Discord.Collection();
 const {
 	prefix,
 	token,
+	version,
 } = require('./config.json');
 
 // Creates the bot client
@@ -45,19 +46,29 @@ bot.on('message', (message) => {
 
 	// DM command handler
 	if (command.guildOnly && message.channel.type === 'dm') {
-		return message.reply('I can\'t execute that command inside DMs!');
+		const dmEmbed = new Discord.MessageEmbed()
+			.setTitle('Incorrect Usgage')
+			.setColor(0xfdff63)
+			.setDescription('`I can\'t execute that command inside DMs!`')
+			.setFooter(`Version ${version}`);
+		return message.channel.send(dmEmbed);
 	}
 
 
 	// Checks if the user needs more arguments
 	if (command.args && !args.length) {
-		let reply = `You didn't provide any arguments, ${message.author}`;
+		let reply = 'You didn\'t provide any arguments';
 
 		if (command.usage) { // If the command usage is avaliable, tell the user
 			reply += `\nThe proper useage would be: \`${prefix}${commandName} ${command.usage}\``;
 		}
+		const noArgsEmbed = new Discord.MessageEmbed()
+			.setTitle('Incorrect Usage')
+			.setColor(0xfdff63)
+			.setDescription(reply)
+			.setFooter(`Version ${version}`);
 
-		return message.channel.send(reply);
+		return message.channel.send(noArgsEmbed);
 	}
 
 	// Checks if the command is on cooldown
@@ -74,7 +85,14 @@ bot.on('message', (message) => {
 
 		if (now < expirationTime) {
 			const timeLeft = (expirationTime - now) / 1000;
-			return message.reply(`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+
+			const cooldownEmbed = new Discord.MessageEmbed()
+				.setTitle('Error')
+				.setColor(0xff1414)
+				.setDescription(`\`Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.\``)
+				.setFooter(`Version ${version}`);
+
+			return message.channel.send(cooldownEmbed);
 		}
 	}
 
@@ -85,10 +103,16 @@ bot.on('message', (message) => {
 	// Checks to see if it can run the command, if not, error
 	try {
 		command.execute(message, args, bot);
-	}
-	catch (error) {
+	} catch (error) {
 		console.error(error);
-		message.reply('There was an error trying to execute that commmand!');
+
+		const errorEmbed = new Discord.MessageEmbed()
+			.setTitle('Error')
+			.setColor(0xff1414)
+			.setDescription('There was an error trying to execute that command!')
+			.setFooter(`Version ${version}`);
+
+		message.channel.send(errorEmbed);
 	}
 });
 

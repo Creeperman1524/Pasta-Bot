@@ -1,4 +1,7 @@
 const Discord = require('discord.js');
+const {
+	version,
+} = require('../config.json');
 
 module.exports = {
 	name: 'ping',
@@ -16,7 +19,8 @@ module.exports = {
 				}, {
 					name: 'Bot Ping',
 					value: Math.round(bot.ws.ping) + ' ms',
-				});
+				})
+				.setFooter(`Version ${version}`);
 
 			m.edit(pingEmbed);
 		});

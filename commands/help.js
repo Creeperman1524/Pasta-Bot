@@ -5,9 +5,6 @@ const {
 	version,
 } = require('../config.json');
 
-// Gets the current time at build time
-const buildDate = new Date();
-
 module.exports = {
 	name: 'help',
 	description: 'Displays a help message',
@@ -40,7 +37,6 @@ module.exports = {
 				.setColor(0xd40d12)
 				.setDescription('A list of all the current commands')
 				.addFields(fields)
-				.setTimestamp(buildDate)
 				.setFooter(`Version ${version}`);
 			return message.channel.send(helpEmbed);
 
