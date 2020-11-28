@@ -6,9 +6,10 @@ const cooldowns = new Discord.Collection();
 // Config
 const {
 	prefix,
-	token,
 	version,
 } = require('./config.json');
+
+const { token } = require('./token.json');
 
 // Creates the bot client
 const bot = new Discord.Client();
