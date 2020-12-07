@@ -2,14 +2,20 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const cooldowns = new Discord.Collection();
+const mcping = require('mcping-js');
 
 // Config
 const {
 	prefix,
 	version,
+	pingInterval,
+	mcServerPort,
 } = require('./config.json');
 
-const { token } = require('./token.json');
+const {
+	token,
+	mcServerIP,
+} = require('./hidden.json');
 
 // Creates the bot client
 const bot = new Discord.Client();
@@ -25,14 +31,50 @@ for (const file of commandFiles) {
 }
 
 
-// Sets the bot's activity status
+// Determines when the bot starts running
 bot.on('ready', () => {
-	bot.user.setStatus('online');
-	bot.user.setActivity(' with pasta', {
-		type: 'PLAYING',
-	});
+	getStatus();
 	console.log('The bot is active');
+	bot.setInterval(getStatus, pingInterval * 1000);
 });
+
+// Dynamically sets the bot's status
+const getStatus = () => {
+	const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
+
+	let status = '';
+
+	server.ping(1000, 754, (err, res) => {
+		// Server offline
+		if (!(typeof err === 'undefined' || err === null)) {
+			bot.user.setStatus('dnd');
+			status = 'an offline server';
+
+			bot.user.setActivity(status, {
+				type: 'WATCHING',
+			});
+
+			// console.log(err);
+			return;
+		}
+
+		// Server online with no players
+		if (typeof res.players.sample === 'undefined') {
+			bot.user.setStatus('idle');
+		}
+
+		// Server online with players
+		if (!(typeof res.players.sample === 'undefined')) {
+			bot.user.setStatus('online');
+		}
+
+		// Sets the activity to the amount of players on the server
+		status = res.players.online + '/' + res.players.max + ' players';
+		bot.user.setActivity(status, {
+			type: 'WATCHING',
+		});
+	});
+};
 
 // Command Handeling
 bot.on('message', (message) => {
