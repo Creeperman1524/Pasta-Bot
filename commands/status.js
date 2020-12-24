@@ -35,9 +35,6 @@ module.exports = {
 				message.channel.send(offlineEmbed);
 				return;
 			} else {
-				// Online
-				console.log('RES:', res);
-
 				// Retrieves the server icon
 				try {
 					favicon = res.favicon.slice(22);
