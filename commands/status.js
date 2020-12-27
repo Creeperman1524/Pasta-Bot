@@ -49,11 +49,12 @@ module.exports = {
 					// No one is online
 					serverStatus = '*No one is playing!*';
 				} else {
-					// People are oneline
+					// People are online
 					for (let i = 0; i < res.players.sample.length; i++) {
 						onlinePlayers.push(res.players.sample[i].name);
 					}
-					onlinePlayers = escape(onlinePlayers.sort().join(', ')).replace(/\u00A7[0-9A-FK-OR]|\\n/ig, '');
+					onlinePlayers = onlinePlayers.sort().join(', ');
+					// onlinePlayers = escape(onlinePlayers.sort().join(', ')).replace(/\u00A7[0-9A-FK-OR]|\\n/ig, '');
 					serverStatus = '**' + res.players.online + '/' + res.players.max +
                         '**' + ' player(s) online.\n\n' + onlinePlayers;
 
