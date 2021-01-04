@@ -42,16 +42,19 @@ bot.on('ready', () => {
 const getStatus = () => {
 	const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
 
-	let status = '';
+	let activity = '';
+	let status = 'dnd';
 
 	server.ping(1000, 754, (err, res) => {
 		// Server offline
 		if (!(typeof err === 'undefined' || err === null)) {
-			bot.user.setStatus('dnd');
-			status = 'an offline server';
 
-			bot.user.setActivity(status, {
-				type: 'WATCHING',
+			bot.user.setPresence({
+				activity: {
+					name: 'an offline server',
+					type: 'WATCHING',
+				},
+				status: 'dnd',
 			});
 
 			// console.log(err);
@@ -60,18 +63,22 @@ const getStatus = () => {
 
 		// Server online with no players
 		if (typeof res.players.sample === 'undefined') {
-			bot.user.setStatus('idle');
+			status = 'idle';
 		}
 
 		// Server online with players
 		if (!(typeof res.players.sample === 'undefined')) {
-			bot.user.setStatus('online');
+			status = 'online';
 		}
 
 		// Sets the activity to the amount of players on the server
-		status = res.players.online + '/' + res.players.max + ' players';
-		bot.user.setActivity(status, {
-			type: 'WATCHING',
+		activity = res.players.online + '/' + res.players.max + ' players';
+		bot.user.setPresence({
+			activity: {
+				name: activity,
+				type: 'WATCHING',
+			},
+			status: status,
 		});
 	});
 };
