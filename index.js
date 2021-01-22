@@ -71,8 +71,16 @@ const getStatus = () => {
 			status = 'online';
 		}
 
+		// Gets the online players
+		let onlinePlayers = [];
+		for (let i = 0; i < res.players.sample.length; i++) {
+			onlinePlayers.push(res.players.sample[i].name);
+		}
+		onlinePlayers = onlinePlayers.sort().join(', ');
+
+
 		// Sets the activity to the amount of players on the server
-		activity = res.players.online + '/' + res.players.max + ' players';
+		activity = res.players.online + '/' + res.players.max + ' players - \n' + onlinePlayers;
 		bot.user.setPresence({
 			activity: {
 				name: activity,
