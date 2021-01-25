@@ -64,23 +64,25 @@ const getStatus = () => {
 		// Server online with no players
 		if (typeof res.players.sample === 'undefined') {
 			status = 'idle';
-		}
-
-		// Server online with players
-		if (!(typeof res.players.sample === 'undefined')) {
-			status = 'online';
+			activity = res.players.online + '/' + res.players.max + ' players';
 		}
 
 		// Gets the online players
 		let onlinePlayers = [];
-		for (let i = 0; i < res.players.sample.length; i++) {
-			onlinePlayers.push(res.players.sample[i].name);
-		}
-		onlinePlayers = onlinePlayers.sort().join(', ');
 
+		// Server online with players
+		if (!(typeof res.players.sample === 'undefined')) {
+			status = 'online';
+
+			for (let i = 0; i < res.players.sample.length; i++) {
+				onlinePlayers.push(res.players.sample[i].name);
+			}
+			onlinePlayers = onlinePlayers.sort().join(', ');
+
+			activity = res.players.online + '/' + res.players.max + ' players -\n ' + onlinePlayers;
+		}
 
 		// Sets the activity to the amount of players on the server
-		activity = res.players.online + '/' + res.players.max + ' players - \n' + onlinePlayers;
 		bot.user.setPresence({
 			activity: {
 				name: activity,
