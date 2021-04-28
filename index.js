@@ -51,7 +51,7 @@ const getStatus = () => {
 
 			bot.user.setPresence({
 				activity: {
-					name: 'an offline server',
+					name: 'an offline server :(',
 					type: 'WATCHING',
 				},
 				status: 'dnd',
