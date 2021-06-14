@@ -11,6 +11,7 @@ module.exports = {
 	execute(message) {
 		const infoEmbed = new Discord.MessageEmbed()
 			.setTitle('Information')
+			.setURL('https://github.com/Creeperman1524/Pasta-Bot')
 			.setColor(0x0088ff)
 			.addFields({
 				name: 'Version',

@@ -62,6 +62,7 @@ module.exports = {
 				name: 'Current Development',
 				value: split[current + 1].substring(4),
 			})
+			.setTimestamp(data.updated_at)
 			.setFooter(`Version ${version}`);
 		message.channel.send(updateEmbed);
 	},
