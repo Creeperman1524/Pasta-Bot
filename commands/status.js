@@ -2,6 +2,7 @@ const mcping = require('mcping-js');
 const Discord = require('discord.js');
 const {
 	mcServerPort,
+	version,
 } = require('../config.json');
 const {
 	mcServerIP,
@@ -31,7 +32,8 @@ module.exports = {
 				const offlineEmbed = new Discord.MessageEmbed()
 					.setTitle('Status for ' + mcServerIP + ':')
 					.setColor(0x854f2b)
-					.setDescription('*Server is offline*');
+					.setDescription('*Server is offline*')
+					.setFooter(`Version ${version}`);
 				message.channel.send(offlineEmbed);
 				return;
 			} else {
@@ -56,7 +58,7 @@ module.exports = {
 					onlinePlayers = onlinePlayers.sort().join(', ');
 					// onlinePlayers = escape(onlinePlayers.sort().join(', ')).replace(/\u00A7[0-9A-FK-OR]|\\n/ig, '');
 					serverStatus = '**' + res.players.online + '/' + res.players.max +
-                        '**' + ' player(s) online.\n\n' + onlinePlayers;
+						'**' + ' player(s) online.\n\n' + onlinePlayers;
 
 				}
 				if (hasIcon === 'yes') {
@@ -71,7 +73,8 @@ module.exports = {
 						.setColor(0x854f2b)
 						.setDescription(serverStatus)
 						.setThumbnail('attachment://icon.png')
-						.addField('Server version:', res.version.name);
+						.addField('Server version:', res.version.name)
+						.setFooter(`Version ${version}`);
 					message.channel.send(serverEmbedicon);
 				} else if (hasIcon === 'no') {
 					// Sends an embed without the icon
@@ -79,7 +82,8 @@ module.exports = {
 						.setTitle('Status for ' + mcServerIP + ':')
 						.setColor(0x854f2b)
 						.setDescription(serverStatus)
-						.addField('Server version:', res.version.name);
+						.addField('Server version:', res.version.name)
+						.setFooter(`Version ${version}`);
 					message.channel.send(serverEmbedNoIcon);
 				}
 			}
