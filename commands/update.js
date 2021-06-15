@@ -26,7 +26,7 @@ module.exports = {
 
 		// Loops through each bullet point
 		for (let i = 1; i < split.length - 2; i++) {
-			total = 7;
+			total = 8;
 			// Checks if each bullet is checked off
 			if (split[i].charAt(2) == 'x') {
 				current++;
