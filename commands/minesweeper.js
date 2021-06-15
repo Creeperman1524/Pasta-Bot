@@ -39,6 +39,45 @@ function startGame(message) {
 		.setFooter(`Version ${version}`);
 
 	message.channel.send(minesweeperEmbed);
+
+	// message.channel.send(minesweeperEmbed).then(async embed => {
+	// 	// Adds the reactions to the message
+	// 	try {
+	// 		await embed.react('⬅️');
+	// 		await embed.react('➡️');
+	// 		await embed.react('⬆️');
+	// 		await embed.react('⬇️');
+	// 		await embed.react('🔽');
+	// 		await embed.react('🔴');
+	// 		await embed.react('🔄');
+	// 	} catch (error) {
+	// 		console.error('One of the emojis failed to react:', error);
+	// 	}
+
+	// 	// Filters out other reactions and users
+	// 	const filter = (reaction, user) => {
+	// 		return ['⬅️', '➡️'].includes(reaction.emoji.name) && user.id === message.author.id;
+	// 	};
+
+	// 	// Waits for the user input
+	// 	embed.awaitReactions(filter, {
+	// 		max: 1,
+	// 		time: 60000,
+	// 		errors: ['time'],
+	// 	})
+	// 		.then(collected => {
+	// 			const reaction = collected.first();
+
+	// 			if (reaction.emoji.name === '⬅️') {
+	// 				embed.reply('you reacted with a thumbs up.');
+	// 			} else {
+	// 				embed.reply('you reacted with a thumbs down.');
+	// 			}
+	// 		})
+	// 		.catch(() => {
+	// 			message.reply('you reacted with neither a thumbs up, nor a thumbs down.');
+	// 		});
+	// });
 	return;
 }
 
