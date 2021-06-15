@@ -10,7 +10,7 @@ module.exports = {
 	description: 'Reloads a specific command script if not working properly',
 	aliases: ['restart'],
 	args: true,
-	usage: '[command name]',
+	usage: ' <command name>',
 	execute(message, args) {
 		// Retreives the command
 		const commandName = args[0].toLowerCase();

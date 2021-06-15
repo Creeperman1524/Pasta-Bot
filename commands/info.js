@@ -19,6 +19,9 @@ module.exports = {
 			}, {
 				name: 'Creator',
 				value: 'Creeperman1524',
+			}, {
+				name: 'Total Servers',
+				value: message.client.guilds.cache.size,
 			})
 			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)

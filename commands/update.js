@@ -10,7 +10,6 @@ module.exports = {
 	description: 'A command to display the current status of the server update',
 	aliases: ['serverupdate'],
 	args: false,
-	usage: '',
 	guildOnly: false,
 	cooldown: 10,
 	async execute(message) {

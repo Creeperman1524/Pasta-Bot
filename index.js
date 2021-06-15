@@ -120,7 +120,7 @@ bot.on('message', (message) => {
 		let reply = 'You didn\'t provide any arguments';
 
 		if (command.usage) { // If the command usage is avaliable, tell the user
-			reply += `\nThe proper useage would be: \`${prefix}${commandName} ${command.usage}\``;
+			reply += `\nThe proper usage would be: \`${prefix}${commandName} ${command.usage}\``;
 		}
 		const noArgsEmbed = new Discord.MessageEmbed()
 			.setTitle('Incorrect Usage')
