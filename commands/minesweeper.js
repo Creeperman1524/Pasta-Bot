@@ -115,6 +115,7 @@ function gameLoop(embed, move) {
 	newEmbed.fields[0] = {
 		name: 'Bombs Left',
 		value: numOfMines - flags,
+		inline: true,
 	};
 	embed.edit(newEmbed);
 
@@ -125,19 +126,19 @@ function updatePlayer(move) {
 	board[player.x][player.y].status = player.tileStatus;
 	switch (move) {
 	case 'up':
-		if (player.x < 1) break;
+		if (player.x <= 1) return;
 		player.x--;
 		break;
 	case 'down':
-		if (player.x > board.length - 1) break;
+		if (player.x >= board.length - 2) return;
 		player.x++;
 		break;
 	case 'left':
-		if (player.y < 1) break;
+		if (player.y <= 1) return;
 		player.y--;
 		break;
 	case 'right':
-		if (player.y > board[player.x].length - 1) break;
+		if (player.y >= board[player.x].length - 2) return;
 		player.y++;
 		break;
 	default:
