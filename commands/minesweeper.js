@@ -154,14 +154,25 @@ function updateBoard(move) {
 	// Digging/Flagging a tile
 	switch (move) {
 	case 'dig':
-		if (board[player.x][player.y].status == 1) return board;
+		// Cannot dig a flag or already shown tile
+		if (player.tileStatus == 1 || player.tileStatus == 3) return board;
 		floodFill(player.x, player.y);
 		player.tileStatus = 1;
 		break;
 	case 'flag':
-		board[player.x][player.y].status = 3;
-		player.tileStatus = 3;
-		flags++;
+		// Cannot place a flag on a shown tile
+		if(player.tileStatus == 1) return board;
+		if(player.tileStatus !== 3) {
+			// Not on a flag AND is on a hidden tile
+			board[player.x][player.y].status = 3;
+			player.tileStatus = 3;
+			flags++;
+		} else {
+			// On a flag
+			board[player.x][player.y].status = 0;
+			player.tileStatus = 0;
+			flags--;
+		}
 		break;
 	}
 
@@ -290,6 +301,7 @@ function floodFill(x, y) {
 // Generates the board
 function generateBoard() {
 	board = [];
+	flags = 0;
 	const minePositions = generateMines();
 
 	for (let x = 0; x < size + 2; x++) {
