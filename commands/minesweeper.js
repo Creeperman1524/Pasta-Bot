@@ -161,8 +161,8 @@ function updateBoard(move) {
 		break;
 	case 'flag':
 		// Cannot place a flag on a shown tile
-		if(player.tileStatus == 1) return board;
-		if(player.tileStatus !== 3) {
+		if (player.tileStatus == 1) return board;
+		if (player.tileStatus !== 3) {
 			// Not on a flag AND is on a hidden tile
 			board[player.x][player.y].status = 3;
 			player.tileStatus = 3;
@@ -197,7 +197,7 @@ function generateText() {
 				// Checks for mine
 				switch (tile.mine) {
 				case false: // No mine
-					text += getNumber(revealTile(x, y));
+					text += getNumber(tile.num);
 					break;
 				case true: // Is a mine
 					text += ':bomb:';
@@ -224,38 +224,73 @@ function generateText() {
 
 // Translates integers to discord emojis
 function getNumber(number) {
-	let final = '';
-	switch (number) {
-	case 0:
-		final = ':blue_square:';
-		break;
-	case 1:
-		final = ':one:';
-		break;
-	case 2:
-		final = ':two:';
-		break;
-	case 3:
-		final = ':three:';
-		break;
-	case 4:
-		final = ':four:';
-		break;
-	case 5:
-		final = ':five:';
-		break;
-	case 6:
-		final = ':six:';
-		break;
-	case 7:
-		final = ':seven:';
-		break;
-	case 8:
-		final = ':eight:';
-		break;
+	const numbers = [':blue_square:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:'];
+	return numbers[number];
+}
+
+// Changes the status of a tile, flood-fills if zero
+function floodFill(x, y) {
+	if (x < 1 || y < 1 || x >= board.length - 1 || y >= board[x].length - 1 || board[x][y].status == 1) return;
+	board[x][y].status = 1;
+	if (board[x][y].num == 0) {
+		floodFill(x - 1, y - 1);
+		floodFill(x, y - 1);
+		floodFill(x + 1, y - 1);
+		floodFill(x - 1, y);
+		floodFill(x + 1, y);
+		floodFill(x - 1, y + 1);
+		floodFill(x, y + 1);
+		floodFill(x + 1, y + 1);
+	}
+}
+
+// Generates the board
+function generateBoard() {
+	board = [];
+	flags = 0;
+	const minePositions = generateMines();
+
+	for (let x = 0; x < size + 2; x++) {
+		const row = [];
+		for (let y = 0; y < size + 2; y++) {
+
+			// Border
+			if (y == 0 || y == size + 1 || x == 0 || x == size + 1) {
+				const tile = {
+					status: 4,
+					x,
+					y,
+					mine: false,
+					num: 0,
+				};
+				row.push(tile);
+			} else {
+				const tile = {
+					status: 0, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border
+					x,
+					y,
+					mine: minePositions.some(positionMatch.bind(null, {
+						x,
+						y,
+					})),
+					num: 0,
+				};
+				row.push(tile);
+			}
+		}
+		board.push(row);
 	}
 
-	return final;
+	// Calculates the numbers for each of the tiles
+	for (let x = 0; x < size + 2; x++) {
+		for (let y = 0; y < size + 2; y++) {
+			if (board[x][y].status !== 4) {
+				board[x][y].num = revealTile(x, y);
+			}
+		}
+	}
+
+	return board;
 }
 
 // Retreves a tile from a certain location, 0 for no bomb, 1 for a bomb
@@ -280,62 +315,6 @@ function revealTile(x, y) {
 	number += checkTile(x + 1, y + 1);
 
 	return number;
-}
-
-// Changes the status of a tile, flood-fills if zero
-function floodFill(x, y) {
-	if (x < 1 || y < 1 || x >= board.length - 1 || y >= board[x].length - 1 || board[x][y].status == 1) return;
-	board[x][y].status = 1;
-	if (revealTile(x, y) == 0) {
-		floodFill(x - 1, y - 1);
-		floodFill(x, y - 1);
-		floodFill(x + 1, y - 1);
-		floodFill(x - 1, y);
-		floodFill(x + 1, y);
-		floodFill(x - 1, y + 1);
-		floodFill(x, y + 1);
-		floodFill(x + 1, y + 1);
-	}
-}
-
-// Generates the board
-function generateBoard() {
-	board = [];
-	flags = 0;
-	const minePositions = generateMines();
-
-	for (let x = 0; x < size + 2; x++) {
-		const row = [];
-		for (let y = 0; y < size + 2; y++) {
-
-			// Border
-			if (y == 0 || y == size + 1 || x == 0 || x == size + 1) {
-				const status = 4;
-				const tile = {
-					status,
-					x,
-					y,
-					mine: false,
-				};
-				row.push(tile);
-			} else {
-				const status = 0;
-				const tile = {
-					status, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border
-					x,
-					y,
-					mine: minePositions.some(positionMatch.bind(null, {
-						x,
-						y,
-					})),
-				};
-				row.push(tile);
-			}
-		}
-		board.push(row);
-	}
-
-	return board;
 }
 
 // Generates the positions of the mines
