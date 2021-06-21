@@ -6,11 +6,6 @@ const {
 // TODO: win/lose condition, reset game, multi-user support, code refactoring
 
 const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴', '🔄'];
-const player = {
-	x: 1,
-	y: 1,
-	tileStatus: 0,
-};
 
 const numOfMines = 10;
 const size = 8;
@@ -18,6 +13,14 @@ const size = 8;
 // By invividual user
 let board = [];
 let flags = 0;
+let tilesLeft = size * size;
+const player = {
+	x: 1,
+	y: 1,
+	tileStatus: 0,
+	lost: false,
+};
+let reactionCollector;
 
 // Starts a new game
 function startGame(message) {
@@ -64,7 +67,7 @@ function startGame(message) {
 
 // Listens for the user input
 async function listenForReactions(embed, message) {
-	const reactionCollector = embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == message.author);
+	reactionCollector = embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == message.author);
 
 	let move = '';
 
@@ -110,15 +113,33 @@ function gameLoop(embed, move) {
 	// Creates the discord text
 	const text = generateText();
 
-	// Edits the previous message
-	const newEmbed = embed.embeds[0].setDescription(text);
-	newEmbed.fields[0] = {
-		name: 'Bombs Left',
-		value: numOfMines - flags,
-		inline: true,
-	};
-	embed.edit(newEmbed);
-
+	// Player has won the game
+	if (tilesLeft == numOfMines) {
+		const newEmbed = embed.embeds[0].setDescription(text);
+		newEmbed.fields = {
+			name: 'You Win!',
+			value: 'Thanks for playing :D\nYou can press the 🔄 to reset this board!',
+			inline: false,
+		};
+		embed.edit(newEmbed);
+	} else if (player.lost) {
+		const newEmbed = embed.embeds[0].setDescription(text);
+		newEmbed.fields = {
+			name: 'You Lose!',
+			value: 'Try again next time!\nYou can press the 🔄 to reset this board!',
+			inline: false,
+		};
+		embed.edit(newEmbed);
+	} else {
+		// Edits the previous message
+		const newEmbed = embed.embeds[0].setDescription(text);
+		newEmbed.fields[0] = {
+			name: 'Bombs Left',
+			value: numOfMines - flags,
+			inline: true,
+		};
+		embed.edit(newEmbed);
+	}
 	// Waits for the user's input
 }
 
@@ -201,6 +222,7 @@ function generateText() {
 					break;
 				case true: // Is a mine
 					text += ':bomb:';
+					player.lost = true;
 					break;
 				}
 				break;
@@ -232,6 +254,7 @@ function getNumber(number) {
 function floodFill(x, y) {
 	if (x < 1 || y < 1 || x >= board.length - 1 || y >= board[x].length - 1 || board[x][y].status == 1) return;
 	board[x][y].status = 1;
+	tilesLeft--;
 	if (board[x][y].num == 0) {
 		floodFill(x - 1, y - 1);
 		floodFill(x, y - 1);
@@ -248,6 +271,8 @@ function floodFill(x, y) {
 function generateBoard() {
 	board = [];
 	flags = 0;
+	tilesLeft = size * size;
+
 	const minePositions = generateMines();
 
 	for (let x = 0; x < size + 2; x++) {
