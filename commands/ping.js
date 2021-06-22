@@ -14,10 +14,10 @@ module.exports = {
 				.setTitle('Ping')
 				.setColor(0xff00ff)
 				.addFields({
-					name: 'Your Ping',
+					name: 'Roundtrip Latency',
 					value: m.createdTimestamp - message.createdTimestamp + ' ms',
 				}, {
-					name: 'Bot Ping',
+					name: 'Websocket Heartbeat',
 					value: Math.round(bot.ws.ping) + ' ms',
 				})
 				.setFooter(`Version ${version}`);
