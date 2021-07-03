@@ -7,62 +7,46 @@ const {
 
 module.exports = {
 	name: 'update',
-	description: 'A command to display the current status of the server update',
+	description: 'A command to display the most recent update to the paper server',
 	aliases: ['serverupdate'],
 	args: false,
 	guildOnly: false,
 	cooldown: 10,
 	async execute(message) {
 
-		let current = 0;
-		let total;
+		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17/';
 
 		// Gets the data
-		const response = await fetch('https://api.github.com/repos/PaperMC/Paper/issues/5785');
+		const response = await fetch(url);
 		const data = await response.json();
 
-		// Splits off the bullet points
-		const split = data.body.split('\r\n-');
+		const fields = [];
+		const updateEmbed = new Discord.MessageEmbed();
 
-		// Loops through each bullet point
-		for (let i = 1; i < split.length - 2; i++) {
-			total = 9;
-			// Checks if each bullet is checked off
-			if (split[i].charAt(2) == 'x') {
-				current++;
+		// Retrieves the 5 latest updates
+		for (let i = 0; i < 3; i++) {
+			// Gets data on each build
+			const responseField = await fetch(url + '/builds/' + data.builds[(data.builds.length - 1) - i]);
+			const newField = await responseField.json();
+
+			// Pushes new
+			fields.push({
+				name: `(${newField.build}) - ${newField.changes[0].summary}`,
+				value: newField.changes[0].message,
+			});
+
+			if (i === 0) {
+				updateEmbed.setTimestamp(newField.time);
 			}
 		}
 
-		// Creates the # progress bar
-		const nunmHashtags = 20;
-		const count = (current / total) * nunmHashtags;
-		let hashtags = '[';
-		let i = 0;
-		while (i < nunmHashtags) {
-			i++;
-			if (i < count) {
-				hashtags += '#';
-			} else {
-				hashtags += '-';
-			}
-		}
-		hashtags += ']';
-
-		// Puts all of the data together into an embed
-		const updateEmbed = new Discord.MessageEmbed()
-			.setTitle('1.17 Update Status')
-			.setURL('https://github.com/PaperMC/Paper/issues/5785')
+		updateEmbed.setTitle('Recent 1.17 Paper Updates')
+			.setURL('https://papermc.io/downloads')
 			.setColor(0x03fcfc)
-			.setDescription('Current status on the PaperMC.io 1.17 release (which the server is dependant on)')
-			.addFields({
-				name: 'Progress',
-				value: '```ini\n' + hashtags + '\n```',
-			}, {
-				name: 'Current Development',
-				value: split[current + 1].substring(4),
-			})
-			.setTimestamp(data.updated_at)
+			.addFields(fields)
+			.setDescription('Latest 3 fixes for the paper server')
 			.setFooter(`Version ${version}`);
+
 		message.channel.send(updateEmbed);
 	},
 };
