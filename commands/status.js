@@ -11,7 +11,7 @@ const {
 module.exports = {
 	name: 'status',
 	description: 'Shows the status of the Minecraft server',
-	aliases: ['server'],
+	aliases: [''],
 	args: false,
 	usage: '[server IP]',
 	guildOnly: false,
