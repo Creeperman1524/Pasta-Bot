@@ -14,7 +14,7 @@ module.exports = {
 	cooldown: 10,
 	async execute(message) {
 
-		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17/';
+		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17.1/';
 
 		// Gets the data
 		const response = await fetch(url);
@@ -40,7 +40,7 @@ module.exports = {
 			}
 		}
 
-		updateEmbed.setTitle('Recent 1.17 Paper Updates')
+		updateEmbed.setTitle('Recent 1.17.1 Paper Updates')
 			.setURL('https://papermc.io/downloads')
 			.setColor(0x03fcfc)
 			.addFields(fields)

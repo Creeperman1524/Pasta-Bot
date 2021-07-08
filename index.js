@@ -45,7 +45,7 @@ const getStatus = () => {
 	let activity = '';
 	let status = 'dnd';
 
-	server.ping(1000, 754, (err, res) => {
+	server.ping(1000, 756, (err, res) => {
 		// Server offline
 		if (!(typeof err === 'undefined' || err === null)) {
 
