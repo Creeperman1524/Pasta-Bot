@@ -31,8 +31,8 @@ module.exports = {
 
 			// Pushes new
 			fields.push({
-				name: `(${newField.build}) - ${newField.changes[0].summary}`,
-				value: newField.changes[0].message,
+				name: truncateText(`(${newField.build}) - ${newField.changes[0].summary}`, 256),
+				value: truncateText(newField.changes[0].message, 1024),
 			});
 
 			if (i === 0) {
@@ -50,3 +50,11 @@ module.exports = {
 		message.channel.send(updateEmbed);
 	},
 };
+
+function truncateText(text, length) {
+	if (text.length <= length - 3) {
+		return text;
+	}
+
+	return text.substr(0, length - 3) + '\u2026';
+}
