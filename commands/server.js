@@ -16,7 +16,7 @@ const serverEmbed = new Discord.MessageEmbed()
 		'inline': true,
 	}, {
 		'name': 'General Info',
-		'value': 'Version: `Paper 1.17`\nSeed: `4159323061339762196`\nView-distance: `10`\nDifficulty: `Hard`',
+		'value': 'Version: `Paper 1.17.1`\nSeed: `4159323061339762196`\nView-distance: `10`\nDifficulty: `Hard`',
 		'inline': true,
 	}, {
 		'name': 'Pasta Bot',
