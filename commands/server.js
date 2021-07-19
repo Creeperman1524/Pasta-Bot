@@ -16,7 +16,7 @@ const serverEmbed = new Discord.MessageEmbed()
 		'inline': true,
 	}, {
 		'name': 'General Info',
-		'value': 'Version: `Paper 1.17.1`\nSeed: `4159323061339762196`\nView-distance: `10`\nDifficulty: `Hard`',
+		'value': 'Version: `Paper 1.17.1`\nSeed: `4159323061339762196`\nView-distance: `8`\nDifficulty: `Hard`',
 		'inline': true,
 	}, {
 		'name': 'Pasta Bot',
@@ -91,7 +91,7 @@ const limitedEmbed = new Discord.MessageEmbed()
 		'inline': true,
 	}, {
 		'name': 'Player Limit',
-		'value': 'The player limit is current capped at 5 players. There are ***19*** people currently whitelisted, so try to keep AFKing time to a minimum',
+		'value': 'The player limit is current capped at 5 players. There are ***20*** people currently whitelisted, so try to keep AFKing time to a minimum',
 		'inline': true,
 	}, {
 		'name': 'Misc',
