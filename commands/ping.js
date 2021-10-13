@@ -1,13 +1,24 @@
 const Discord = require('discord.js');
 const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
+const {
 	version,
 } = require('../config.json');
 
+const name = 'ping';
+const description = 'Checks the ping of the bot';
+
 module.exports = {
-	name: 'ping',
-	description: 'Checks the ping of the server and the bot',
-	cooldown: 5,
-	execute(message, args, bot) {
+	name: name,
+	description: description,
+
+	data: new SlashCommandBuilder()
+		.setName(name)
+		.setDescription(description),
+
+	async execute(message) {
 		message.channel.send('Pinging... :ping_pong: ').then(m => {
 
 			const pingEmbed = new Discord.MessageEmbed()
@@ -18,7 +29,7 @@ module.exports = {
 					value: m.createdTimestamp - message.createdTimestamp + ' ms',
 				}, {
 					name: 'Websocket Heartbeat',
-					value: Math.round(bot.ws.ping) + ' ms',
+					value: Math.round(message.client.ws.ping) + ' ms',
 				})
 				.setFooter(`Version ${version}`);
 

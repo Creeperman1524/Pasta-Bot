@@ -1,6 +1,9 @@
 const mcping = require('mcping-js');
 const Discord = require('discord.js');
 const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+const {
 	mcServerPort,
 	version,
 } = require('../config.json');
@@ -8,15 +11,19 @@ const {
 	mcServerIP,
 } = require('../hidden.json');
 
+const name = 'status';
+const description = 'Shows the status of the Minecraft server';
+
+
 module.exports = {
-	name: 'status',
-	description: 'Shows the status of the Minecraft server',
-	aliases: [''],
-	args: false,
-	usage: '[server IP]',
-	guildOnly: false,
-	cooldown: 3,
-	execute(message, args) {
+	name: name,
+	description: description,
+
+	data: new SlashCommandBuilder()
+		.setName(name)
+		.setDescription(description),
+
+	async execute(message, args) {
 		// Checks if the user input a server
 		if (args == '') {
 			const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);

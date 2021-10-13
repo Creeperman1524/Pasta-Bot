@@ -1,14 +1,26 @@
 const Discord = require('discord.js');
 const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
+const {
 	version,
 } = require('../config.json');
 
 const buildDate = new Date();
 
+const name = 'info';
+const description = 'Displays some info about the bot\'s current stats';
+
 module.exports = {
-	name: 'info',
-	description: 'Displays some info about the bot\'s current stats',
-	execute(message) {
+	name: name,
+	description: description,
+
+	data: new SlashCommandBuilder()
+		.setName(name)
+		.setDescription(description),
+
+	async execute(message) {
 		const infoEmbed = new Discord.MessageEmbed()
 			.setTitle('Information')
 			.setURL('https://github.com/Creeperman1524/Pasta-Bot')

@@ -1,17 +1,25 @@
 const Discord = require('discord.js');
+const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
 const fetch = require('node-fetch');
 
 const {
 	version,
 } = require('../config.json');
 
+const name = 'update';
+const description = 'A command to display the most recent update to the paper server';
+
 module.exports = {
-	name: 'update',
-	description: 'A command to display the most recent update to the paper server',
-	aliases: ['serverupdate'],
-	args: false,
-	guildOnly: false,
-	cooldown: 10,
+	name: name,
+	description: description,
+
+	data: new SlashCommandBuilder()
+		.setName(name)
+		.setDescription(description),
+
 	async execute(message) {
 
 		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17.1/';

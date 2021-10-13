@@ -1,17 +1,25 @@
+const Discord = require('discord.js');
+const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
 const {
 	prefix,
 	version,
 } = require('../config.json');
 
-const Discord = require('discord.js');
+const name = 'reload';
+const description = 'Reloads a specific command script if not working properly';
 
 module.exports = {
-	name: 'reload',
-	description: 'Reloads a specific command script if not working properly',
-	aliases: ['restart'],
-	args: true,
-	usage: ' <command name>',
-	execute(message, args) {
+	name: name,
+	description: description,
+
+	data: new SlashCommandBuilder()
+		.setName(name)
+		.setDescription(description),
+
+	async execute(message, args) {
 		// Retreives the command
 		const commandName = args[0].toLowerCase();
 		const command = message.client.commands.get(commandName) || message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
