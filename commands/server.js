@@ -108,16 +108,10 @@ const limitedEmbed = new Discord.MessageEmbed()
 
 const pages = [serverEmbed, datapackEmbed, backupsEmbed, limitedEmbed];
 
-const name = 'server';
-const description = 'Displays information about the minecraft server';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('server')
+		.setDescription('Displays information about the minecraft server'),
 
 	async execute(message) {
 		paginationEmbed(message, pages);

@@ -7,16 +7,10 @@ const {
 	version,
 } = require('../config.json');
 
-const name = 'ping';
-const description = 'Checks the ping of the bot';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('ping')
+		.setDescription('Checks the ping of the bot'),
 
 	async execute(message) {
 		message.channel.send('Pinging... :ping_pong: ').then(m => {

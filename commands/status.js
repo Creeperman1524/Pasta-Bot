@@ -11,17 +11,10 @@ const {
 	mcServerIP,
 } = require('../hidden.json');
 
-const name = 'status';
-const description = 'Shows the status of the Minecraft server';
-
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('status')
+		.setDescription('Shows the status of the Minecraft server'),
 
 	async execute(message, args) {
 		// Checks if the user input a server

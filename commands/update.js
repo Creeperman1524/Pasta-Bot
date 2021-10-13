@@ -9,16 +9,10 @@ const {
 	version,
 } = require('../config.json');
 
-const name = 'update';
-const description = 'A command to display the most recent update to the paper server';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('update')
+		.setDescription('A command to display the most recent update to the paper server'),
 
 	async execute(message) {
 

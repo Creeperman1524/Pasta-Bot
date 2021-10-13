@@ -9,16 +9,10 @@ const {
 	version,
 } = require('../config.json');
 
-const name = 'help';
-const description = 'Displays a help message';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('help')
+		.setDescription('Displays a help message'),
 
 	async execute(message, args) {
 		const fields = [];

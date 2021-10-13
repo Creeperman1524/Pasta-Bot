@@ -9,16 +9,10 @@ const {
 
 // TODO: reaction controls, player movement, win/lose condition, flood-fill, reset game, asychronous, multi-user support, code refactoring
 
-const name = 'minesweeper';
-const description = 'Start a game of minesweeper';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('minesweeper')
+		.setDescription('Start a game of minesweeper'),
 
 	async execute(message, args) {
 		// Checks if the player started a game or is asking for help

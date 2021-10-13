@@ -8,16 +8,10 @@ const {
 	version,
 } = require('../config.json');
 
-const name = 'reload';
-const description = 'Reloads a specific command script if not working properly';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('reload')
+		.setDescription('Reloads a specific command script if not working properly'),
 
 	async execute(message, args) {
 		// Retreives the command

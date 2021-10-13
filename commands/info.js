@@ -9,16 +9,10 @@ const {
 
 const buildDate = new Date();
 
-const name = 'info';
-const description = 'Displays some info about the bot\'s current stats';
-
 module.exports = {
-	name: name,
-	description: description,
-
 	data: new SlashCommandBuilder()
-		.setName(name)
-		.setDescription(description),
+		.setName('info')
+		.setDescription('Displays some info about the bot\'s current stats'),
 
 	async execute(message) {
 		const infoEmbed = new Discord.MessageEmbed()
