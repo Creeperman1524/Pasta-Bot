@@ -1,4 +1,6 @@
-const Discord = require('discord.js');
+const {
+	MessageEmbed,
+} = require('discord.js');
 const {
 	SlashCommandBuilder,
 } = require('@discordjs/builders');
@@ -14,7 +16,9 @@ module.exports = {
 		.setName('update')
 		.setDescription('A command to display the most recent update to the paper server'),
 
-	async execute(message) {
+	async execute(interaction) {
+
+		await interaction.deferReply();
 
 		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17.1/';
 
@@ -23,7 +27,7 @@ module.exports = {
 		const data = await response.json();
 
 		const fields = [];
-		const updateEmbed = new Discord.MessageEmbed();
+		const updateEmbed = new MessageEmbed();
 
 		// Retrieves the 5 latest updates
 		for (let i = 0; i < 3; i++) {
@@ -49,7 +53,9 @@ module.exports = {
 			.setDescription('Latest 3 fixes for the paper server')
 			.setFooter(`Version ${version}`);
 
-		message.channel.send(updateEmbed);
+		await interaction.editReply({
+			embeds: [updateEmbed],
+		});
 	},
 };
 

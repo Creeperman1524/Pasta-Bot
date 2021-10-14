@@ -14,13 +14,19 @@ module.exports = {
 		.setName('minesweeper')
 		.setDescription('Start a game of minesweeper'),
 
-	async execute(message, args) {
-		// Checks if the player started a game or is asking for help
-		if (args[0] == 'start') {
-			startGame(message);
-		} else if (args[0] == 'help') {
-			console.log('send help');
-		}
+	async execute(interaction) {
+		interaction.reply({
+			content: 'This command is currently a WIP!',
+			ephemeral: true,
+		});
+
+
+		// // Checks if the player started a game or is asking for help
+		// if (args[0] == 'start') {
+		// 	startGame(message);
+		// } else if (args[0] == 'help') {
+		// 	console.log('send help');
+		// }
 	},
 };
 

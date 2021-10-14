@@ -1,4 +1,7 @@
-const Discord = require('discord.js');
+const {
+	Discord,
+	MessageEmbed,
+} = require('discord.js');
 const {
 	SlashCommandBuilder,
 } = require('@discordjs/builders');
@@ -14,8 +17,8 @@ module.exports = {
 		.setName('info')
 		.setDescription('Displays some info about the bot\'s current stats'),
 
-	async execute(message) {
-		const infoEmbed = new Discord.MessageEmbed()
+	async execute(interaction) {
+		const infoEmbed = new MessageEmbed()
 			.setTitle('Information')
 			.setURL('https://github.com/Creeperman1524/Pasta-Bot')
 			.setColor(0x0088ff)
@@ -27,11 +30,13 @@ module.exports = {
 				value: 'Creeperman1524',
 			}, {
 				name: 'Total Servers',
-				value: message.client.guilds.cache.size,
+				value: `${interaction.client.guilds.cache.size}`,
 			})
 			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)
 			.setFooter(`Version ${version}`);
-		message.channel.send(infoEmbed);
+		interaction.reply({
+			embeds: [infoEmbed],
+		});
 	},
 };

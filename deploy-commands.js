@@ -27,8 +27,6 @@ const rest = new REST({
 	version: '9',
 }).setToken(token);
 
-console.log(commands);
-
 rest.put(Routes.applicationCommands(clientId, guildId), {
 	body: commands,
 })

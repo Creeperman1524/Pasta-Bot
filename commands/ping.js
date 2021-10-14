@@ -1,4 +1,6 @@
-const Discord = require('discord.js');
+const {
+	MessageEmbed,
+} = require('discord.js');
 const {
 	SlashCommandBuilder,
 } = require('@discordjs/builders');
@@ -12,22 +14,25 @@ module.exports = {
 		.setName('ping')
 		.setDescription('Checks the ping of the bot'),
 
-	async execute(message) {
-		message.channel.send('Pinging... :ping_pong: ').then(m => {
+	async execute(interaction) {
 
-			const pingEmbed = new Discord.MessageEmbed()
-				.setTitle('Ping')
-				.setColor(0xff00ff)
-				.addFields({
-					name: 'Roundtrip Latency',
-					value: m.createdTimestamp - message.createdTimestamp + ' ms',
-				}, {
-					name: 'Websocket Heartbeat',
-					value: Math.round(message.client.ws.ping) + ' ms',
-				})
-				.setFooter(`Version ${version}`);
+		// "so and so is thinking"
+		await interaction.deferReply();
 
-			m.edit(pingEmbed);
+		const pingEmbed = new MessageEmbed()
+			.setTitle('Ping')
+			.setColor(0xff00ff)
+			.addFields({
+				name: 'Roundtrip Latency',
+				value: Date.now() - interaction.createdTimestamp + ' ms',
+			}, {
+				name: 'Websocket Heartbeat',
+				value: Math.round(interaction.client.ws.ping) + ' ms',
+			})
+			.setFooter(`Version ${version}`);
+
+		await interaction.editReply({
+			embeds: [pingEmbed],
 		});
 	},
 };
