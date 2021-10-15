@@ -4,6 +4,7 @@ const {
 	Client,
 	Intents,
 	Collection,
+	MessageEmbed,
 } = require('discord.js');
 
 const mcping = require('mcping-js');
@@ -12,6 +13,7 @@ const mcping = require('mcping-js');
 const {
 	pingInterval,
 	mcServerPort,
+	version,
 } = require('./config.json');
 
 const {
@@ -110,8 +112,15 @@ client.on('interactionCreate', async interaction => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
+
+		const errorEmbed = new MessageEmbed()
+			.setTitle('Error')
+			.setColor(0xff1414)
+			.setDescription('There was an error trying to execute that command!')
+			.setFooter(`Version ${version}`);
+
 		return interaction.reply({
-			content: 'There was an error while executing this command!',
+			embeds : [errorEmbed],
 			ephemeral: true,
 		});
 	}
