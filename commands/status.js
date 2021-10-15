@@ -1,5 +1,7 @@
 const mcping = require('mcping-js');
-const Discord = require('discord.js');
+const {
+	MessageEmbed,
+} = require('discord.js');
 const {
 	SlashCommandBuilder,
 } = require('@discordjs/builders');
@@ -14,24 +16,29 @@ const {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('status')
-		.setDescription('Shows the status of the Minecraft server'),
+		.setDescription('Shows the status of the Minecraft server')
+		.addStringOption(option =>
+			option.setName('ip')
+				.setDescription('The IP address of the server'),
+		),
+	async execute(interaction) {
+		const ip = interaction.options.getString('ip');
 
-	async execute(message, args) {
 		// Checks if the user input a server
-		if (args == '') {
+		if (ip == null) {
 			const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
 
 			// Pings the server
-			pingServer(server, message, mcServerIP);
+			pingServer(server, interaction, mcServerIP);
 
 			return;
 		} else {
 			// The default server connection
 
-			const server = new mcping.MinecraftServer(args[0], mcServerPort);
+			const server = new mcping.MinecraftServer(ip, mcServerPort);
 
 			// Pings the server
-			pingServer(server, message, args[0]);
+			pingServer(server, interaction, ip);
 
 			return;
 		}
@@ -44,18 +51,21 @@ module.exports = {
 // Server ping handeling
 let favicon, hasIcon, serverStatus;
 
-function pingServer(server, message, ip) {
+function pingServer(server, interaction, ip) {
+	console.log(server);
 	server.ping(1000, 756, (err, res) => {
 		// Determines if it's online or not
 		if (err) {
 
 			// Offline
-			const offlineEmbed = new Discord.MessageEmbed()
+			const offlineEmbed = new MessageEmbed()
 				.setTitle('Status for ' + ip + ':')
 				.setColor(0x854f2b)
 				.setDescription('*Server is offline*')
 				.setFooter(`Version ${version}`);
-			message.channel.send(offlineEmbed);
+			interaction.reply({
+				embeds: [offlineEmbed],
+			});
 			return;
 		} else {
 			// Retrieves the server icon
@@ -85,27 +95,31 @@ function pingServer(server, message, ip) {
 			if (hasIcon === 'yes') {
 				// Sends an embed with an icon image
 				const buffer = Buffer.from(favicon, 'base64');
-				const serverEmbedicon = new Discord.MessageEmbed()
-					.attachFiles({
-						attachment: buffer,
-						name: 'icon.png',
-					})
+				const serverEmbedicon = new MessageEmbed()
 					.setTitle('Status for ' + ip + ':')
 					.setColor(0x854f2b)
 					.setDescription(serverStatus)
 					.setThumbnail('attachment://icon.png')
 					.addField('Server version:', res.version.name)
 					.setFooter(`Version ${version}`);
-				message.channel.send(serverEmbedicon);
+				interaction.reply({
+					embeds: [serverEmbedicon],
+					files: [{
+						attachment: buffer,
+						name: 'icon.png',
+					}],
+				});
 			} else if (hasIcon === 'no') {
 				// Sends an embed without the icon
-				const serverEmbedNoIcon = new Discord.MessageEmbed()
+				const serverEmbedNoIcon = new MessageEmbed()
 					.setTitle('Status for ' + ip + ':')
 					.setColor(0x854f2b)
 					.setDescription(serverStatus)
 					.addField('Server version:', res.version.name)
 					.setFooter(`Version ${version}`);
-				message.channel.send(serverEmbedNoIcon);
+				interaction.reply({
+					embeds: [serverEmbedNoIcon],
+				});
 			}
 		}
 	}, 3000);

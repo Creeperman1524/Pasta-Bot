@@ -113,7 +113,11 @@ module.exports = {
 		.setName('server')
 		.setDescription('Displays information about the minecraft server'),
 
-	async execute(message) {
-		paginationEmbed(message, pages);
+	async execute(interaction) {
+		// paginationEmbed(interaction, pages);
+		interaction.reply({
+			content: 'This command is currently a WIP!',
+			ephemeral: true,
+		});
 	},
 };
