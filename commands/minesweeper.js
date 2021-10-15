@@ -1,25 +1,32 @@
 const Discord = require('discord.js');
 const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
+const {
 	version,
 } = require('../config.json');
 
 // TODO: reaction controls, player movement, win/lose condition, flood-fill, reset game, asychronous, multi-user support, code refactoring
 
 module.exports = {
-	name: 'minesweeper',
-	description: 'Start a game of minesweeper',
-	aliases: ['ms', 'badapple'],
-	args: false,
-	usage: '<start|help>',
-	guildOnly: false,
-	cooldown: 0,
-	execute(message, args) {
-		// Checks if the player started a game or is asking for help
-		if (args[0] == 'start') {
-			startGame(message);
-		} else if (args[0] == 'help') {
-			console.log('send help');
-		}
+	data: new SlashCommandBuilder()
+		.setName('minesweeper')
+		.setDescription('Start a game of minesweeper'),
+
+	async execute(interaction) {
+		interaction.reply({
+			content: 'This command is currently a WIP!',
+			ephemeral: true,
+		});
+
+
+		// // Checks if the player started a game or is asking for help
+		// if (args[0] == 'start') {
+		// 	startGame(message);
+		// } else if (args[0] == 'help') {
+		// 	console.log('send help');
+		// }
 	},
 };
 

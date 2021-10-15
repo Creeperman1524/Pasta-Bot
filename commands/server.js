@@ -1,4 +1,7 @@
 const Discord = require('discord.js');
+const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
 const paginationEmbed = require('discord.js-pagination');
 
 // Pages
@@ -106,14 +109,15 @@ const limitedEmbed = new Discord.MessageEmbed()
 const pages = [serverEmbed, datapackEmbed, backupsEmbed, limitedEmbed];
 
 module.exports = {
-	name: 'server',
-	description: 'Displays information about the minecraft server',
-	aliases: [''],
-	args: false,
-	usage: '',
-	guildOnly: false,
-	cooldown: 10,
-	execute(message) {
-		paginationEmbed(message, pages);
+	data: new SlashCommandBuilder()
+		.setName('server')
+		.setDescription('Displays information about the minecraft server'),
+
+	async execute(interaction) {
+		// paginationEmbed(interaction, pages);
+		interaction.reply({
+			content: 'This command is currently a WIP!',
+			ephemeral: true,
+		});
 	},
 };
