@@ -41,7 +41,7 @@ for (const file of commandFiles) {
 client.once('ready', () => {
 	getStatus();
 	console.log('The bot is active');
-	setTimeout(getStatus, pingInterval * 1000);
+	setInterval(getStatus, pingInterval * 1000);
 });
 
 // Updates the bot's status periodically

@@ -52,7 +52,6 @@ module.exports = {
 let favicon, hasIcon, serverStatus;
 
 function pingServer(server, interaction, ip) {
-	console.log(server);
 	server.ping(1000, 756, (err, res) => {
 		// Determines if it's online or not
 		if (err) {
