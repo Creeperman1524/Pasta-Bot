@@ -1,28 +1,38 @@
-const Discord = require('discord.js');
+const {
+	MessageEmbed,
+} = require('discord.js');
+const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
 const {
 	version,
 } = require('../config.json');
 
 module.exports = {
-	name: 'ping',
-	description: 'Checks the ping of the server and the bot',
-	cooldown: 5,
-	execute(message, args, bot) {
-		message.channel.send('Pinging... :ping_pong: ').then(m => {
+	data: new SlashCommandBuilder()
+		.setName('ping')
+		.setDescription('Checks the ping of the bot'),
 
-			const pingEmbed = new Discord.MessageEmbed()
-				.setTitle('Ping')
-				.setColor(0xff00ff)
-				.addFields({
-					name: 'Your Ping',
-					value: m.createdTimestamp - message.createdTimestamp + ' ms',
-				}, {
-					name: 'Bot Ping',
-					value: Math.round(bot.ws.ping) + ' ms',
-				})
-				.setFooter(`Version ${version}`);
+	async execute(interaction) {
 
-			m.edit(pingEmbed);
+		// "so and so is thinking"
+		await interaction.deferReply();
+
+		const pingEmbed = new MessageEmbed()
+			.setTitle('Ping')
+			.setColor(0xff00ff)
+			.addFields({
+				name: 'Roundtrip Latency',
+				value: Date.now() - interaction.createdTimestamp + ' ms',
+			}, {
+				name: 'Websocket Heartbeat',
+				value: Math.round(interaction.client.ws.ping) + ' ms',
+			})
+			.setFooter(`Version ${version}`);
+
+		await interaction.editReply({
+			embeds: [pingEmbed],
 		});
 	},
 };

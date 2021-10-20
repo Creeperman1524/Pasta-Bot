@@ -1,4 +1,10 @@
-const Discord = require('discord.js');
+const {
+	MessageEmbed,
+} = require('discord.js');
+const {
+	SlashCommandBuilder,
+} = require('@discordjs/builders');
+
 const fetch = require('node-fetch');
 
 const {
@@ -6,63 +12,57 @@ const {
 } = require('../config.json');
 
 module.exports = {
-	name: 'update',
-	description: 'A command to display the current status of the server update',
-	aliases: ['serverupdate'],
-	args: false,
-	guildOnly: false,
-	cooldown: 10,
-	async execute(message) {
+	data: new SlashCommandBuilder()
+		.setName('update')
+		.setDescription('A command to display the most recent update to the paper server'),
 
-		let current = 0;
-		let total;
+	async execute(interaction) {
+
+		await interaction.deferReply();
+
+		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17.1/';
 
 		// Gets the data
-		const response = await fetch('https://api.github.com/repos/PaperMC/Paper/issues/5785');
+		const response = await fetch(url);
 		const data = await response.json();
 
-		// Splits off the bullet points
-		const split = data.body.split('\r\n-');
+		const fields = [];
+		const updateEmbed = new MessageEmbed();
 
-		// Loops through each bullet point
-		for (let i = 1; i < split.length - 2; i++) {
-			total = 7;
-			// Checks if each bullet is checked off
-			if (split[i].charAt(2) == 'x') {
-				current++;
+		// Retrieves the 5 latest updates
+		for (let i = 0; i < 3; i++) {
+			// Gets data on each build
+			const responseField = await fetch(url + '/builds/' + data.builds[(data.builds.length - 1) - i]);
+			const newField = await responseField.json();
+
+			// Pushes new
+			fields.push({
+				name: truncateText(`(${newField.build}) - ${newField.changes[0].summary}`, 256),
+				value: truncateText(newField.changes[0].message, 1024),
+			});
+
+			if (i === 0) {
+				updateEmbed.setTimestamp(newField.time);
 			}
 		}
 
-		// Creates the # progress bar
-		const nunmHashtags = 20;
-		const count = (current / total) * nunmHashtags;
-		let hashtags = '[';
-		let i = 0;
-		while (i < nunmHashtags) {
-			i++;
-			if (i < count) {
-				hashtags += '#';
-			} else {
-				hashtags += '-';
-			}
-		}
-		hashtags += ']';
-
-		// Puts all of the data together into an embed
-		const updateEmbed = new Discord.MessageEmbed()
-			.setTitle('1.17 Update Status')
-			.setURL('https://github.com/PaperMC/Paper/issues/5785')
+		updateEmbed.setTitle('Recent 1.17.1 Paper Updates')
+			.setURL('https://papermc.io/downloads')
 			.setColor(0x03fcfc)
-			.setDescription('Current status on the PaperMC.io 1.17 release (which the server is dependant on)')
-			.addFields({
-				name: 'Progress',
-				value: '```ini\n' + hashtags + '\n```',
-			}, {
-				name: 'Current Development',
-				value: split[current + 1].substring(4),
-			})
-			.setTimestamp(data.updated_at)
+			.addFields(fields)
+			.setDescription('Latest 3 fixes for the paper server')
 			.setFooter(`Version ${version}`);
-		message.channel.send(updateEmbed);
+
+		await interaction.editReply({
+			embeds: [updateEmbed],
+		});
 	},
 };
+
+function truncateText(text, length) {
+	if (text.length <= length - 3) {
+		return text;
+	}
+
+	return text.substr(0, length - 3) + '\u2026';
+}
