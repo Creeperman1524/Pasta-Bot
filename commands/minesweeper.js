@@ -3,35 +3,45 @@ const {
 	version,
 } = require('../config.json');
 
-// TODO: win/lose condition, reset game, multi-user support, code refactoring
+// TODO: first click guaranteed to be safe, auto-timeout, highlight correct flags green and wrong ones x's, update to v13	
 
-const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴', '🔄'];
+const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴'];
 
 const numOfMines = 10;
 const size = 8;
 
-// By invividual user
-let board = [];
-let flags = 0;
-let tilesLeft = size * size;
-const player = {
-	x: 1,
-	y: 1,
-	tileStatus: 0,
-	lost: false,
-};
-let reactionCollector;
+const games = new Discord.Collection();
+
+// Creates a game for a user
+function createGame(myMessage) {
+	// Creates a game object
+	const game = {
+		board: [],
+		flags: 0,
+		tilesLeft: size * size,
+		player: {
+			x: 1,
+			y: 1,
+			tileStatus: 0,
+			lost: false,
+		},
+		reactionCollector: null,
+		message: myMessage, // The user command
+		embed: null, // The game/embedS sent
+		timeout: new Date(new Date().getTime() + 10 * 60000), // game will expire in ten minutes
+	};
+
+	// Adds it to the games object
+	games.set(myMessage.id, game);
+	startGame(game);
+}
 
 // Starts a new game
-function startGame(message) {
-	// Reset the player
-	player.x = 1;
-	player.y = 1;
-	player.tileStatus = 0;
+function startGame(game) {
 
-	board = generateBoard();
-	board = updateBoard(board); // Adds the player
-	const text = generateText();
+	game.board = generateBoard(game.board);
+	updateBoard(game); // Adds the player
+	const text = generateText(game);
 
 	// Creates the board
 	const minesweeperEmbed = new Discord.MessageEmbed()
@@ -43,14 +53,16 @@ function startGame(message) {
 			inline: true,
 		}, {
 			name: 'Current Player',
-			value: message.author,
+			value: game.message.author,
 			inline: true,
 		})
 		.setDescription(text)
 		.setFooter(`Version ${version}`);
 
 	// Adds the reactions after sending the board
-	message.channel.send(minesweeperEmbed).then(async embed => {
+	game.message.channel.send(minesweeperEmbed).then(async embed => {
+		game.embed = embed;
+
 		// Adds the reactions to the message
 		try {
 			for (const emoji of emojiList) await embed.react(emoji);
@@ -59,21 +71,21 @@ function startGame(message) {
 		}
 
 		// Waits for user input
-		listenForReactions(embed, message);
+		listenForReactions(game);
 	});
 
 	return;
 }
 
 // Listens for the user input
-async function listenForReactions(embed, message) {
-	reactionCollector = embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == message.author);
+async function listenForReactions(game) {
+	game.reactionCollector = game.embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == game.message.author);
 
 	let move = '';
 
 	// Detects and sends the move the player wants
-	await reactionCollector.on('collect', reaction => {
-		reaction.users.remove(message.author);
+	await game.reactionCollector.on('collect', reaction => {
+		reaction.users.remove(game.message.author);
 		switch (reaction.emoji.name) {
 		case emojiList[0]:
 			move = 'left';
@@ -93,120 +105,143 @@ async function listenForReactions(embed, message) {
 		case emojiList[5]:
 			move = 'flag';
 			break;
-		case emojiList[6]:
-			move = 'reset';
-			break;
 		default:
 			break;
 		}
-		gameLoop(embed, move, message);
+		gameLoop(game, move);
 	});
 }
 
-function gameLoop(embed, move) {
+function gameLoop(game, move) {
 	// Updates the player's position
-	updatePlayer(move);
+	updatePlayer(game, move);
 
 	// Generates the new board based on the player's position/move
-	board = updateBoard(move);
+	updateBoard(game, move);
 
 	// Creates the discord text
-	const text = generateText();
+	const text = generateText(game);
 
 	// Player has won the game
-	if (tilesLeft == numOfMines) {
-		const newEmbed = embed.embeds[0].setDescription(text);
+	if (game.tilesLeft == numOfMines) {
+		// Win the game
+		const newEmbed = game.embed.embeds[0].setDescription(text);
 		newEmbed.fields = {
 			name: 'You Win!',
-			value: 'Thanks for playing :D\nYou can press the 🔄 to reset this board!',
+			value: 'Thanks for playing! :grin:',
 			inline: false,
 		};
-		embed.edit(newEmbed);
-	} else if (player.lost) {
-		const newEmbed = embed.embeds[0].setDescription(text);
-		newEmbed.fields = {
-			name: 'You Lose!',
-			value: 'Try again next time!\nYou can press the 🔄 to reset this board!',
-			inline: false,
-		};
-		embed.edit(newEmbed);
+
+		game.embed.edit(newEmbed);
+		game.embed.reactions.removeAll();
+		games.delete(game.message.id);
+
+	} else if (game.player.lost) {
+		// Lose the game
+		lose(game);
+
 	} else {
-		// Edits the previous message
-		const newEmbed = embed.embeds[0].setDescription(text);
+		// Updates the game's stats
+		const newEmbed = game.embed.embeds[0].setDescription(text);
 		newEmbed.fields[0] = {
 			name: 'Bombs Left',
-			value: numOfMines - flags,
+			value: numOfMines - game.flags,
 			inline: true,
 		};
-		embed.edit(newEmbed);
+
+		game.embed.edit(newEmbed);
 	}
 	// Waits for the user's input
 }
 
-function updatePlayer(move) {
-	board[player.x][player.y].status = player.tileStatus;
+function lose(game) {
+	for (let x = 0; x < size + 2; x++) {
+		for (let y = 0; y < size + 2; y++) {
+			// Avoids the boom and walls
+			if (game.board[x][y].status < 3) {
+				game.board[x][y].status = 1;
+			}
+		}
+	}
+
+	const text = generateText(game);
+
+	const newEmbed = game.embed.embeds[0].setDescription(text);
+	newEmbed.fields = {
+		name: 'You Lose!',
+		value: 'Try again next time! :pensive:',
+		inline: false,
+	};
+
+	game.embed.edit(newEmbed);
+	game.embed.reactions.removeAll();
+	games.delete(game.message.id);
+}
+
+function updatePlayer(game, move) {
+	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
 	switch (move) {
 	case 'up':
-		if (player.x <= 1) return;
-		player.x--;
+		if (game.player.x <= 1) return;
+		game.player.x--;
 		break;
 	case 'down':
-		if (player.x >= board.length - 2) return;
-		player.x++;
+		if (game.player.x >= game.board.length - 2) return;
+		game.player.x++;
 		break;
 	case 'left':
-		if (player.y <= 1) return;
-		player.y--;
+		if (game.player.y <= 1) return;
+		game.player.y--;
 		break;
 	case 'right':
-		if (player.y >= board[player.x].length - 2) return;
-		player.y++;
+		if (game.player.y >= game.board[game.player.x].length - 2) return;
+		game.player.y++;
 		break;
 	default:
 		break;
 	}
 }
 
-function updateBoard(move) {
+function updateBoard(game, move) {
 	// Moves the player and replaces the tile before
-	player.tileStatus = board[player.x][player.y].status;
-	board[player.x][player.y].status = 2;
+	game.player.tileStatus = game.board[game.player.x][game.player.y].status;
+	game.board[game.player.x][game.player.y].status = 2;
 
 	// Digging/Flagging a tile
 	switch (move) {
 	case 'dig':
 		// Cannot dig a flag or already shown tile
-		if (player.tileStatus == 1 || player.tileStatus == 3) return board;
-		floodFill(player.x, player.y);
-		player.tileStatus = 1;
+		if (game.player.tileStatus == 1 || game.player.tileStatus == 3) return;
+
+		floodFill(game, game.player.x, game.player.y);
+		game.player.tileStatus = 1;
 		break;
 	case 'flag':
 		// Cannot place a flag on a shown tile
-		if (player.tileStatus == 1) return board;
-		if (player.tileStatus !== 3) {
+		if (game.player.tileStatus == 1) return;
+
+		if (game.player.tileStatus !== 3) {
 			// Not on a flag AND is on a hidden tile
-			board[player.x][player.y].status = 3;
-			player.tileStatus = 3;
-			flags++;
+			game.board[game.player.x][game.player.y].status = 3;
+			game.player.tileStatus = 3;
+			game.flags++;
 		} else {
 			// On a flag
-			board[player.x][player.y].status = 0;
-			player.tileStatus = 0;
-			flags--;
+			game.board[game.player.x][game.player.y].status = 0;
+			game.player.tileStatus = 0;
+			game.flags--;
 		}
 		break;
 	}
-
-	return board;
 }
 
 // Generates the text for the UI
-function generateText() {
+function generateText(game) {
 	let text = '';
 
 	for (let x = 0; x < size + 2; x++) {
 		for (let y = 0; y < size + 2; y++) {
-			const tile = board[x][y];
+			const tile = game.board[x][y];
 
 			// Displays the mines
 			switch (tile.status) {
@@ -222,7 +257,8 @@ function generateText() {
 					break;
 				case true: // Is a mine
 					text += ':bomb:';
-					player.lost = true;
+					game.player.lost = true;
+					if (tile.x == game.player.x && tile.y == game.player.y) tile.status = 5; // Changes the player tile to a boom
 					break;
 				}
 				break;
@@ -235,6 +271,9 @@ function generateText() {
 				break;
 			case 4: // Border
 				text += ':green_square:';
+				break;
+			case 5: // Exploded Bomb
+				text += ':boom:';
 				break;
 			}
 		}
@@ -251,28 +290,24 @@ function getNumber(number) {
 }
 
 // Changes the status of a tile, flood-fills if zero
-function floodFill(x, y) {
-	if (x < 1 || y < 1 || x >= board.length - 1 || y >= board[x].length - 1 || board[x][y].status == 1) return;
-	board[x][y].status = 1;
-	tilesLeft--;
-	if (board[x][y].num == 0) {
-		floodFill(x - 1, y - 1);
-		floodFill(x, y - 1);
-		floodFill(x + 1, y - 1);
-		floodFill(x - 1, y);
-		floodFill(x + 1, y);
-		floodFill(x - 1, y + 1);
-		floodFill(x, y + 1);
-		floodFill(x + 1, y + 1);
+function floodFill(game, x, y) {
+	if (x < 1 || y < 1 || x >= game.board.length - 1 || y >= game.board[x].length - 1 || game.board[x][y].status == 1) return;
+	game.board[x][y].status = 1;
+	game.tilesLeft--;
+	if (game.board[x][y].num == 0) {
+		floodFill(game, x - 1, y - 1);
+		floodFill(game, x, y - 1);
+		floodFill(game, x + 1, y - 1);
+		floodFill(game, x - 1, y);
+		floodFill(game, x + 1, y);
+		floodFill(game, x - 1, y + 1);
+		floodFill(game, x, y + 1);
+		floodFill(game, x + 1, y + 1);
 	}
 }
 
 // Generates the board
-function generateBoard() {
-	board = [];
-	flags = 0;
-	tilesLeft = size * size;
-
+function generateBoard(board) {
 	const minePositions = generateMines();
 
 	for (let x = 0; x < size + 2; x++) {
@@ -291,7 +326,7 @@ function generateBoard() {
 				row.push(tile);
 			} else {
 				const tile = {
-					status: 0, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border
+					status: 0, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border, 5 = explode
 					x,
 					y,
 					mine: minePositions.some(positionMatch.bind(null, {
@@ -310,7 +345,7 @@ function generateBoard() {
 	for (let x = 0; x < size + 2; x++) {
 		for (let y = 0; y < size + 2; y++) {
 			if (board[x][y].status !== 4) {
-				board[x][y].num = revealTile(x, y);
+				board[x][y].num = revealTile(board, x, y);
 			}
 		}
 	}
@@ -319,7 +354,7 @@ function generateBoard() {
 }
 
 // Retreves a tile from a certain location, 0 for no bomb, 1 for a bomb
-function checkTile(x, y) {
+function checkTile(board, x, y) {
 	if (x < 1 || y < 1) return 0; // If the tile is outside of the board, it's 0
 	if (x >= board.length - 1) return 0;
 	if (y >= board[x].length - 1) return 0;
@@ -328,16 +363,16 @@ function checkTile(x, y) {
 }
 
 // Returns the number emoji for the amount of bombs around a tile
-function revealTile(x, y) {
+function revealTile(board, x, y) {
 	let number = 0;
-	number += checkTile(x - 1, y - 1);
-	number += checkTile(x, y - 1);
-	number += checkTile(x + 1, y - 1);
-	number += checkTile(x - 1, y);
-	number += checkTile(x + 1, y);
-	number += checkTile(x - 1, y + 1);
-	number += checkTile(x, y + 1);
-	number += checkTile(x + 1, y + 1);
+	number += checkTile(board, x - 1, y - 1);
+	number += checkTile(board, x, y - 1);
+	number += checkTile(board, x + 1, y - 1);
+	number += checkTile(board, x - 1, y);
+	number += checkTile(board, x + 1, y);
+	number += checkTile(board, x - 1, y + 1);
+	number += checkTile(board, x, y + 1);
+	number += checkTile(board, x + 1, y + 1);
 
 	return number;
 }
@@ -380,7 +415,7 @@ module.exports = {
 	execute(message, args) {
 		// Checks if the player started a game or is asking for help
 		if (args[0] == 'start') {
-			startGame(message);
+			createGame(message);
 		} else if (args[0] == 'help') {
 			console.log('send help');
 		}
