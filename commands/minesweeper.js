@@ -3,7 +3,7 @@ const {
 	version,
 } = require('../config.json');
 
-// TODO: first click guaranteed to be safe, auto-timeout, highlight correct flags green and wrong ones x's, update to v13	
+// TODO: first click guaranteed to be safe, auto-timeout, update to v13
 
 const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴'];
 
@@ -161,6 +161,14 @@ function lose(game) {
 			if (game.board[x][y].status < 3) {
 				game.board[x][y].status = 1;
 			}
+
+			// Checks flags and marks incorrect ones with an x
+			if (game.board[x][y].status == 3) {
+				if(!game.board[x][y].mine) {
+					game.board[x][y].status = 6;
+				}
+			}
+
 		}
 	}
 
@@ -275,6 +283,9 @@ function generateText(game) {
 			case 5: // Exploded Bomb
 				text += ':boom:';
 				break;
+			case 6: // Incorrect flag
+				text += ':x:';
+				break;
 			}
 		}
 		text += '\n';
@@ -326,7 +337,7 @@ function generateBoard(board) {
 				row.push(tile);
 			} else {
 				const tile = {
-					status: 0, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border, 5 = explode
+					status: 0, // 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border, 5 = explode, 6 = x (wrong flag)
 					x,
 					y,
 					mine: minePositions.some(positionMatch.bind(null, {
