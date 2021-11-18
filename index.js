@@ -11,7 +11,7 @@ const mcping = require('mcping-js');
 
 // Config
 const {
-	pingInterval,
+	statusInterval,
 	mcServerPort,
 	version,
 } = require('./config.json');
@@ -39,13 +39,56 @@ for (const file of commandFiles) {
 
 // Runs when the bot is online
 client.once('ready', () => {
-	getStatus();
+	displayServer();
 	console.log('The bot is active');
-	setInterval(getStatus, pingInterval * 1000);
+	setInterval(flipFlop, statusInterval * 1000);
 });
 
+// Flips between the two status's
+let flip = false;
+const flipFlop = () => {
+	if(flip) {
+		displayServer();
+		flip = false;
+	} else {
+		countdown();
+		flip = true;
+	}
+
+};
+
+// Displays a countdown till the minecraft update
+const countdown = () => {
+	const release = new Date(2021, 10, 30, 12); // Release date
+	const now = new Date(); // Now
+
+	const timeUntil = release - now;
+
+	const days = Math.floor(timeUntil / 1000 / 60 / 60 / 24);
+	const hours = Math.floor(timeUntil / 1000 / 60 / 60 - days * 24);
+
+	if(timeUntil > 0) {
+		client.user.setPresence({
+			activities: [{
+				name: `in ${days} days and ${hours} hours`,
+				type: 'PLAYING',
+			}],
+			status: 'idle',
+		});
+	} else {
+		client.user.setPresence({
+			activities: [{
+				name: 'on the new 1.18 update',
+				type: 'PLAYING',
+			}],
+			status: 'online',
+		});
+	}
+
+};
+
 // Updates the bot's status periodically
-const getStatus = () => {
+const displayServer = () => {
 	const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
 
 	let activity = '';
