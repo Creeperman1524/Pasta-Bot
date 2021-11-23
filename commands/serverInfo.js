@@ -110,7 +110,7 @@ const pages = [serverEmbed, datapackEmbed, backupsEmbed, limitedEmbed];
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('server')
+		.setName('serverinfo')
 		.setDescription('Displays information about the minecraft server'),
 
 	async execute(interaction) {

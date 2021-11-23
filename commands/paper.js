@@ -13,7 +13,7 @@ const {
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('update')
+		.setName('paper')
 		.setDescription('A command to display the most recent update to the paper server'),
 
 	async execute(interaction) {
