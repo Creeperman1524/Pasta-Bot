@@ -3,7 +3,7 @@ const {
 	version,
 } = require('../config.json');
 
-// TODO: first click guaranteed to be safe, auto-timeout, update to v13
+// TODO: first click guaranteed to be safe, update to v13, how to play the game menu
 
 const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴'];
 
@@ -27,8 +27,8 @@ function createGame(myMessage) {
 		},
 		reactionCollector: null,
 		message: myMessage, // The user command
-		embed: null, // The game/embedS sent
-		timeout: new Date(new Date().getTime() + 10 * 60000), // game will expire in ten minutes
+		embed: null, // The game/embeds sent
+		timeout: 10 * 60000, // The expiration timer for the game
 	};
 
 	// Adds it to the games object
@@ -57,7 +57,8 @@ function startGame(game) {
 			inline: true,
 		})
 		.setDescription(text)
-		.setFooter(`Version ${version}`);
+		.setFooter(`Version ${version} | Ends at`)
+		.setTimestamp(new Date().getTime() + game.timeout);
 
 	// Adds the reactions after sending the board
 	game.message.channel.send(minesweeperEmbed).then(async embed => {
@@ -79,12 +80,13 @@ function startGame(game) {
 
 // Listens for the user input
 async function listenForReactions(game) {
-	game.reactionCollector = game.embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == game.message.author);
+	game.reactionCollector = game.embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user == game.message.author, { time: game.timeout });
+	game.reactionCollector.timeout = game.timeout;
 
 	let move = '';
 
 	// Detects and sends the move the player wants
-	await game.reactionCollector.on('collect', reaction => {
+	game.reactionCollector.on('collect', reaction => {
 		reaction.users.remove(game.message.author);
 		switch (reaction.emoji.name) {
 		case emojiList[0]:
@@ -110,6 +112,12 @@ async function listenForReactions(game) {
 		}
 		gameLoop(game, move);
 	});
+
+	game.reactionCollector.on('end', () => {
+		lose(game);
+	});
+
+
 }
 
 function gameLoop(game, move) {
