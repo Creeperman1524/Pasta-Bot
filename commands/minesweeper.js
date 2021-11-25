@@ -87,7 +87,7 @@ function startGame(game) {
 
 // Listens for the user input
 async function listenForReactions(game) {
-	game.reactionCollector = game.embed.createReactionCollector((reaction, user) => emojiList.includes(reaction.emoji.name) && user.id == game.interaction.user.id, { time: game.timeout });
+	game.reactionCollector = game.embed.createReactionCollector({ filter: (reaction, user) => emojiList.includes(reaction.emoji.name) && user.id == game.interaction.user.id, time: game.timeout });
 
 	let move = '';
 
