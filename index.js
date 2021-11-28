@@ -59,7 +59,7 @@ const flipFlop = () => {
 
 // Displays a countdown till the minecraft update
 const countdown = () => {
-	const release = new Date(2021, 10, 30, 12); // Release date
+	const release = new Date(2021, 11, 3, 19); // Release date
 	const now = new Date(); // Now
 
 	const timeUntil = release - now;
