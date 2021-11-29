@@ -31,6 +31,7 @@ function createGame(myInteraction) {
 			y: 1,
 			tileStatus: 0,
 			lost: false,
+			won: true,
 		},
 		reactionCollector: null,
 		interaction: myInteraction, // The user command
@@ -120,7 +121,10 @@ async function listenForReactions(game) {
 	});
 
 	game.reactionCollector.on('end', () => {
-		lose(game);
+		// Checks if the user has already won the game, if not automatically fail it
+		if(!game.player.won) {
+			lose(game);
+		}
 	});
 
 
@@ -146,6 +150,8 @@ function gameLoop(game, move) {
 			value: 'Thanks for playing! :grin:',
 			inline: false,
 		};
+
+		game.player.won = true;
 
 		game.interaction.editReply({ embeds: [newEmbed] });
 		game.embed.reactions.removeAll();
