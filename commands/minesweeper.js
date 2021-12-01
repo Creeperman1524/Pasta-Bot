@@ -31,7 +31,7 @@ function createGame(myInteraction) {
 			y: 1,
 			tileStatus: 0,
 			lost: false,
-			won: true,
+			won: false,
 		},
 		reactionCollector: null,
 		interaction: myInteraction, // The user command
