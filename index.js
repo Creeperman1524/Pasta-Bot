@@ -41,7 +41,7 @@ for (const file of commandFiles) {
 client.once('ready', () => {
 	displayServer();
 	console.log('The bot is active');
-	setInterval(displayServer(), statusInterval * 1000);
+	setInterval(displayServer, statusInterval * 1000);
 });
 
 // Updates the bot's status periodically
