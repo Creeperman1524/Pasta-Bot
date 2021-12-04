@@ -41,51 +41,8 @@ for (const file of commandFiles) {
 client.once('ready', () => {
 	displayServer();
 	console.log('The bot is active');
-	setInterval(flipFlop, statusInterval * 1000);
+	setInterval(displayServer(), statusInterval * 1000);
 });
-
-// Flips between the two status's
-let flip = false;
-const flipFlop = () => {
-	if(flip) {
-		displayServer();
-		flip = false;
-	} else {
-		countdown();
-		flip = true;
-	}
-
-};
-
-// Displays a countdown till the minecraft update
-const countdown = () => {
-	const release = new Date(2021, 11, 3, 19); // Release date
-	const now = new Date(); // Now
-
-	const timeUntil = release - now;
-
-	const days = Math.floor(timeUntil / 1000 / 60 / 60 / 24);
-	const hours = Math.floor(timeUntil / 1000 / 60 / 60 - days * 24);
-
-	if(timeUntil > 0) {
-		client.user.setPresence({
-			activities: [{
-				name: `in ${days} days and ${hours} hours`,
-				type: 'PLAYING',
-			}],
-			status: 'idle',
-		});
-	} else {
-		client.user.setPresence({
-			activities: [{
-				name: 'on the new 1.18 update',
-				type: 'PLAYING',
-			}],
-			status: 'online',
-		});
-	}
-
-};
 
 // Updates the bot's status periodically
 const displayServer = () => {
