@@ -20,7 +20,7 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.17.1/';
+		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18/';
 
 		// Gets the data
 		const response = await fetch(url);
@@ -29,7 +29,7 @@ module.exports = {
 		const fields = [];
 		const updateEmbed = new MessageEmbed();
 
-		// Retrieves the 5 latest updates
+		// Retrieves the 3 latest updates
 		for (let i = 0; i < 3; i++) {
 			// Gets data on each build
 			const responseField = await fetch(url + '/builds/' + data.builds[(data.builds.length - 1) - i]);
@@ -46,7 +46,7 @@ module.exports = {
 			}
 		}
 
-		updateEmbed.setTitle('Recent 1.17.1 Paper Updates')
+		updateEmbed.setTitle('Recent 1.18 Paper Updates')
 			.setURL('https://papermc.io/downloads')
 			.setColor(0x03fcfc)
 			.addFields(fields)
