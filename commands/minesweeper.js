@@ -1,14 +1,6 @@
-const {
-	MessageEmbed,
-	Collection,
-} = require('discord.js');
-const {
-	SlashCommandBuilder,
-} = require('@discordjs/builders');
-
-const {
-	version,
-} = require('../config.json');
+const { MessageEmbed, Collection } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const { version } = require('../config.json');
 
 // TODO: first click guaranteed to be safe, how to play the game menu
 

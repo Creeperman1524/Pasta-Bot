@@ -1,26 +1,11 @@
 // Packages
 const fs = require('fs');
-const {
-	Client,
-	Intents,
-	Collection,
-	MessageEmbed,
-} = require('discord.js');
-
+const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
 const mcping = require('mcping-js');
 
 // Config
-const {
-	statusInterval,
-	mcServerPort,
-	version,
-} = require('./config.json');
-
-const {
-	token,
-	mcServerIP,
-} = require('./hidden.json');
-
+const { statusInterval, mcServerPort, version } = require('./config.json');
+const { token, mcServerIP } = require('./hidden.json');
 
 // Creates the bot client
 const client = new Client({
@@ -28,6 +13,7 @@ const client = new Client({
 		[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
 	],
 });
+
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
