@@ -44,7 +44,7 @@ const displayServer = () => {
 			client.user.setPresence({
 				activities: [{
 					name: 'an offline server :(',
-					type: 'WATCHING',
+					type: 'PLAYING',
 				}],
 				status: 'dnd',
 			});
@@ -78,7 +78,7 @@ const displayServer = () => {
 		client.user.setPresence({
 			activities: [{
 				name: activity,
-				type: 'WATCHING',
+				type: 'PLAYING',
 			}],
 			status: status,
 		});
