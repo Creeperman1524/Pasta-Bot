@@ -37,7 +37,7 @@ const displayServer = () => {
 	let activity = '';
 	let status = 'dnd';
 
-	server.ping(1000, 756, (err, res) => {
+	server.ping(1000, 757, (err, res) => {
 		// Server offline
 		if (!(typeof err === 'undefined' || err === null)) {
 

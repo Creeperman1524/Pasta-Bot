@@ -186,7 +186,7 @@ function statusCommand(interaction) {
 let favicon, hasIcon, serverStatus;
 
 function pingServer(server, interaction, ip) {
-	server.ping(1000, 756, (err, res) => {
+	server.ping(1000, 757, (err, res) => {
 		// Determines if it's online or not
 		if (err) {
 
@@ -287,7 +287,7 @@ function ipCommand(interaction) {
 
 let data = null;
 async function getCurrentVersion() {
-	const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18';
+	const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.1';
 
 	const response = await fetch(url);
 	data = await response.json();
