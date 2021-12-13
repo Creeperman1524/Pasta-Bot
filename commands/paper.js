@@ -22,7 +22,7 @@ module.exports = {
 		const updateEmbed = new MessageEmbed();
 
 		// Retrieves the 3 latest updates
-		for (let i = 0; i < 3; i++) {
+		for (let i = 0; i < 3; i++) { // TODO: ERRORS WHEN THERE AREN'T 3 TOTAL BUILDS
 			// Gets data on each build
 			const responseField = await fetch(url + '/builds/' + data.builds[(data.builds.length - 1) - i]);
 			const newField = await responseField.json();

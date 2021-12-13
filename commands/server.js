@@ -9,7 +9,6 @@ const fetch = require('node-fetch');
 
 // TODO
 // map - gives the map link to the server
-// addons - all of the datapacks, plugins, and advancements
 
 // Date when the minecraft server restarts/backs up
 const buildDate = new Date();
@@ -41,6 +40,13 @@ module.exports = {
 			.setDescription('The ip address of the Minecraft server'),
 		)
 
+		// map
+		.addSubcommand(subcommand => subcommand
+			.setName('map')
+			.setDescription('The web-hosted map of the Minecraft server'),
+		)
+
+
 		// version
 		.addSubcommand(subcommand => subcommand
 			.setName('version')
@@ -60,6 +66,9 @@ module.exports = {
 			break;
 		case 'ip':
 			ipCommand(interaction);
+			break;
+		case 'map':
+			mapCommand(interaction);
 			break;
 		case 'version':
 			await versionCommand(interaction);
@@ -283,6 +292,17 @@ function ipCommand(interaction) {
 		.setFooter(`Version ${version}`);
 
 	interaction.editReply({ embeds: [ipEmbed] });
+}
+
+// Map command
+function mapCommand(interaction) {
+	const mapEmbed = new MessageEmbed()
+		.setTitle('Server Map')
+		.setColor(0x9000ff)
+		.setDescription(`Server map: [http://${mcServerIP}:8123](http://${mcServerIP}:8123)`)
+		.setFooter(`Version ${version}`);
+
+	interaction.editReply({ embeds: [mapEmbed] });
 }
 
 let data = null;
