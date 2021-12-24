@@ -7,9 +7,6 @@ const { mcServerIP, backupsDirectory } = require('../hidden.json');
 const fs = require('fs');
 const fetch = require('node-fetch');
 
-// TODO
-// map - gives the map link to the server
-
 // Date when the minecraft server restarts/backs up
 const buildDate = new Date();
 
@@ -46,6 +43,11 @@ module.exports = {
 			.setDescription('The web-hosted map of the Minecraft server'),
 		)
 
+		// seed
+		.addSubcommand(subcommand => subcommand
+			.setName('seed')
+			.setDescription('The seed of the Minecraft server'),
+		)
 
 		// version
 		.addSubcommand(subcommand => subcommand
@@ -69,6 +71,9 @@ module.exports = {
 			break;
 		case 'map':
 			mapCommand(interaction);
+			break;
+		case 'seed':
+			seedCommand(interaction);
 			break;
 		case 'version':
 			await versionCommand(interaction);
@@ -304,6 +309,18 @@ function mapCommand(interaction) {
 
 	interaction.editReply({ embeds: [mapEmbed] });
 }
+
+// Seed command
+function seedCommand(interaction) {
+	const seedEmbed = new MessageEmbed()
+		.setTitle('Server Seed')
+		.setColor(0xff006a)
+		.setDescription('Seed: `-2856535938574691800`')
+		.setFooter(`Version ${version}`);
+
+	interaction.editReply({ embeds: [seedEmbed] });
+}
+
 
 let data = null;
 async function getCurrentVersion() {
