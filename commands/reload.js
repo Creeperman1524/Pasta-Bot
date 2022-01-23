@@ -1,54 +1,61 @@
-const {
-	prefix,
-	version,
-} = require('../config.json');
-
-const Discord = require('discord.js');
+const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
+const { version } = require('../config.json');
 
 module.exports = {
-	name: 'reload',
-	description: 'Reloads a specific command script if not working properly',
-	aliases: ['restart'],
-	args: true,
-	usage: '[command name]',
-	execute(message, args) {
+	data: new SlashCommandBuilder()
+		.setName('reload')
+		.setDescription('Reloads a specific command script if not working properly')
+		.addStringOption(option =>
+			option.setName('command')
+				.setDescription('The command to reload')
+				.setRequired(true),
+		),
+
+	async execute(interaction) {
 		// Retreives the command
-		const commandName = args[0].toLowerCase();
-		const command = message.client.commands.get(commandName) || message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+		const commandName = interaction.options.getString('command').toLowerCase();
+		const command = interaction.client.commands.get(commandName);
 
 		// If the command doesn't exist, return
 		if (!command) {
-			const noCommandEmbed = new Discord.MessageEmbed()
+			const noCommandEmbed = new MessageEmbed()
 				.setTitle('Incorrect Usage')
 				.setColor(0xfdff63)
-				.setDescription(`There is no command with the name or alias \`${commandName}\``)
+				.setDescription(`There is no command with the name \`${commandName}\``)
 				.setFooter(`Version ${version}`);
-			return message.channel.send(noCommandEmbed);
+			return interaction.reply({
+				embeds: [noCommandEmbed],
+			});
 		}
 
 		// Deletes the cache
-		delete require.cache[require.resolve(`./${command.name}.js`)];
+		delete require.cache[require.resolve(`./${command.data.name}.js`)];
 
 		// Trys to re-add the command
 		try {
-			const newCommand = require(`./${command.name}.js`);
-			message.client.commands.set(newCommand.name, newCommand);
+			const newCommand = require(`./${command.data.name}.js`);
+			interaction.client.commands.set(newCommand.name, newCommand);
 		} catch (error) {
 			console.log(error);
-			const errorEmbed = new Discord.MessageEmbed()
+			const errorEmbed = new MessageEmbed()
 				.setTitle('Error')
 				.setColor(0xff1414)
-				.setDescription(`There was an error while reloading a command \`${command.name}\`:\n\`${error.message}\``)
+				.setDescription(`There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``)
 				.setFooter(`Version ${version}`);
-			return message.channel.send(errorEmbed);
+			return interaction.reply({
+				embeds: [errorEmbed],
+			});
 		}
 
-		const successEmbed = new Discord.MessageEmbed()
+		const successEmbed = new MessageEmbed()
 			.setTitle('Success')
 			.setColor(0x009f00)
-			.setDescription(`Command \`${prefix}${command.name}\` was reloaded!`)
+			.setDescription(`Command \`/${command.data.name}\` was reloaded!`)
 			.setFooter(`Version ${version}`);
 
-		message.channel.send(successEmbed);
+		interaction.reply({
+			embeds: [successEmbed],
+		});
 	},
 };
