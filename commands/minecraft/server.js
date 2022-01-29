@@ -1,8 +1,8 @@
 const mcping = require('mcping-js');
 const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { mcServerPort, version } = require('../config.json');
-const { mcServerIP, backupsDirectory } = require('../hidden.json');
+const { mcServerPort, version } = require('../../config.json');
+const { mcServerIP, backupsDirectory } = require('../../hidden.json');
 
 const fs = require('fs');
 const fetch = require('node-fetch');

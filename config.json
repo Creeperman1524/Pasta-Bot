@@ -1,6 +1,5 @@
 {
-    "prefix": "p!",
-    "version": "0.7",
+    "version": "0.7.1",
     "statusInterval": "20",
     "mcServerPort": "25565"
 }

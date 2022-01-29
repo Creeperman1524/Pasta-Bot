@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../config.json');
+const { version } = require('../../config.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,9 +10,7 @@ module.exports = {
 
 	async execute(interaction) {
 		const fields = [];
-		const {
-			commands,
-		} = interaction.client;
+		const { commands } = interaction.client;
 
 		// Stores the command name and descriptions into separate arrays
 		const names = commands.map(command => command.data.name);
@@ -34,6 +32,7 @@ module.exports = {
 			.setDescription('A list of all the current commands')
 			.addFields(fields)
 			.setFooter(`Version ${version}`);
+
 		return interaction.reply({
 			embeds: [helpEmbed],
 		});

@@ -1,6 +1,6 @@
 const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../config.json');
+const { version } = require('../../config.json');
 
 const buildDate = new Date();
 
@@ -27,6 +27,7 @@ module.exports = {
 			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)
 			.setFooter(`Version ${version}`);
+
 		interaction.reply({
 			embeds: [infoEmbed],
 		});

@@ -20,17 +20,4 @@
  - [ ] Name That Tune
 
 ## :scroll: Changelog
-#### (**WIP**) Version 0.9 - *Music Player*
-- Ability to play single songs, playlists, pause, shuffle, and queue songs
-- Multiple people can add to the queue
-  - Possible additional logging for when songs fail
-
-
-#### (**WIP**) Version 0.8- *Reaction Roles*
-- Adds ability to assign a message to be reacted to that grants and revokes roles from users
-- Peridically scans the message for any changes in users to fix their roles
-  - Helps when the bot is offline to "catch up" with any changes
-
-
-#### Version 0.7 - *Minesweeper*
- - Added a full working minesweeper minigame
+[View changelog](CHANGELOG.md)

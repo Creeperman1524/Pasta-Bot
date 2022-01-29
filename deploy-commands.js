@@ -5,14 +5,19 @@ const { Routes } = require('discord-api-types/v9');
 const { clientId, guildId, token } = require('./hidden.json');
 
 const commands = [];
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFolders = fs.readdirSync('./commands');
 
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	if(command.data) {
-		commands.push(command.data.toJSON());
+// Gather commands from folders
+for(const folder of commandFolders) {
+	const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+	for (const file of commandFiles) {
+		const command = require(`./commands/${folder}/${file}`);
+		if(command.data) {
+			commands.push(command.data.toJSON());
+		}
 	}
 }
+
 
 const rest = new REST({
 	version: '9',
