@@ -1,5 +1,6 @@
 {
-    "version": "0.7.1",
+    "version": "0.7.2",
     "statusInterval": "20",
+	"commandRefreshInterval": "30",
     "mcServerPort": "25565"
 }

@@ -4,8 +4,9 @@ const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
 const mcping = require('mcping-js');
 
 // Config
-const { statusInterval, mcServerPort, version } = require('./config.json');
+const { statusInterval, commandRefreshInterval, mcServerPort, version } = require('./config.json');
 const { token, mcServerIP } = require('./hidden.json');
+const deployCommands = require('./deploy-commands');
 
 // Creates the bot client
 const client = new Client({
@@ -29,10 +30,31 @@ for(const folder of commandFolders) {
 
 // Runs when the bot is online
 client.once('ready', () => {
+	updateCommands();
+
+	console.log('\nThe bot is active');
+
 	displayServer();
-	console.log('The bot is active');
 	setInterval(displayServer, statusInterval * 1000);
 });
+
+const updateCommands = () => {
+	const raw = fs.readFileSync('./storage.json');
+	const data = JSON.parse(raw);
+
+	const currentTime = Date.now();
+
+	// Refreshes commands only if it hasn't within the last 30 minutes
+	if(data.commandUpdate < currentTime) {
+		deployCommands.execute(client);
+		data.commandUpdate = currentTime + (commandRefreshInterval * 60000);
+
+		// Updates time
+		fs.writeFileSync('./storage.json', JSON.stringify(data));
+	} else {
+		console.log('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
+	}
+};
 
 // Updates the bot's status periodically
 const displayServer = () => {

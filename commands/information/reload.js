@@ -10,7 +10,9 @@ module.exports = {
 			option.setName('command')
 				.setDescription('The command to reload')
 				.setRequired(true),
-		),
+		)
+		.setDefaultPermission(false),
+	permissions: ['OWNER'],
 
 	async execute(interaction) {
 		// Retreives the command
