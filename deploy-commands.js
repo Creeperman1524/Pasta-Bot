@@ -65,7 +65,6 @@ async function updateCommandPermissions(client) {
 				const permission = generatePermissions(command[1], client.guilds.cache.get(id));
 				if(permission) fullPermissions.push(permission);
 			}
-			console.log(fullPermissions);
 			await rest.put(
 				Routes.guildApplicationCommandsPermissions(clientId, id),
 				{ body: fullPermissions },
