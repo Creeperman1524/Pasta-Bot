@@ -62,9 +62,10 @@ async function updateCommandPermissions(client) {
 		for(const id of guildIDs) {
 			const fullPermissions = [];
 			for(const command of await client.application.commands.fetch()) {
-				const permission = generatePermissions(command[1]);
+				const permission = generatePermissions(command[1], client.guilds.cache.get(id));
 				if(permission) fullPermissions.push(permission);
 			}
+			console.log(fullPermissions);
 			await rest.put(
 				Routes.guildApplicationCommandsPermissions(clientId, id),
 				{ body: fullPermissions },
@@ -77,8 +78,8 @@ async function updateCommandPermissions(client) {
 	}
 }
 
-// Valid permissions: OWNER
-function generatePermissions(discordCommand) {
+// Valid permissions: OWNER, ADMIN
+function generatePermissions(discordCommand, guild) {
 	// Pairs API command and file command
 	let command;
 	for(const cmd of commands) {
@@ -94,11 +95,27 @@ function generatePermissions(discordCommand) {
 		permissions: [],
 	};
 
+	// Owner permission
 	if(command.permissions[0] == 'OWNER') {
 		commandPermission.permissions.push({
 			id: '284842415289008138',
 			type: 2,
 			permission: true,
+		});
+	}
+
+	// Administrator permission
+	if(command.permissions[0] == 'ADMIN') {
+		let count = 0;
+		guild.roles.cache.forEach(role => {
+			if(role.permissions.has('ADMINISTRATOR') && count < 10) {
+				commandPermission.permissions.push({
+					id: role.id,
+					type: 1,
+					permission: true,
+				});
+				count++;
+			}
 		});
 	}
 
