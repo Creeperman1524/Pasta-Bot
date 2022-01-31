@@ -77,7 +77,7 @@ async function updateCommandPermissions(client) {
 	}
 }
 
-// Valid permissions: OWNER, ADMIN
+// Valid permissions: OWNER, ADMIN, MESSAGES
 function generatePermissions(discordCommand, guild) {
 	// Pairs API command and file command
 	let command;
@@ -108,6 +108,20 @@ function generatePermissions(discordCommand, guild) {
 		let count = 0;
 		guild.roles.cache.forEach(role => {
 			if(role.permissions.has('ADMINISTRATOR') && count < 10) {
+				commandPermission.permissions.push({
+					id: role.id,
+					type: 1,
+					permission: true,
+				});
+				count++;
+			}
+		});
+	}
+
+	if(command.permissions[0] == 'MESSAGES') {
+		let count = 0;
+		guild.roles.cache.forEach(role => {
+			if(role.permissions.has('MANAGE_MESSAGES') && count < 10) {
 				commandPermission.permissions.push({
 					id: role.id,
 					type: 1,

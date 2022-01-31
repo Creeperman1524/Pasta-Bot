@@ -13,7 +13,7 @@
 ##### 0.7.2 - Command Permissions (1/29/22)
 - Commands are integrated with discord permissions to "grey out" commands when you can't use them
 	- Able to change what permissions are needed to use the command
-	- Can only toggle for the `OWNER` (me) and for roles with the `ADMINISTRATOR` option
+	- Possible values include `OWNER`, `ADMINISTRATOR`, or `MESSAGES`
 
 ##### 0.7.1 - Command grouping (1/29/22)
 - Commands are grouped into separate categories interally
