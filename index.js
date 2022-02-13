@@ -195,12 +195,6 @@ async function reactionRoleHandler(reaction, user, method) {
 		}
 	} else {
 		// Role doesn't exist
-		const errorEmbed = new MessageEmbed()
-			.setTitle('Error!')
-			.setColor(0xff0000)
-			.setDescription('Something has gone horribly wrong! Please contact my system administrator :(')
-			.setFooter(`Version ${version}`);
-		reaction.message.channel.send({ embeds: [errorEmbed] });
 		console.error(`Role for reaction ${reaction.emoji.name} does not exist!`);
 	}
 }
