@@ -76,7 +76,7 @@ module.exports = {
 	permissions: ['MESSAGES'],
 
 	async execute(interaction) {
-		interaction.deferReply();
+		await interaction.deferReply();
 		switch (interaction.options.getSubcommand()) {
 		case 'create':
 			createReactionMessage(interaction);
