@@ -76,6 +76,7 @@ module.exports = {
 	permissions: ['MESSAGES'],
 
 	async execute(interaction) {
+		interaction.deferReply();
 		switch (interaction.options.getSubcommand()) {
 		case 'create':
 			createReactionMessage(interaction);
@@ -122,13 +123,13 @@ async function createReactionMessage(interaction) {
 				})
 				.setFooter(`Version ${version}`);
 
-			interaction.reply({
+			interaction.editReply({
 				embeds: [replyEmbed],
 			});
 
 		});
 	} else {
-		interaction.reply({
+		interaction.editReply({
 			content: 'Please select a valid channel!',
 			ephemeral: true,
 		});
@@ -157,10 +158,10 @@ async function deleteReactionMessage(interaction) {
 			.setDescription('Your reaction message was safely removed')
 			.setFooter(`Version ${version}`);
 
-		interaction.reply({ embeds: [replyEmbed] });
+		interaction.editReply({ embeds: [replyEmbed] });
 
 	} else {
-		interaction.reply({
+		interaction.editReply({
 			content: 'It seems that message isn\'t from this server',
 			ephemeral: true,
 		});
@@ -181,7 +182,7 @@ async function addRoletoMessage(interaction) {
 
 	// Checks if the message exists
 	if(!message) {
-		interaction.reply({
+		interaction.editReply({
 			content: 'It seems that message isn\'t from this server',
 			ephemeral: true,
 		});
@@ -194,7 +195,7 @@ async function addRoletoMessage(interaction) {
 
 	// Checks if the role is valid
 	if(role.name == '@everyone') {
-		interaction.reply({
+		interaction.editReply({
 			content: 'That\'s an invalid role!',
 			ephemeral: true,
 		});
@@ -205,7 +206,7 @@ async function addRoletoMessage(interaction) {
 	try {
 		await message.react(emoji);
 	} catch (error) {
-		interaction.reply({
+		interaction.editReply({
 			content: 'That\'s an invalid emoji!',
 			ephemeral: true,
 		});
@@ -234,7 +235,7 @@ async function addRoletoMessage(interaction) {
 		.setDescription(`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`)
 		.setFooter(`Version ${version}`);
 
-	interaction.reply({ embeds: [replyEmbed] });
+	interaction.editReply({ embeds: [replyEmbed] });
 
 	// Edits database
 	reactionGuild[message.id].push([role.id, emoji]);
@@ -253,7 +254,7 @@ async function removeRolefromMessage(interaction) {
 
 	// Checks if the message exists
 	if(!message) {
-		interaction.reply({
+		interaction.editReply({
 			content: 'It seems that message isn\'t from this server',
 			ephemeral: true,
 		});
@@ -273,7 +274,7 @@ async function removeRolefromMessage(interaction) {
 	}
 
 	if(!found) {
-		interaction.reply({
+		interaction.editReply({
 			content: 'That role is not used in that reaction message!',
 			ephemeral: true,
 		});
@@ -313,7 +314,7 @@ async function removeRolefromMessage(interaction) {
 		.setDescription(`<@&${role.id}> was safely removed from the role reaction message!`)
 		.setFooter(`Version ${version}`);
 
-	interaction.reply({ embeds: [replyEmbed] });
+	interaction.editReply({ embeds: [replyEmbed] });
 
 	writeToDatabase(data);
 }
@@ -335,7 +336,7 @@ async function findMessage(interaction, reactionGuild) {
 
 	// If that message isn't a reaction message
 	if(!reactionGuild[messageID]) {
-		interaction.reply({
+		interaction.editReply({
 			content: 'That message link isn\'t a valid reaction message!',
 			ephemeral: true,
 		});
