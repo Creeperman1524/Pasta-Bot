@@ -163,7 +163,7 @@ async function reactionRoleHandler(reaction, user, method) {
 	if(user.partial) await user.fetch();
 
 	// Checks if the reaction was to a reaction message
-	if(!reactionMessages[reaction.message.guildID]) return;
+	if(!reactionMessages[reaction.message.guildId]) return;
 	if(!reactionMessages[reaction.message.guildId][reaction.message.id]) return;
 
 	let role;
