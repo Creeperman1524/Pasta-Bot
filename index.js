@@ -11,8 +11,9 @@ const deployCommands = require('./deploy-commands');
 // Creates the bot client
 const client = new Client({
 	intents: [
-		[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
+		[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES],
 	],
+	partials: ['MESSAGE', 'USER', 'REACTION'],
 });
 
 
@@ -38,6 +39,7 @@ client.once('ready', () => {
 	setInterval(displayServer, statusInterval * 1000);
 });
 
+// Refreshes the commands on startup
 const updateCommands = () => {
 	const raw = fs.readFileSync('./storage.json');
 	const data = JSON.parse(raw);
@@ -55,6 +57,7 @@ const updateCommands = () => {
 		console.log('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
 	}
 };
+
 
 // Updates the bot's status periodically
 const displayServer = () => {
@@ -137,6 +140,67 @@ client.on('interactionCreate', async interaction => {
 		});
 	}
 });
+
+// Listens for reaction changes for the reaction roles
+client.on('messageReactionAdd', async (reaction, user) => {
+	reactionRoleHandler(reaction, user, 'add');
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+	reactionRoleHandler(reaction, user, 'remove');
+});
+
+async function reactionRoleHandler(reaction, user, method) {
+	// Reads from the database
+	const data = JSON.parse(fs.readFileSync('./storage.json'));
+	const reactionMessages = data.reactionMessages;
+
+	// Reaction partials
+	if(reaction.message.partial) await reaction.message.fetch();
+	if(reaction.partial) await reaction.fetch();
+
+	// User partials
+	if(user.partial) await user.fetch();
+
+	// Checks if the reaction was to a reaction message
+	if(!reactionMessages[reaction.message.guildId][reaction.message.id]) return;
+
+	let role;
+	// Tries to find the role in the server
+	for(const storageRole of reactionMessages[reaction.message.guildId][reaction.message.id]) {
+		if(storageRole[1] == reaction.emoji.name) {
+			role = reaction.message.guild.roles.cache.get(storageRole[0]);
+		}
+	}
+
+	if(role) {
+		const member = await reaction.message.guild.members.cache.find((mem) => mem.id === user.id);
+		try {
+			// Gives the user the role
+			switch (method) {
+			case 'add':
+				// NOTE: Does not work when the user has not been cached (no messages sent after restart)
+				await member.roles.add(role);
+				break;
+			case 'remove':
+				await member.roles.remove(role);
+				break;
+			}
+
+		} catch (error) {
+			console.log(error);
+		}
+	} else {
+		// Role doesn't exist
+		const errorEmbed = new MessageEmbed()
+			.setTitle('Error!')
+			.setColor(0xff0000)
+			.setDescription('Something has gone horribly wrong! Please contact my system administrator :(')
+			.setFooter(`Version ${version}`);
+		reaction.message.channel.send({ embeds: [errorEmbed] });
+		console.error(`Role for reaction ${reaction.emoji.name} does not exist!`);
+	}
+}
 
 // Logs the bot in
 client.login(token);

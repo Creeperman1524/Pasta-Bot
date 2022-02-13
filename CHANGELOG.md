@@ -5,11 +5,11 @@
 	- Possible additional logging for when songs fail
 
 
-### (**WIP**) 0.8.0- *Reaction Roles*
+### 0.8.0- *Reaction Roles*
 - Adds ability to assign a message to be reacted to that grants and revokes roles from users
-- Peridically scans the message for any changes in users to fix their roles
-	- Helps when the bot is offline to "catch up" with any changes
-
+	- You can add or remove roles at a later time
+	- Customize the emojis each role is bound to
+	- Persists over bot restarts (may get out of sync when the bot is offline)
 ##### 0.7.2 - Command Permissions (1/29/22)
 - Commands are integrated with discord permissions to "grey out" commands when you can't use them
 	- Able to change what permissions are needed to use the command
