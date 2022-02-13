@@ -151,6 +151,8 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 async function reactionRoleHandler(reaction, user, method) {
+	if(user.id == client.user.id) return;
+
 	// Reads from the database
 	const data = JSON.parse(fs.readFileSync('./storage.json'));
 	const reactionMessages = data.reactionMessages;
