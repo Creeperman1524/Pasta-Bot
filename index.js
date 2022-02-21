@@ -30,8 +30,8 @@ for(const folder of commandFolders) {
 }
 
 // Runs when the bot is online
-client.once('ready', () => {
-	updateCommands();
+client.once('ready', async () => {
+	await updateCommands();
 
 	console.log('\nThe bot is active');
 
@@ -40,7 +40,7 @@ client.once('ready', () => {
 });
 
 // Refreshes the commands on startup
-const updateCommands = () => {
+const updateCommands = async () => {
 	const raw = fs.readFileSync('./storage.json');
 	const data = JSON.parse(raw);
 
@@ -48,7 +48,7 @@ const updateCommands = () => {
 
 	// Refreshes commands only if it hasn't within the last 30 minutes
 	if(data.commandUpdate < currentTime) {
-		deployCommands.execute(client);
+		await deployCommands.execute(client);
 		data.commandUpdate = currentTime + (commandRefreshInterval * 60000);
 
 		// Updates time
