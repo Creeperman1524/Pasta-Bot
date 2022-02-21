@@ -32,6 +32,7 @@ module.exports = {
 		}
 
 		// Deletes the cache
+		// TODOD: FIX WITH COMMAND CATEGORIES
 		delete require.cache[require.resolve(`./${command.data.name}.js`)];
 
 		// Trys to re-add the command

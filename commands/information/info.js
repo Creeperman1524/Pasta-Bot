@@ -16,13 +16,13 @@ module.exports = {
 			.setColor(0x0088ff)
 			.addFields({
 				name: 'Version',
-				value: `${version}`,
+				value: `\`${version}\``,
 			}, {
 				name: 'Creator',
-				value: 'Creeperman1524',
+				value: '`Creeperman1524`',
 			}, {
 				name: 'Total Servers',
-				value: `${interaction.client.guilds.cache.size}`,
+				value: `\`${interaction.client.guilds.cache.size}\``,
 			})
 			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)
