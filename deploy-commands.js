@@ -3,6 +3,7 @@ const {	REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
 const { clientId, token } = require('./hidden.json');
+const { logger } = require('./logging.js');
 
 const rest = new REST({ version: '9' }).setToken(token);
 
@@ -22,11 +23,11 @@ module.exports = {
 };
 
 // Refreshes all of the commands
-async function updateCommands(client) {
+async function updateCommands() {
 	const commandData = [];
 	const commandFolders = fs.readdirSync('./commands');
 
-	client.logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) commands...');
+	logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) commands...');
 
 	// Gather commands from folders
 	for(const folder of commandFolders) {
@@ -36,7 +37,7 @@ async function updateCommands(client) {
 			commands.push(command);
 			if(command.data) {
 				commandData.push(command.data.toJSON());
-				client.logger.child({ mode: 'STARTUP' }).debug(`Pushing '${command.data.name}' to command list`);
+				logger.child({ mode: 'STARTUP' }).debug(`Pushing '${command.data.name}' to command list`);
 			}
 		}
 	}
@@ -47,10 +48,10 @@ async function updateCommands(client) {
 			Routes.applicationCommands(clientId),
 			{ body: commandData },
 		);
-		client.logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) commands.');
+		logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) commands.');
 	} catch (error) {
-		client.logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) commands');
-		client.logger.child({ mode: 'STARTUP' }).error(error);
+		logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) commands');
+		logger.child({ mode: 'STARTUP' }).error(error);
 	}
 }
 
@@ -58,12 +59,12 @@ async function updateCommands(client) {
 async function updateCommandPermissions(client) {
 	// Updates permission for each guild
 	try {
-		client.logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) command permissions...');
+		logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) command permissions...');
 
 		for(const id of guildIDs) {
 			const fullPermissions = [];
 			for(const command of await client.application.commands.fetch()) {
-				const permission = generatePermissions(command[1], client.guilds.cache.get(id), client);
+				const permission = generatePermissions(command[1], client.guilds.cache.get(id));
 				if(permission) fullPermissions.push(permission);
 			}
 			await rest.put(
@@ -71,15 +72,15 @@ async function updateCommandPermissions(client) {
 				{ body: fullPermissions },
 			);
 		}
-		client.logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) command permissions.');
+		logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) command permissions.');
 	} catch (error) {
-		client.logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) command permissions');
-		client.logger.child({ mode: 'STARTUP' }).error(error);
+		logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) command permissions');
+		logger.child({ mode: 'STARTUP' }).error(error);
 	}
 }
 
 // Valid permissions: OWNER, ADMIN, MESSAGES
-function generatePermissions(discordCommand, guild, client) {
+function generatePermissions(discordCommand, guild) {
 	// Pairs API command and file command
 	let command;
 	for(const cmd of commands) {
@@ -102,7 +103,7 @@ function generatePermissions(discordCommand, guild, client) {
 			type: 2,
 			permission: true,
 		});
-		client.logger.child({ mode: 'STARTUP' }).debug(`Added OWNER permission to '${command.data.name}' in '${guild.name}' (${guild.id})'`);
+		logger.child({ mode: 'STARTUP' }).debug(`Added OWNER permission to '${command.data.name}' in '${guild.name}' (${guild.id})'`);
 	}
 
 	// Administrator permission
@@ -115,7 +116,7 @@ function generatePermissions(discordCommand, guild, client) {
 					type: 1,
 					permission: true,
 				});
-				client.logger.child({ mode: 'STARTUP' }).debug(`Added ADMIN permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
+				logger.child({ mode: 'STARTUP' }).debug(`Added ADMIN permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
 				count++;
 			}
 		});
@@ -130,7 +131,7 @@ function generatePermissions(discordCommand, guild, client) {
 					type: 1,
 					permission: true,
 				});
-				client.logger.child({ mode: 'STARTUP' }).debug(`Added MESSAGES permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
+				logger.child({ mode: 'STARTUP' }).debug(`Added MESSAGES permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
 				count++;
 			}
 		});

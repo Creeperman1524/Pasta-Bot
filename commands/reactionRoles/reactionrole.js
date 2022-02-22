@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { version } = require('../../config.json');
+const { logger } = require('../../logging.js');
 const fs = require('fs');
 
 module.exports = {
@@ -149,7 +150,7 @@ async function deleteReactionMessage(interaction) {
 
 	if(message) {
 		message.delete()
-			.catch(interaction.client.logger.child({
+			.catch(logger.child({
 				mode: 'REACTION ROLE',
 				metaData: {
 					user: interaction.user.username,

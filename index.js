@@ -2,7 +2,7 @@
 const fs = require('fs');
 const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
 const mcping = require('mcping-js');
-const { createLogger, transports, format } = require('winston');
+const { logger } = require('./logging.js');
 
 // Config
 const { statusInterval, commandRefreshInterval, mcServerPort, version } = require('./config.json');
@@ -17,29 +17,6 @@ const client = new Client({
 	partials: ['MESSAGE', 'USER', 'REACTION'],
 });
 
-// Logging
-const logLevels = {
-	fatal: 0,
-	error: 1,
-	warn: 2,
-	info: 3,
-	debug: 4,
-};
-
-const consoleFormat = format.printf(({ level, message, mode }) => {
-	return `[${mode}] ${level}: ${message}`;
-});
-
-client.logger = createLogger({
-	levels: logLevels,
-	defaultMeta: { loggingVersion: 1 },
-	format: format.combine(format.timestamp(), format.json()),
-	transports: [
-		new transports.Console({ level: 'debug', format: format.combine(format.colorize(), consoleFormat) }),
-		new transports.File({ level: 'info', filename: './logs/log.log', timestamp: true }),
-		new transports.File({ level: 'error', filename: './logs/error.log', timestamp: true }),
-	],
-});
 
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./commands');
@@ -55,11 +32,11 @@ for(const folder of commandFolders) {
 
 // Runs when the bot is online
 client.once('ready', async () => {
-	client.logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
+	logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
 
 	await updateCommands();
 
-	client.logger.child({ mode: 'STARTUP' }).info('Bot is active');
+	logger.child({ mode: 'STARTUP' }).info('Bot is active');
 
 	displayServer();
 	setInterval(displayServer, statusInterval * 1000);
@@ -80,7 +57,7 @@ const updateCommands = async () => {
 		// Updates time
 		fs.writeFileSync('./storage.json', JSON.stringify(data));
 	} else {
-		client.logger.child({ mode: 'STARTUP' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
+		logger.child({ mode: 'STARTUP' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
 	}
 };
 
@@ -137,7 +114,7 @@ const displayServer = () => {
 			}],
 			status: status,
 		});
-		client.logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${status}' and activity '${activity}'`);
+		logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${status}' and activity '${activity}'`);
 	});
 };
 
@@ -151,7 +128,7 @@ client.on('interactionCreate', async interaction => {
 
 	// Tries to run the command
 	try {
-		client.logger.child({
+		logger.child({
 			mode: 'COMMAND',
 			metaData: {
 				user: interaction.user.username,
@@ -163,7 +140,7 @@ client.on('interactionCreate', async interaction => {
 
 		await command.execute(interaction);
 	} catch (error) {
-		client.logger.child({
+		logger.child({
 			mode: 'COMMAND',
 			metaData: {
 				user: interaction.user.username,
@@ -229,7 +206,7 @@ async function reactionRoleHandler(reaction, user, method) {
 			case 'add':
 				// NOTE: Does not work when the user has not been cached (no messages sent after restart)
 				await member.roles.add(role);
-				client.logger.child({
+				logger.child({
 					mode: 'REACTION ROLES',
 					metaData: {
 						user: user.username, userid: user.id,
@@ -240,7 +217,7 @@ async function reactionRoleHandler(reaction, user, method) {
 				break;
 			case 'remove':
 				await member.roles.remove(role);
-				client.logger.child({
+				logger.child({
 					mode: 'REACTION ROLES',
 					metaData: {
 						user: user.username, userid: user.id,
@@ -252,7 +229,7 @@ async function reactionRoleHandler(reaction, user, method) {
 			}
 
 		} catch (error) {
-			client.logger.child({
+			logger.child({
 				mode: 'REACTION ROLES',
 				metaData: {
 					user: user.username, userid: user.id,
@@ -263,7 +240,7 @@ async function reactionRoleHandler(reaction, user, method) {
 		}
 	} else {
 		// Role doesn't exist
-		client.logger.child({
+		logger.child({
 			mode: 'REACTION ROLES',
 			metaData: {
 				user: user.username, userid: user.id,

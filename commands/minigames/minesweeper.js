@@ -1,6 +1,7 @@
 const { MessageEmbed, Collection } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { version } = require('../../config.json');
+const { logger } = require('../../logging.js');
 
 // TODO: first click guaranteed to be safe, how to play the game menu
 
@@ -68,7 +69,7 @@ function startGame(game) {
 		try {
 			for (const emoji of emojiList) await embed.react(emoji);
 		} catch (error) {
-			game.interaction.client.logger.child({
+			logger.child({
 				mode: 'MINESWEEPER',
 				metaData: {
 					user: game.interaction.user.username,

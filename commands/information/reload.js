@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { version } = require('../../config.json');
+const { logger } = require('../../logging.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -39,7 +40,7 @@ module.exports = {
 			const newCommand = require(`./${command.data.name}.js`);
 			interaction.client.commands.set(newCommand.name, newCommand);
 		} catch (error) {
-			interaction.client.logger.child({
+			logger.child({
 				mode: 'RELOAD',
 				metaData: {
 					user: interaction.user.username,
