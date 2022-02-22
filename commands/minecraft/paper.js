@@ -43,7 +43,7 @@ module.exports = {
 			.setColor(0x03fcfc)
 			.addFields(fields)
 			.setDescription('Latest 3 fixes for the paper server')
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		await interaction.editReply({
 			embeds: [updateEmbed],

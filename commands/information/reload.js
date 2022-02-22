@@ -25,7 +25,7 @@ module.exports = {
 				.setTitle('Incorrect Usage')
 				.setColor(0xfdff63)
 				.setDescription(`There is no command with the name \`${commandName}\``)
-				.setFooter(`Version ${version}`);
+				.setFooter({ text: `Version ${version}` });
 			return interaction.reply({
 				embeds: [noCommandEmbed],
 			});
@@ -44,7 +44,7 @@ module.exports = {
 				.setTitle('Error')
 				.setColor(0xff1414)
 				.setDescription(`There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``)
-				.setFooter(`Version ${version}`);
+				.setFooter({ text: `Version ${version}` });
 			return interaction.reply({
 				embeds: [errorEmbed],
 			});
@@ -54,7 +54,7 @@ module.exports = {
 			.setTitle('Success')
 			.setColor(0x009f00)
 			.setDescription(`Command \`/${command.data.name}\` was reloaded!`)
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		interaction.reply({
 			embeds: [successEmbed],

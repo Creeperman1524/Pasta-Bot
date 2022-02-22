@@ -57,7 +57,7 @@ function startGame(game) {
 			inline: true,
 		})
 		.setDescription(text)
-		.setFooter(`Version ${version} | Ends at`)
+		.setFooter({ text: `Version ${version} | Ends at` })
 		.setTimestamp(new Date().getTime() + game.timeout);
 
 	// Adds the reactions after sending the board

@@ -108,7 +108,7 @@ async function createReactionMessage(interaction) {
 			.setTitle(interaction.options.getString('title'))
 			.setDescription('React to this message to change your roles!')
 			.setColor(0x3274ba)
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		await channel.send({ embeds: [baseEmbed] }).then((msg) => {
 			reactionGuild[msg.id] = [];
@@ -121,7 +121,7 @@ async function createReactionMessage(interaction) {
 					name: 'Jump to that message',
 					value: `[Click here](${msg.url})`,
 				})
-				.setFooter(`Version ${version}`);
+				.setFooter({ text: `Version ${version}` });
 
 			interaction.editReply({
 				embeds: [replyEmbed],
@@ -156,7 +156,7 @@ async function deleteReactionMessage(interaction) {
 			.setTitle('Success!')
 			.setColor(0x009f00)
 			.setDescription('Your reaction message was safely removed')
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		interaction.editReply({ embeds: [replyEmbed] });
 
@@ -233,7 +233,7 @@ async function addRoletoMessage(interaction) {
 		.setTitle('Success!')
 		.setColor(0x009f00)
 		.setDescription(`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`)
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [replyEmbed] });
 
@@ -312,7 +312,7 @@ async function removeRolefromMessage(interaction) {
 		.setTitle('Success!')
 		.setColor(0x009f00)
 		.setDescription(`<@&${role.id}> was safely removed from the role reaction message!`)
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [replyEmbed] });
 

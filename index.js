@@ -132,7 +132,7 @@ client.on('interactionCreate', async interaction => {
 			.setTitle('Error')
 			.setColor(0xff1414)
 			.setDescription('There was an error trying to execute that command!')
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		return interaction.reply({
 			embeds : [errorEmbed],

@@ -164,7 +164,7 @@ function backupsCommand(interaction) {
 			value: `${line4}`,
 			inline: true,
 		})
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [backupsEmbed] });
 }
@@ -209,7 +209,7 @@ function pingServer(server, interaction, ip) {
 				.setTitle('Status for ' + ip + ':')
 				.setColor(0x854f2b)
 				.setDescription('*Server is offline*')
-				.setFooter(`Version ${version}`);
+				.setFooter({ text: `Version ${version}` });
 			interaction.editReply({
 				embeds: [offlineEmbed],
 			});
@@ -248,7 +248,7 @@ function pingServer(server, interaction, ip) {
 					.setDescription(serverStatus)
 					.setThumbnail('attachment://icon.png')
 					.addField('Server version:', res.version.name)
-					.setFooter(`Version ${version}`);
+					.setFooter({ text: `Version ${version}` });
 				interaction.editReply({
 					embeds: [serverEmbedicon],
 					files: [{
@@ -263,7 +263,7 @@ function pingServer(server, interaction, ip) {
 					.setColor(0x854f2b)
 					.setDescription(serverStatus)
 					.addField('Server version:', res.version.name)
-					.setFooter(`Version ${version}`);
+					.setFooter({ text: `Version ${version}` });
 				interaction.editReply({
 					embeds: [serverEmbedNoIcon],
 				});
@@ -294,7 +294,7 @@ function ipCommand(interaction) {
 				inline: true,
 			},
 		)
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [ipEmbed] });
 }
@@ -305,7 +305,7 @@ function mapCommand(interaction) {
 		.setTitle('Server Map')
 		.setColor(0x9000ff)
 		.setDescription(`Server map: [http://${mcServerIP}:8123](http://${mcServerIP}:8123)`)
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [mapEmbed] });
 }
@@ -316,7 +316,7 @@ function seedCommand(interaction) {
 		.setTitle('Server Seed')
 		.setColor(0xff006a)
 		.setDescription('Seed: `-2856535938574691800`')
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [seedEmbed] });
 }
@@ -336,7 +336,7 @@ async function versionCommand(interaction) {
 		.setTitle('Paper Version')
 		.setColor(0x5fc2d4)
 		.setDescription(`The server is currently running: **Paper version git-Paper-${data.builds[data.builds.length - 1]} (MC: ${data.version})**`)
-		.setFooter(`Version ${version}`);
+		.setFooter({ text: `Version ${version}` });
 
 	interaction.editReply({ embeds: [versionEmbed] });
 }
