@@ -2,6 +2,7 @@
 const fs = require('fs');
 const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
 const mcping = require('mcping-js');
+const { createLogger, transports, format } = require('winston');
 
 // Config
 const { statusInterval, commandRefreshInterval, mcServerPort, version } = require('./config.json');
@@ -16,6 +17,28 @@ const client = new Client({
 	partials: ['MESSAGE', 'USER', 'REACTION'],
 });
 
+// Logging
+const logLevels = {
+	fatal: 0,
+	error: 1,
+	warn: 2,
+	info: 3,
+	debug: 4,
+};
+
+const consoleFormat = format.printf(({ level, message, mode }) => {
+	return `[${mode}] ${level}: ${message}`;
+});
+
+client.logger = createLogger({
+	levels: logLevels,
+	format: format.combine(format.timestamp(), format.json()),
+	transports: [
+		new transports.Console({ level: 'debug', format: format.combine(format.colorize(), consoleFormat) }),
+		new transports.File({ level: 'info', filename: './logs/log.log', timestamp: true }),
+		new transports.File({ level: 'error', filename: './logs/error.log', timestamp: true }),
+	],
+});
 
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./commands');
