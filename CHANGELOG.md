@@ -4,6 +4,11 @@
 - Multiple people can add to the queue
 	- Possible additional logging for when songs fail
 
+#### 0.8.1 - Internal bot logging
+- The bot can output log information to a file with timestamps to further debug
+	- Helpful for figuring out when things go wrong
+	- Logs error to a separate file
+	- Track crude statistics with these metrics
 
 ### 0.8.0- *Reaction Roles* (2/13/22)
 - Adds ability to assign a message to be reacted to that grants and revokes roles from users

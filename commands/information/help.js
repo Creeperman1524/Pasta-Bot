@@ -31,7 +31,7 @@ module.exports = {
 			.setColor(0xd40d12)
 			.setDescription('A list of all the current commands')
 			.addFields(fields)
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		return interaction.reply({
 			embeds: [helpEmbed],

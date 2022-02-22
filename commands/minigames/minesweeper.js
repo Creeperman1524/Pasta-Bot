@@ -1,6 +1,7 @@
 const { MessageEmbed, Collection } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { version } = require('../../config.json');
+const { logger } = require('../../logging.js');
 
 // TODO: first click guaranteed to be safe, how to play the game menu
 
@@ -57,7 +58,7 @@ function startGame(game) {
 			inline: true,
 		})
 		.setDescription(text)
-		.setFooter(`Version ${version} | Ends at`)
+		.setFooter({ text: `Version ${version} | Ends at` })
 		.setTimestamp(new Date().getTime() + game.timeout);
 
 	// Adds the reactions after sending the board
@@ -68,7 +69,15 @@ function startGame(game) {
 		try {
 			for (const emoji of emojiList) await embed.react(emoji);
 		} catch (error) {
-			console.error('One of the emojis failed to react:', error);
+			logger.child({
+				mode: 'MINESWEEPER',
+				metaData: {
+					user: game.interaction.user.username,
+					userid: game.interaction.user.id,
+					guild: game.interaction.guild.name,
+					guildid: game.interaction.guild.id,
+				},
+			}).error(`One of the emojis failed to react: ${error}`);
 		}
 
 		// Waits for user input

@@ -22,7 +22,7 @@ module.exports = {
 				name: 'Websocket Heartbeat',
 				value: Math.round(interaction.client.ws.ping) + ' ms',
 			})
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		await interaction.editReply({
 			embeds: [pingEmbed],

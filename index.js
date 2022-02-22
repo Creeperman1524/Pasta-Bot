@@ -2,6 +2,7 @@
 const fs = require('fs');
 const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
 const mcping = require('mcping-js');
+const { logger } = require('./logging.js');
 
 // Config
 const { statusInterval, commandRefreshInterval, mcServerPort, version } = require('./config.json');
@@ -31,9 +32,11 @@ for(const folder of commandFolders) {
 
 // Runs when the bot is online
 client.once('ready', async () => {
+	logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
+
 	await updateCommands();
 
-	console.log('\nThe bot is active');
+	logger.child({ mode: 'STARTUP' }).info('Bot is active');
 
 	displayServer();
 	setInterval(displayServer, statusInterval * 1000);
@@ -54,7 +57,7 @@ const updateCommands = async () => {
 		// Updates time
 		fs.writeFileSync('./storage.json', JSON.stringify(data));
 	} else {
-		console.log('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
+		logger.child({ mode: 'STARTUP' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
 	}
 };
 
@@ -111,6 +114,7 @@ const displayServer = () => {
 			}],
 			status: status,
 		});
+		logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${status}' and activity '${activity}'`);
 	});
 };
 
@@ -124,15 +128,33 @@ client.on('interactionCreate', async interaction => {
 
 	// Tries to run the command
 	try {
+		logger.child({
+			mode: 'COMMAND',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+			},
+		}).info(`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`);
+
 		await command.execute(interaction);
 	} catch (error) {
-		console.error(error);
+		logger.child({
+			mode: 'COMMAND',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+			},
+		}).error(error);
 
 		const errorEmbed = new MessageEmbed()
 			.setTitle('Error')
 			.setColor(0xff1414)
 			.setDescription('There was an error trying to execute that command!')
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		return interaction.reply({
 			embeds : [errorEmbed],
@@ -184,18 +206,47 @@ async function reactionRoleHandler(reaction, user, method) {
 			case 'add':
 				// NOTE: Does not work when the user has not been cached (no messages sent after restart)
 				await member.roles.add(role);
+				logger.child({
+					mode: 'REACTION ROLES',
+					metaData: {
+						user: user.username, userid: user.id,
+						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+						role: role.name, roleid: role.id,
+					},
+				}).info(`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
 				break;
 			case 'remove':
 				await member.roles.remove(role);
+				logger.child({
+					mode: 'REACTION ROLES',
+					metaData: {
+						user: user.username, userid: user.id,
+						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+						role: role.name, roleid: role.id,
+					},
+				}).info(`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
 				break;
 			}
 
 		} catch (error) {
-			console.log(error);
+			logger.child({
+				mode: 'REACTION ROLES',
+				metaData: {
+					user: user.username, userid: user.id,
+					guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+					role: role.name, roleid: role.id,
+				},
+			}).error(error);
 		}
 	} else {
 		// Role doesn't exist
-		console.error(`Role for reaction ${reaction.emoji.name} does not exist!`);
+		logger.child({
+			mode: 'REACTION ROLES',
+			metaData: {
+				user: user.username, userid: user.id,
+				guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+			},
+		}).warn(`Role for reaction ${reaction.emoji.name} does not exist!`);
 	}
 }
 

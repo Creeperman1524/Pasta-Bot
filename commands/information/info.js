@@ -26,7 +26,7 @@ module.exports = {
 			})
 			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)
-			.setFooter(`Version ${version}`);
+			.setFooter({ text: `Version ${version}` });
 
 		interaction.reply({
 			embeds: [infoEmbed],
