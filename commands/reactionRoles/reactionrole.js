@@ -149,7 +149,15 @@ async function deleteReactionMessage(interaction) {
 
 	if(message) {
 		message.delete()
-			.catch(console.error);
+			.catch(interaction.client.logger.child({
+				mode: 'REACTION ROLE',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+				},
+			}).error);
 		delete reactionGuild[message.id];
 
 		const replyEmbed = new MessageEmbed()

@@ -32,6 +32,7 @@ const consoleFormat = format.printf(({ level, message, mode }) => {
 
 client.logger = createLogger({
 	levels: logLevels,
+	defaultMeta: { loggingVersion: 1 },
 	format: format.combine(format.timestamp(), format.json()),
 	transports: [
 		new transports.Console({ level: 'debug', format: format.combine(format.colorize(), consoleFormat) }),
@@ -136,6 +137,7 @@ const displayServer = () => {
 			}],
 			status: status,
 		});
+		client.logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${status}' and activity '${activity}'`);
 	});
 };
 
@@ -149,10 +151,27 @@ client.on('interactionCreate', async interaction => {
 
 	// Tries to run the command
 	try {
-		client.logger.child({ mode: 'COMMAND' }).info(`Command '${interaction.commandName}' executed by ${interaction.user.username} (${interaction.id}) in guild '${interaction.guild.name}' (${interaction.guildId})`);
+		client.logger.child({
+			mode: 'COMMAND',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+			},
+		}).info(`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`);
+
 		await command.execute(interaction);
 	} catch (error) {
-		client.logger.child({ mode: 'COMMAND' }).error(error);
+		client.logger.child({
+			mode: 'COMMAND',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+			},
+		}).error(error);
 
 		const errorEmbed = new MessageEmbed()
 			.setTitle('Error')
@@ -210,18 +229,47 @@ async function reactionRoleHandler(reaction, user, method) {
 			case 'add':
 				// NOTE: Does not work when the user has not been cached (no messages sent after restart)
 				await member.roles.add(role);
+				client.logger.child({
+					mode: 'REACTION ROLES',
+					metaData: {
+						user: user.username, userid: user.id,
+						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+						role: role.name, roleid: role.id,
+					},
+				}).info(`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
 				break;
 			case 'remove':
 				await member.roles.remove(role);
+				client.logger.child({
+					mode: 'REACTION ROLES',
+					metaData: {
+						user: user.username, userid: user.id,
+						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+						role: role.name, roleid: role.id,
+					},
+				}).info(`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
 				break;
 			}
 
 		} catch (error) {
-			console.log(error);
+			client.logger.child({
+				mode: 'REACTION ROLES',
+				metaData: {
+					user: user.username, userid: user.id,
+					guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+					role: role.name, roleid: role.id,
+				},
+			}).error(error);
 		}
 	} else {
 		// Role doesn't exist
-		console.error(`Role for reaction ${reaction.emoji.name} does not exist!`);
+		client.logger.child({
+			mode: 'REACTION ROLES',
+			metaData: {
+				user: user.username, userid: user.id,
+				guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+			},
+		}).warn(`Role for reaction ${reaction.emoji.name} does not exist!`);
 	}
 }
 
