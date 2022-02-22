@@ -54,9 +54,11 @@ for(const folder of commandFolders) {
 
 // Runs when the bot is online
 client.once('ready', async () => {
+	client.logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
+
 	await updateCommands();
 
-	console.log('\nThe bot is active');
+	client.logger.child({ mode: 'STARTUP' }).info('Bot is active');
 
 	displayServer();
 	setInterval(displayServer, statusInterval * 1000);
@@ -77,7 +79,7 @@ const updateCommands = async () => {
 		// Updates time
 		fs.writeFileSync('./storage.json', JSON.stringify(data));
 	} else {
-		console.log('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
+		client.logger.child({ mode: 'STARTUP' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
 	}
 };
 
@@ -147,9 +149,10 @@ client.on('interactionCreate', async interaction => {
 
 	// Tries to run the command
 	try {
+		client.logger.child({ mode: 'COMMAND' }).info(`Command '${interaction.commandName}' executed by ${interaction.user.username} (${interaction.id}) in guild '${interaction.guild.name}' (${interaction.guildId})`);
 		await command.execute(interaction);
 	} catch (error) {
-		console.error(error);
+		client.logger.child({ mode: 'COMMAND' }).error(error);
 
 		const errorEmbed = new MessageEmbed()
 			.setTitle('Error')
