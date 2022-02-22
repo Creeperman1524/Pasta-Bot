@@ -39,7 +39,16 @@ module.exports = {
 			const newCommand = require(`./${command.data.name}.js`);
 			interaction.client.commands.set(newCommand.name, newCommand);
 		} catch (error) {
-			console.log(error);
+			interaction.client.logger.child({
+				mode: 'RELOAD',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+				},
+			}).error(error);
+
 			const errorEmbed = new MessageEmbed()
 				.setTitle('Error')
 				.setColor(0xff1414)

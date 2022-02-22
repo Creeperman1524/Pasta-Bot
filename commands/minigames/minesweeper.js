@@ -68,7 +68,15 @@ function startGame(game) {
 		try {
 			for (const emoji of emojiList) await embed.react(emoji);
 		} catch (error) {
-			console.error('One of the emojis failed to react:', error);
+			game.interaction.client.logger.child({
+				mode: 'MINESWEEPER',
+				metaData: {
+					user: game.interaction.user.username,
+					userid: game.interaction.user.id,
+					guild: game.interaction.guild.name,
+					guildid: game.interaction.guild.id,
+				},
+			}).error(`One of the emojis failed to react: ${error}`);
 		}
 
 		// Waits for user input
