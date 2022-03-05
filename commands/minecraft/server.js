@@ -324,7 +324,7 @@ function seedCommand(interaction) {
 
 let data = null;
 async function getCurrentVersion() {
-	const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.1';
+	const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.2';
 
 	const response = await fetch(url);
 	data = await response.json();
