@@ -27,7 +27,7 @@ async function updateCommands() {
 	const commandData = [];
 	const commandFolders = fs.readdirSync('./commands');
 
-	logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) commands...');
+	logger.child({ mode: 'DEPLOY' }).info('Started refreshing application (/) commands...');
 
 	// Gather commands from folders
 	for(const folder of commandFolders) {
@@ -37,7 +37,7 @@ async function updateCommands() {
 			commands.push(command);
 			if(command.data) {
 				commandData.push(command.data.toJSON());
-				logger.child({ mode: 'STARTUP' }).debug(`Pushing '${command.data.name}' to command list`);
+				logger.child({ mode: 'DEPLOY' }).debug(`Pushing '${command.data.name}' to command list`);
 			}
 		}
 	}
@@ -48,10 +48,10 @@ async function updateCommands() {
 			Routes.applicationCommands(clientId),
 			{ body: commandData },
 		);
-		logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) commands.');
+		logger.child({ mode: 'DEPLOY' }).info('Successfully reloaded application (/) commands.');
 	} catch (error) {
-		logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) commands');
-		logger.child({ mode: 'STARTUP' }).error(error);
+		logger.child({ mode: 'DEPLOY' }).warn('Could not reload application (/) commands');
+		logger.child({ mode: 'DEPLOY' }).error(error);
 	}
 }
 
@@ -59,7 +59,7 @@ async function updateCommands() {
 async function updateCommandPermissions(client) {
 	// Updates permission for each guild
 	try {
-		logger.child({ mode: 'STARTUP' }).info('Started refreshing application (/) command permissions...');
+		logger.child({ mode: 'DEPLOY' }).info('Started refreshing application (/) command permissions...');
 
 		for(const id of guildIDs) {
 			const fullPermissions = [];
@@ -72,10 +72,10 @@ async function updateCommandPermissions(client) {
 				{ body: fullPermissions },
 			);
 		}
-		logger.child({ mode: 'STARTUP' }).info('Successfully reloaded application (/) command permissions.');
+		logger.child({ mode: 'DEPLOY' }).info('Successfully reloaded application (/) command permissions.');
 	} catch (error) {
-		logger.child({ mode: 'STARTUP' }).warn('Could not reload application (/) command permissions');
-		logger.child({ mode: 'STARTUP' }).error(error);
+		logger.child({ mode: 'DEPLOY' }).warn('Could not reload application (/) command permissions');
+		logger.child({ mode: 'DEPLOY' }).error(error);
 	}
 }
 
@@ -103,7 +103,7 @@ function generatePermissions(discordCommand, guild) {
 			type: 2,
 			permission: true,
 		});
-		logger.child({ mode: 'STARTUP' }).debug(`Added OWNER permission to '${command.data.name}' in '${guild.name}' (${guild.id})'`);
+		logger.child({ mode: 'DEPLOY' }).debug(`Added OWNER permission to '${command.data.name}' in '${guild.name}' (${guild.id})'`);
 	}
 
 	// Administrator permission
@@ -116,7 +116,7 @@ function generatePermissions(discordCommand, guild) {
 					type: 1,
 					permission: true,
 				});
-				logger.child({ mode: 'STARTUP' }).debug(`Added ADMIN permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
+				logger.child({ mode: 'DEPLOY' }).debug(`Added ADMIN permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
 				count++;
 			}
 		});
@@ -131,7 +131,7 @@ function generatePermissions(discordCommand, guild) {
 					type: 1,
 					permission: true,
 				});
-				logger.child({ mode: 'STARTUP' }).debug(`Added MESSAGES permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
+				logger.child({ mode: 'DEPLOY' }).debug(`Added MESSAGES permission to '${command.data.name}' with role '${role.name}' (${role.id}) in '${guild.name}' (${guild.id})`);
 				count++;
 			}
 		});

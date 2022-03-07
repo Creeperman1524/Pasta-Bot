@@ -4,7 +4,13 @@
 - Multiple people can add to the queue
 	- Possible additional logging for when songs fail
 
-#### 0.8.1 - Internal bot logging
+#### 0.8.2 - Bot task system (3/6/22)
+- Different tasks are now separated into files for better organization
+	- Updating the bot status
+	- Updating commands at startup
+
+
+#### 0.8.1 - Internal bot logging (2/22/22)
 - The bot can output log information to a file with timestamps to further debug
 	- Helpful for figuring out when things go wrong
 	- Logs error to a separate file
