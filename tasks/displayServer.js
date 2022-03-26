@@ -28,7 +28,7 @@ module.exports = {
 					status: 'dnd',
 				});
 				logger.child({ mode: 'STATUS' }).debug('Status has been updated with status \'dnd\' and activity \'an offline server :(\'');
-				console.log(err);
+				// console.log(err);
 				return;
 			}
 
