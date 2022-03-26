@@ -1,0 +1,42 @@
+# Things to do
+- [X] Task system
+	- [X] Deploy commands (start up)
+	- [X] Update status (every 20 seconds)
+	- [ ] Check for bot updates (every hour?)
+		- Would DM with a button to restart the bot (?)
+- [ ] Environment variables for better security (instead of hidden file)
+	- [ ] Bot token
+	- [ ] Server IP
+	- [ ] Backup directly
+	- [ ] Dev environment + versions
+- [ ] Database
+	- [ ] Connection task
+	- [ ] Store storage.json information
+	- [ ] Store statistics per user
+		- Total games
+		- Fastest games
+		- W/L count and ratio
+		- High scores
+		- Leaderboards (?)
+- [ ] Better info command
+	- [ ] Better description of what the bot is
+	- [ ] Current uptime
+	- [X] Add links to the github with buttons
+- [ ] Standarized embeds
+	- [ ] Module to create embeds from
+	- [ ] Color sheet for easy color changes (remove colors.txt)
+	- [ ] Dev versioning
+- [ ] Updated help command
+	- Add context menu to select between the different categories
+- [ ] Fix reload command (command categories)
+
+- [ ] Minesweeper update
+	- [ ] Fix first click bug
+		- Have top right square always clicked? setting for that?
+		- Have top right square always safe but not clicked?
+	- [ ] Difficulty settings (?) Custom board size (?)
+	- [ ] How to play menu
+	- [ ] Leaderboards (?) (fastest times)
+- [ ] Music commands
+- [ ] Tic tac toe
+- [ ] Hangman
