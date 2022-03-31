@@ -18,9 +18,9 @@
 		- W/L count and ratio
 		- High scores
 		- Leaderboards (?)
-- [ ] Better info command
-	- [ ] Better description of what the bot is
-	- [ ] Current uptime
+- [X] Better info command
+	- [X] Better description of what the bot is
+	- [X] Current uptime
 	- [X] Add links to the github with buttons
 - [ ] Standarized embeds
 	- [ ] Module to create embeds from
@@ -29,8 +29,10 @@
 - [ ] Updated help command
 	- Add context menu to select between the different categories
 - [ ] Fix reload command (command categories)
+	- [ ] Reload tasks? 
 
 - [ ] Minesweeper update
+	- [ ] Convert emojis to buttons
 	- [ ] Fix first click bug
 		- Have top right square always clicked? setting for that?
 		- Have top right square always safe but not clicked?

@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { version } = require('../../config.json');
 
@@ -10,26 +10,44 @@ module.exports = {
 		.setDescription('Displays some info about the bot\'s current stats'),
 
 	async execute(interaction) {
+		const row = new MessageActionRow()
+			.addComponents(
+				new MessageButton()
+					.setLabel('Github')
+					.setURL('https://github.com/Creeperman1524/Pasta-Bot')
+					.setStyle('LINK'),
+			);
+
+		// Uptime values
+		const currentDate = new Date();
+		const elapsed = (currentDate - buildDate) / 1000;
+		const seconds = Math.floor(elapsed % 60);
+		const minutes = Math.floor(elapsed / 60 % 60);
+		const hours = Math.floor(elapsed / 60 / 60);
+
 		const infoEmbed = new MessageEmbed()
 			.setTitle('Information')
-			.setURL('https://github.com/Creeperman1524/Pasta-Bot')
 			.setColor(0x0088ff)
+			.setDescription('General information for the bot')
 			.addFields({
-				name: 'Version',
-				value: `\`${version}\``,
-			}, {
 				name: 'Creator',
-				value: '`Creeperman1524`',
+				value: '`Creeperman1524#3279`',
+				inline: true,
 			}, {
 				name: 'Total Servers',
 				value: `\`${interaction.client.guilds.cache.size}\``,
+				inline: true.valueOf,
+			}, {
+				name: 'Uptime',
+				value: `\`${hours}h ${minutes}m ${seconds}s\``,
+				inline: true,
 			})
-			.setDescription('All the information you need for this bot')
 			.setTimestamp(buildDate)
 			.setFooter({ text: `Version ${version}` });
 
 		interaction.reply({
 			embeds: [infoEmbed],
+			components: [row],
 		});
 	},
 };
