@@ -1,6 +1,5 @@
-const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,17 +11,16 @@ module.exports = {
 		// "so and so is thinking"
 		await interaction.deferReply();
 
-		const pingEmbed = new MessageEmbed()
+		const pingEmbed = newEmbed()
 			.setTitle('Ping')
-			.setColor(0xff00ff)
+			.setColor(colors.pingCommand)
 			.addFields({
 				name: 'Roundtrip Latency',
 				value: Date.now() - interaction.createdTimestamp + ' ms',
 			}, {
 				name: 'Websocket Heartbeat',
 				value: Math.round(interaction.client.ws.ping) + ' ms',
-			})
-			.setFooter({ text: `Version ${version}` });
+			});
 
 		await interaction.editReply({
 			embeds: [pingEmbed],

@@ -1,7 +1,6 @@
-const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fetch = require('node-fetch');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -19,7 +18,7 @@ module.exports = {
 		const data = await response.json();
 
 		const fields = [];
-		const updateEmbed = new MessageEmbed();
+		const updateEmbed = newEmbed();
 
 		// Retrieves the 3 latest updates
 		for (let i = 0; i < 3; i++) { // TODO: ERRORS WHEN THERE AREN'T 3 TOTAL BUILDS
@@ -40,10 +39,9 @@ module.exports = {
 
 		updateEmbed.setTitle('Recent 1.18.2 Paper Updates')
 			.setURL('https://papermc.io/downloads')
-			.setColor(0x03fcfc)
+			.setColor(colors.paperCommand)
 			.addFields(fields)
-			.setDescription('Latest 3 fixes for the paper server')
-			.setFooter({ text: `Version ${version}` });
+			.setDescription('Latest 3 fixes for the paper server');
 
 		await interaction.editReply({
 			embeds: [updateEmbed],

@@ -1,7 +1,5 @@
-/* eslint-disable no-undef */
-const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -16,7 +14,7 @@ module.exports = {
 		const names = commands.map(command => command.data.name);
 		const descriptions = commands.map(commandDesc => commandDesc.data.description);
 
-		for (i = 0; i < names.length; i++) {
+		for (let i = 0; i < names.length; i++) {
 			fields.push({
 				name: `/${names[i]}`,
 				value: `\`${descriptions[i]}\``,
@@ -25,13 +23,12 @@ module.exports = {
 		}
 
 		// Creates the embed for the help page
-		const helpEmbed = new MessageEmbed()
+		const helpEmbed = newEmbed()
 			.setTitle('Commands')
 			.setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-			.setColor(0xd40d12)
+			.setColor(colors.helpCommand)
 			.setDescription('A list of all the current commands')
-			.addFields(fields)
-			.setFooter({ text: `Version ${version}` });
+			.addFields(fields);
 
 		return interaction.reply({
 			embeds: [helpEmbed],

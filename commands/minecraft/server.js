@@ -1,8 +1,8 @@
 const mcping = require('mcping-js');
-const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { mcServerPort, version } = require('../../config.json');
+const { mcServerPort } = require('../../config.json');
 const { mcServerIP, backupsDirectory } = require('../../hidden.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 
 const fs = require('fs');
 const fetch = require('node-fetch');
@@ -151,9 +151,9 @@ function backupsCommand(interaction) {
 	const line3 = `• ${formatedDate3} (${Math.floor((new Date() - date3) / 3600000)}hrs ago)`;
 	const line4 = `• ${formatedDate4} (${Math.floor((new Date() - date4) / 3600000)}hrs ago)`;
 
-	const backupsEmbed = new MessageEmbed()
+	const backupsEmbed = newEmbed()
 		.setTitle('Backups')
-		.setColor(0xd303fc)
+		.setColor(colors.serverBackupCommand)
 		.setDescription('**Daily** backups are made everyday at 4am, and only the last 3 days are kept.\n**Weekly** backups are made every Sunday at 4am, and are kept permanently')
 		.addFields({
 			name: '__**Daily**__',
@@ -163,8 +163,7 @@ function backupsCommand(interaction) {
 			name: '__**Weekly**__',
 			value: `${line4}`,
 			inline: true,
-		})
-		.setFooter({ text: `Version ${version}` });
+		});
 
 	interaction.editReply({ embeds: [backupsEmbed] });
 }
@@ -205,11 +204,10 @@ function pingServer(server, interaction, ip) {
 		if (err) {
 
 			// Offline
-			const offlineEmbed = new MessageEmbed()
+			const offlineEmbed = newEmbed()
 				.setTitle('Status for ' + ip + ':')
-				.setColor(0x854f2b)
-				.setDescription('*Server is offline*')
-				.setFooter({ text: `Version ${version}` });
+				.setColor(colors.serverPingCommand)
+				.setDescription('*Server is offline*');
 			interaction.editReply({
 				embeds: [offlineEmbed],
 			});
@@ -242,13 +240,12 @@ function pingServer(server, interaction, ip) {
 			if (hasIcon === 'yes') {
 				// Sends an embed with an icon image
 				const buffer = Buffer.from(favicon, 'base64');
-				const serverEmbedicon = new MessageEmbed()
+				const serverEmbedicon = newEmbed()
 					.setTitle('Status for ' + ip + ':')
-					.setColor(0x854f2b)
+					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
 					.setThumbnail('attachment://icon.png')
-					.addField('Server version:', res.version.name)
-					.setFooter({ text: `Version ${version}` });
+					.addField('Server version:', res.version.name);
 				interaction.editReply({
 					embeds: [serverEmbedicon],
 					files: [{
@@ -258,12 +255,11 @@ function pingServer(server, interaction, ip) {
 				});
 			} else if (hasIcon === 'no') {
 				// Sends an embed without the icon
-				const serverEmbedNoIcon = new MessageEmbed()
+				const serverEmbedNoIcon = newEmbed()
 					.setTitle('Status for ' + ip + ':')
-					.setColor(0x854f2b)
+					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
-					.addField('Server version:', res.version.name)
-					.setFooter({ text: `Version ${version}` });
+					.addField('Server version:', res.version.name);
 				interaction.editReply({
 					embeds: [serverEmbedNoIcon],
 				});
@@ -274,9 +270,9 @@ function pingServer(server, interaction, ip) {
 
 // Ip command
 function ipCommand(interaction) {
-	const ipEmbed = new MessageEmbed()
+	const ipEmbed = newEmbed()
 		.setTitle('Connection Info')
-		.setColor(0xf99703)
+		.setColor(colors.serverIPCommand)
 		.addFields(
 			{
 				name: 'IP',
@@ -293,30 +289,27 @@ function ipCommand(interaction) {
 				value: '`Minecraft Java Edition`',
 				inline: true,
 			},
-		)
-		.setFooter({ text: `Version ${version}` });
+		);
 
 	interaction.editReply({ embeds: [ipEmbed] });
 }
 
 // Map command
 function mapCommand(interaction) {
-	const mapEmbed = new MessageEmbed()
+	const mapEmbed = newEmbed()
 		.setTitle('Server Map')
-		.setColor(0x9000ff)
-		.setDescription(`Server map: [http://${mcServerIP}:8123](http://${mcServerIP}:8123)`)
-		.setFooter({ text: `Version ${version}` });
+		.setColor(colors.serverMapCommand)
+		.setDescription(`Server map: [http://${mcServerIP}:8123](http://${mcServerIP}:8123)`);
 
 	interaction.editReply({ embeds: [mapEmbed] });
 }
 
 // Seed command
 function seedCommand(interaction) {
-	const seedEmbed = new MessageEmbed()
+	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
-		.setColor(0xff006a)
-		.setDescription('Seed: `-2856535938574691800`')
-		.setFooter({ text: `Version ${version}` });
+		.setColor(colors.serverSeedCommand)
+		.setDescription('Seed: `-2856535938574691800`');
 
 	interaction.editReply({ embeds: [seedEmbed] });
 }
@@ -332,11 +325,10 @@ async function getCurrentVersion() {
 
 // Version command
 async function versionCommand(interaction) {
-	const versionEmbed = new MessageEmbed()
+	const versionEmbed = newEmbed(0)
 		.setTitle('Paper Version')
-		.setColor(0x5fc2d4)
-		.setDescription(`The server is currently running: **Paper version git-Paper-${data.builds[data.builds.length - 1]} (MC: ${data.version})**`)
-		.setFooter({ text: `Version ${version}` });
+		.setColor(colors.serverPaperCommand)
+		.setDescription(`The server is currently running: **Paper version git-Paper-${data.builds[data.builds.length - 1]} (MC: ${data.version})**`);
 
 	interaction.editReply({ embeds: [versionEmbed] });
 }

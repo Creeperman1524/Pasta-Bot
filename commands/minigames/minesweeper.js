@@ -1,6 +1,6 @@
 const { MessageEmbed, Collection } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
 // TODO: first click guaranteed to be safe, how to play the game menu
@@ -45,9 +45,9 @@ function startGame(game) {
 	const text = generateText(game);
 
 	// Creates the board
-	const minesweeperEmbed = new MessageEmbed()
+	const minesweeperEmbed = newEmbed()
 		.setTitle('Minesweeper')
-		.setColor(0x232323)
+		.setColor(colors.minesweeperCommand)
 		.addFields({
 			name: 'Bombs Left',
 			value: `${numOfMines}`,
@@ -58,7 +58,7 @@ function startGame(game) {
 			inline: true,
 		})
 		.setDescription(text)
-		.setFooter({ text: `Version ${version} | Ends at` })
+		.setFooter({ text: `${newEmbed().footer.text} | Ends at` })
 		.setTimestamp(new Date().getTime() + game.timeout);
 
 	// Adds the reactions after sending the board
@@ -145,8 +145,8 @@ function gameLoop(game, move) {
 	if (game.tilesLeft == numOfMines) {
 		// Win the game
 		const lastEmbed = game.embed.embeds[0];
-		const newEmbed = new MessageEmbed(lastEmbed).setDescription(text);
-		newEmbed.fields = {
+		const embed = new MessageEmbed(lastEmbed).setDescription(text);
+		embed.fields = {
 			name: 'You Win!',
 			value: 'Thanks for playing! :grin:',
 			inline: false,
@@ -154,7 +154,7 @@ function gameLoop(game, move) {
 
 		game.player.won = true;
 
-		game.interaction.editReply({ embeds: [newEmbed] });
+		game.interaction.editReply({ embeds: [embed] });
 		game.embed.reactions.removeAll();
 		games.delete(game.interaction.id);
 
@@ -165,14 +165,14 @@ function gameLoop(game, move) {
 	} else {
 		// Updates the game's stats
 		const lastEmbed = game.embed.embeds[0];
-		const newEmbed = new MessageEmbed(lastEmbed).setDescription(text);
-		newEmbed.fields[0] = {
+		const embed = new MessageEmbed(lastEmbed).setDescription(text);
+		embed.fields[0] = {
 			name: 'Bombs Left',
 			value: `${numOfMines - game.flags}`,
 			inline: true,
 		};
 
-		game.interaction.editReply({ embeds: [newEmbed] });
+		game.interaction.editReply({ embeds: [embed] });
 	}
 	// Waits for the user's input
 }
@@ -198,14 +198,14 @@ function lose(game) {
 	const text = generateText(game);
 
 	const lastEmbed = game.embed.embeds[0];
-	const newEmbed = new MessageEmbed(lastEmbed).setDescription(text);
-	newEmbed.fields = {
+	const embed = new MessageEmbed(lastEmbed).setDescription(text);
+	embed.fields = {
 		name: 'You Lose!',
 		value: 'Try again next time! :pensive:',
 		inline: false,
 	};
 
-	game.interaction.editReply({ embeds: [newEmbed] });
+	game.interaction.editReply({ embeds: [embed] });
 	game.embed.reactions.removeAll();
 	games.delete(game.interaction.id);
 }

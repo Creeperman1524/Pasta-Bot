@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 const fs = require('fs');
 
@@ -105,24 +105,22 @@ async function createReactionMessage(interaction) {
 	// Sends the base message
 	const channel = interaction.options.getChannel('channel');
 	if(channel.type == 'GUILD_TEXT') {
-		const baseEmbed = new MessageEmbed()
+		const baseEmbed = newEmbed()
 			.setTitle(interaction.options.getString('title'))
 			.setDescription('React to this message to change your roles!')
-			.setColor(0x3274ba)
-			.setFooter({ text: `Version ${version}` });
+			.setColor(colors.reactionRolesCommand);
 
 		await channel.send({ embeds: [baseEmbed] }).then((msg) => {
 			reactionGuild[msg.id] = [];
 
-			const replyEmbed = new MessageEmbed()
+			const replyEmbed = newEmbed()
 				.setTitle('Success!')
-				.setColor(0x009f00)
+				.setColor(colors.success)
 				.setDescription('Your reaction message was successfully created :D\nRun `/reactionrole add` to add roles to your message!')
 				.addFields({
 					name: 'Jump to that message',
 					value: `[Click here](${msg.url})`,
-				})
-				.setFooter({ text: `Version ${version}` });
+				});
 
 			interaction.editReply({
 				embeds: [replyEmbed],
@@ -161,11 +159,10 @@ async function deleteReactionMessage(interaction) {
 			}).error);
 		delete reactionGuild[message.id];
 
-		const replyEmbed = new MessageEmbed()
+		const replyEmbed = newEmbed()
 			.setTitle('Success!')
-			.setColor(0x009f00)
-			.setDescription('Your reaction message was safely removed')
-			.setFooter({ text: `Version ${version}` });
+			.setColor(colors.success)
+			.setDescription('Your reaction message was safely removed');
 
 		interaction.editReply({ embeds: [replyEmbed] });
 
@@ -238,11 +235,10 @@ async function addRoletoMessage(interaction) {
 	message.edit({ embeds: [addRoleEmbed] });
 
 	// Responds to the user
-	const replyEmbed = new MessageEmbed()
+	const replyEmbed = newEmbed()
 		.setTitle('Success!')
-		.setColor(0x009f00)
-		.setDescription(`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`)
-		.setFooter({ text: `Version ${version}` });
+		.setColor(colors.success)
+		.setDescription(`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`);
 
 	interaction.editReply({ embeds: [replyEmbed] });
 
@@ -317,11 +313,10 @@ async function removeRolefromMessage(interaction) {
 	await message.reactions.cache.get(emoji).remove();
 
 	// Responds to the user
-	const replyEmbed = new MessageEmbed()
+	const replyEmbed = newEmbed()
 		.setTitle('Success!')
-		.setColor(0x009f00)
-		.setDescription(`<@&${role.id}> was safely removed from the role reaction message!`)
-		.setFooter({ text: `Version ${version}` });
+		.setColor(colors.success)
+		.setDescription(`<@&${role.id}> was safely removed from the role reaction message!`);
 
 	interaction.editReply({ embeds: [replyEmbed] });
 

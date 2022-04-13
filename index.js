@@ -1,11 +1,11 @@
 // Packages
 const fs = require('fs');
-const { Client, Intents, Collection, MessageEmbed } = require('discord.js');
+const { Client, Intents, Collection } = require('discord.js');
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
 
 // Config
-const { version } = require('./config.json');
+const { newEmbed, colors } = require('./util/embeds.js');
 const { token } = require('./hidden.json');
 
 // Creates the bot client
@@ -68,11 +68,10 @@ client.on('interactionCreate', async interaction => {
 			},
 		}).error(error);
 
-		const errorEmbed = new MessageEmbed()
+		const errorEmbed = newEmbed()
 			.setTitle('Error')
-			.setColor(0xff1414)
-			.setDescription('There was an error trying to execute that command!')
-			.setFooter({ text: `Version ${version}` });
+			.setColor(colors.error)
+			.setDescription('There was an error trying to execute that command!');
 
 		return interaction.reply({
 			embeds : [errorEmbed],

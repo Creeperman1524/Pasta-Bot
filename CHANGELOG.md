@@ -1,8 +1,9 @@
 ## :scroll: Changelog
-### (**WIP**) 0.9.0 - *Music Player*
-- Ability to play single songs, playlists, pause, shuffle, and queue songs
-- Multiple people can add to the queue
-	- Possible additional logging for when songs fail
+
+#### 0.8.4 - Standardized embeds (4/13/22)
+- Created a module for embeds to have the same look and version number
+	- Added a table for color values to quick change the colors of the embeds
+- Updated the reference for all embeds used in the bot
 
 #### 0.8.3 - Updated info command (3/30/22)
 - Updated the `info` command to have more information

@@ -1,6 +1,6 @@
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 
 const buildDate = new Date();
 
@@ -25,9 +25,9 @@ module.exports = {
 		const minutes = Math.floor(elapsed / 60 % 60);
 		const hours = Math.floor(elapsed / 60 / 60);
 
-		const infoEmbed = new MessageEmbed()
+		const infoEmbed = newEmbed()
 			.setTitle('Information')
-			.setColor(0x0088ff)
+			.setColor(colors.infoCommand)
 			.setDescription('General information for the bot')
 			.addFields({
 				name: 'Creator',
@@ -42,8 +42,7 @@ module.exports = {
 				value: `\`${hours}h ${minutes}m ${seconds}s\``,
 				inline: true,
 			})
-			.setTimestamp(buildDate)
-			.setFooter({ text: `Version ${version}` });
+			.setTimestamp(buildDate);
 
 		interaction.reply({
 			embeds: [infoEmbed],

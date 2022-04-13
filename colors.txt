@@ -1,5 +1,0 @@
-Colors -
-
-Success: 0x009f00
-Error: 0xff1414
-Incorrect Usage: 0xfdff63

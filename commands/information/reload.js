@@ -1,6 +1,5 @@
-const { MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { version } = require('../../config.json');
+const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
 module.exports = {
@@ -22,11 +21,10 @@ module.exports = {
 
 		// If the command doesn't exist, return
 		if (!command) {
-			const noCommandEmbed = new MessageEmbed()
+			const noCommandEmbed = newEmbed()
 				.setTitle('Incorrect Usage')
-				.setColor(0xfdff63)
-				.setDescription(`There is no command with the name \`${commandName}\``)
-				.setFooter({ text: `Version ${version}` });
+				.setColor(colors.warn)
+				.setDescription(`There is no command with the name \`${commandName}\``);
 			return interaction.reply({
 				embeds: [noCommandEmbed],
 			});
@@ -51,21 +49,19 @@ module.exports = {
 				},
 			}).error(error);
 
-			const errorEmbed = new MessageEmbed()
+			const errorEmbed = newEmbed()
 				.setTitle('Error')
-				.setColor(0xff1414)
-				.setDescription(`There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``)
-				.setFooter({ text: `Version ${version}` });
+				.setColor(colors.error)
+				.setDescription(`There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``);
 			return interaction.reply({
 				embeds: [errorEmbed],
 			});
 		}
 
-		const successEmbed = new MessageEmbed()
+		const successEmbed = newEmbed()
 			.setTitle('Success')
-			.setColor(0x009f00)
-			.setDescription(`Command \`/${command.data.name}\` was reloaded!`)
-			.setFooter({ text: `Version ${version}` });
+			.setColor(colors.success)
+			.setDescription(`Command \`/${command.data.name}\` was reloaded!`);
 
 		interaction.reply({
 			embeds: [successEmbed],
