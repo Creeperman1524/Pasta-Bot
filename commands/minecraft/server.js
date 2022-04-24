@@ -6,6 +6,7 @@ const { newEmbed, colors } = require('../../util/embeds.js');
 
 const fs = require('fs');
 const fetch = require('node-fetch');
+const { logger } = require('../../logging');
 
 // Date when the minecraft server restarts/backs up
 const buildDate = new Date();
@@ -87,69 +88,43 @@ module.exports = {
 function backupsCommand(interaction) {
 
 	// Estimated days of the latest backups
-	let date1 = buildDate;
-	let date2 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 1));
-	let date3 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 2));
-	let date4 = new Date(new Date(buildDate).setDate(buildDate.getDate() - buildDate.getDay()));
+	const date1 = buildDate;
+	const date2 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 1));
+	const date3 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 2));
+	const date4 = new Date(new Date(buildDate).setDate(buildDate.getDate() - buildDate.getDay()));
 
 	// Finds the earliest backup for that day
-	const backup1 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date1)))[0];
-	const backup2 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date2)))[0];
-	const backup3 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date3)))[0];
-	const backup4 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date4)))[0];
+	let backup1, backup2, backup3, backup4;
+	try {
+		backup1 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date1)))[0];
+		backup2 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date2)))[0];
+		backup3 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date3)))[0];
+		backup4 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date4)))[0];
+	} catch (error) {
+		logger.child({
+			mode: 'SERVER BACKUP',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+			},
+		}).error(error);
 
-	// The embed date1
-	let formatedDate1 = '';
-	let formatedDate2 = '';
-	let formatedDate3 = '';
-	let formatedDate4 = '';
+		const errorEmbed = newEmbed()
+			.setTitle('Error!')
+			.setColor(colors.error)
+			.setDescription('There was a problem retrieving backups.');
 
-	// Changes dates to fit the format
-	if(backup1) {
-		// If there is a backup for that date
-		date1 = new Date(backup1.slice(0, 4), backup1.slice(5, 7) - 1, backup1.slice(8, 10), backup1.slice(11, 13), backup1.slice(14, 16));
-		formatedDate1 = `${date1.toDateString().slice(0, -5)} ${date1.toTimeString().slice(0, 5)}`;
-	} else {
-		// If there isn't a backup for that date
-		date1 = new Date();
-		formatedDate1 = 'No Backup!';
+		interaction.editReply({ embeds: [errorEmbed] });
+		return;
 	}
 
-	if(backup2) {
-		// If there is a backup for that date
-		date2 = new Date(backup2.slice(0, 4), backup2.slice(5, 7) - 1, backup2.slice(8, 10), backup2.slice(11, 13), backup2.slice(14, 16));
-		formatedDate2 = `${date2.toDateString().slice(0, -5)} ${date2.toTimeString().slice(0, 5)}`;
-	} else {
-		// If there isn't a backup for that date
-		date2 = new Date();
-		formatedDate2 = 'No Backup!';
-	}
-
-	if(backup3) {
-		// If there is a backup for that date
-		date3 = new Date(backup3.slice(0, 4), backup3.slice(5, 7) - 1, backup3.slice(8, 10), backup3.slice(11, 13), backup3.slice(14, 16));
-		formatedDate3 = `${date3.toDateString().slice(0, -5)} ${date3.toTimeString().slice(0, 5)}`;
-	} else {
-		// If there isn't a backup for that date
-		date3 = new Date();
-		formatedDate3 = 'No Backup!';
-	}
-
-	if(backup4) {
-		// If there is a backup for that date
-		date4 = new Date(backup4.slice(0, 4), backup4.slice(5, 7) - 1, backup4.slice(8, 10), backup4.slice(11, 13), backup4.slice(14, 16));
-		formatedDate4 = `${date4.toDateString().slice(0, -5)} ${date4.toTimeString().slice(0, 5)}`;
-	} else {
-		// If there isn't a backup for that date
-		date4 = new Date();
-		formatedDate4 = 'No Backup!';
-	}
-
-
-	const line1 = `• ${formatedDate1} (${Math.floor((new Date() - date1) / 3600000)}hrs ago)`;
-	const line2 = `• ${formatedDate2} (${Math.floor((new Date() - date2) / 3600000)}hrs ago)`;
-	const line3 = `• ${formatedDate3} (${Math.floor((new Date() - date3) / 3600000)}hrs ago)`;
-	const line4 = `• ${formatedDate4} (${Math.floor((new Date() - date4) / 3600000)}hrs ago)`;
+	// The text for each backup
+	const formatedDate1 = checkBackup(backup1);
+	const formatedDate2 = checkBackup(backup2);
+	const formatedDate3 = checkBackup(backup3);
+	const formatedDate4 = checkBackup(backup4);
 
 	const backupsEmbed = newEmbed()
 		.setTitle('Backups')
@@ -157,11 +132,11 @@ function backupsCommand(interaction) {
 		.setDescription('**Daily** backups are made everyday at 4am, and only the last 3 days are kept.\n**Weekly** backups are made every Sunday at 4am, and are kept permanently')
 		.addFields({
 			name: '__**Daily**__',
-			value: `${line1}\n${line2}\n${line3}`,
+			value: `• ${formatedDate1}\n• ${formatedDate2}\n• ${formatedDate3}`,
 			inline: true,
 		}, {
 			name: '__**Weekly**__',
-			value: `${line4}`,
+			value: `• ${formatedDate4}`,
 			inline: true,
 		});
 
@@ -171,6 +146,20 @@ function backupsCommand(interaction) {
 function convertDate(oldDate) {
 	const newDate = new Date(oldDate);
 	return newDate.toLocaleDateString('lt-LV').replaceAll('-', '.');
+}
+
+function checkBackup(backup) {
+	let formatedDate;
+
+	// Checks if the backup exists
+	if(backup) {
+		const date = new Date(backup.slice(0, 4), backup.slice(5, 7) - 1, backup.slice(8, 10), backup.slice(11, 13), backup.slice(14, 16));
+		formatedDate = `<t:${date.getTime() / 1000}:f> (<t:${date.getTime() / 1000}:R>)`;
+	} else {
+		formatedDate = '*No Backup!*';
+	}
+
+	return formatedDate;
 }
 
 
