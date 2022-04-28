@@ -13,6 +13,7 @@ module.exports = {
 		)
 		.setDefaultPermission(false),
 	permissions: ['OWNER'],
+	category: 'information',
 
 	async execute(interaction) {
 		// Retreives the command

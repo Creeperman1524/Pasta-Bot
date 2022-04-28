@@ -75,6 +75,7 @@ module.exports = {
 
 		.setDefaultPermission(false),
 	permissions: ['MESSAGES'],
+	category: 'admin',
 
 	async execute(interaction) {
 		await interaction.deferReply();

@@ -6,6 +6,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('paper')
 		.setDescription('A command to display the most recent update to the paper server'),
+	category: 'minecraft',
 
 	async execute(interaction) {
 

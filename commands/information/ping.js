@@ -5,6 +5,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('ping')
 		.setDescription('Checks the ping of the bot'),
+	category: 'information',
 
 	async execute(interaction) {
 

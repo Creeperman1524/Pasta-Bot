@@ -1,37 +1,66 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
+const { paginate } = require('../../util/pagination.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('help')
-		.setDescription('Displays a help message'),
+		.setDescription('Displays a help message')
+		.addStringOption(option =>
+			option.setName('command')
+				.setDescription('The command to get more information on')
+				.setRequired(false),
+		),
+	category: 'information',
 
 	async execute(interaction) {
-		const fields = [];
-		const { commands } = interaction.client;
+		await interaction.deferReply();
 
-		// Stores the command name and descriptions into separate arrays
-		const names = commands.map(command => command.data.name);
-		const descriptions = commands.map(commandDesc => commandDesc.data.description);
-
-		for (let i = 0; i < names.length; i++) {
-			fields.push({
-				name: `/${names[i]}`,
-				value: `\`${descriptions[i]}\``,
-				// inline: true,
-			});
+		const command = interaction.options.getString('command');
+		if(!command) {
+			generalHelp(interaction);
+		} else {
+			detailedHelp(interaction, command);
 		}
 
-		// Creates the embed for the help page
-		const helpEmbed = newEmbed()
-			.setTitle('Commands')
-			.setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-			.setColor(colors.helpCommand)
-			.setDescription('A list of all the current commands')
-			.addFields(fields);
-
-		return interaction.reply({
-			embeds: [helpEmbed],
-		});
 	},
 };
+
+async function generalHelp(interaction) {
+	const { commands } = interaction.client;
+
+	// Gathers all of the categories from the commands
+	const rawCategories = commands.map(command => command.category);
+	const categories = rawCategories.filter((item, pos) => {return rawCategories.indexOf(item) == pos;}); // deduplicates the array
+
+	const embeds = [];
+
+	// Loops through all categories to find which command corresponds to which
+	for(const category of categories) {
+		const fields = [];
+		commands.forEach(command => {
+			if(command.category == category) {
+				fields.push({
+					name: `/${command.data.name}`,
+					value: `\`${command.data.description}\``,
+				});
+			}
+		});
+
+		// Creates an embed for each category
+		embeds.push(
+			newEmbed()
+				.setTitle(`Help - __${category}__`)
+				.setColor(colors.helpCommand)
+				.addFields(fields),
+		);
+	}
+
+	paginate(interaction, embeds, 60000);
+
+}
+
+function detailedHelp(interaction, command) {
+	console.log(command);
+}

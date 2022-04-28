@@ -55,6 +55,7 @@ module.exports = {
 			.setName('version')
 			.setDescription('The version of the minecraft server'),
 		),
+	category: 'minecraft',
 
 	// Commands
 	async execute(interaction) {

@@ -8,6 +8,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('info')
 		.setDescription('Displays some info about the bot\'s current stats'),
+	category: 'information',
 
 	async execute(interaction) {
 		const row = new MessageActionRow()
