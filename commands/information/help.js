@@ -16,7 +16,7 @@ module.exports = {
 	async execute(interaction) {
 		await interaction.deferReply();
 
-		const command = interaction.options.getString('command');
+		const command = interaction.options.getString('command').toLowerCase();
 		if(!command) {
 			generalHelp(interaction);
 		} else {
