@@ -9,7 +9,7 @@ function newEmbed() {
 
 // All of the embed colors for the bot
 const colors = {
-	helpCommand: '0xd40d12',
+	helpCommand: '0x1cff2b',
 	infoCommand: '0x0088ff',
 	pingCommand: '0xff00ff',
 	paperCommand: '0x03fcfc',
