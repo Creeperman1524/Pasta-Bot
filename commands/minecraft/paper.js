@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fetch = require('node-fetch');
 const { newEmbed, colors } = require('../../util/embeds.js');
+const { mcServerVersion } = require('../../config.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,7 +13,7 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.2/';
+		const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}/`;
 
 		// Gets the data
 		const response = await fetch(url);
@@ -38,7 +39,7 @@ module.exports = {
 			}
 		}
 
-		updateEmbed.setTitle('Recent 1.18.2 Paper Updates')
+		updateEmbed.setTitle(`Recent ${mcServerVersion} Paper Updates`)
 			.setURL('https://papermc.io/downloads')
 			.setColor(colors.paperCommand)
 			.addFields(fields)

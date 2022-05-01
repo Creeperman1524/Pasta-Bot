@@ -1,6 +1,6 @@
 const mcping = require('mcping-js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { mcServerPort } = require('../../config.json');
+const { mcServerPort, mcServerVersion } = require('../../config.json');
 const { mcServerIP, backupsDirectory } = require('../../hidden.json');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
@@ -307,7 +307,7 @@ function seedCommand(interaction) {
 
 let data = null;
 async function getCurrentVersion() {
-	const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.2';
+	const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}`;
 
 	const response = await fetch(url);
 	data = await response.json();
