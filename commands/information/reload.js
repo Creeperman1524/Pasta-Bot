@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
@@ -16,7 +17,9 @@ module.exports = {
 	category: 'information',
 
 	async execute(interaction) {
-		// Retreives the command
+		await interaction.deferReply({ ephemeral: true });
+
+		// Retrieves the command
 		const commandName = interaction.options.getString('command').toLowerCase();
 		const command = interaction.client.commands.get(commandName);
 
@@ -26,18 +29,18 @@ module.exports = {
 				.setTitle('Incorrect Usage')
 				.setColor(colors.warn)
 				.setDescription(`There is no command with the name \`${commandName}\``);
-			return interaction.reply({
+			return await interaction.editReply({
 				embeds: [noCommandEmbed],
 			});
 		}
 
-		// Deletes the cache
-		// TODOD: FIX WITH COMMAND CATEGORIES
-		delete require.cache[require.resolve(`./${command.data.name}.js`)];
-
-		// Trys to re-add the command
 		try {
-			const newCommand = require(`./${command.data.name}.js`);
+			// Deletes the cache
+			const fileLocation = `../../commands/${await findFile(command.data.name)}`;
+			delete require.cache[require.resolve(fileLocation)];
+
+			// Readds the command
+			const newCommand = require(fileLocation);
 			interaction.client.commands.set(newCommand.name, newCommand);
 		} catch (error) {
 			logger.child({
@@ -53,8 +56,8 @@ module.exports = {
 			const errorEmbed = newEmbed()
 				.setTitle('Error')
 				.setColor(colors.error)
-				.setDescription(`There was an error while reloading a command \`${command.data.name}\`:\n\`${error.message}\``);
-			return interaction.reply({
+				.setDescription(`There was an error while reloading a command \`${command.data.name}\``);
+			return await interaction.editReply({
 				embeds: [errorEmbed],
 			});
 		}
@@ -64,8 +67,21 @@ module.exports = {
 			.setColor(colors.success)
 			.setDescription(`Command \`/${command.data.name}\` was reloaded!`);
 
-		interaction.reply({
+		await interaction.editReply({
 			embeds: [successEmbed],
 		});
 	},
 };
+
+async function findFile(commandName) {
+	const commandFolder = './commands';
+	const folders = await fs.readdirSync(commandFolder);
+
+	for(const category of folders) {
+		if(await fs.readdirSync(`${commandFolder}/${category}`).includes(`${commandName}.js`)) {
+			return `${category}/${commandName}.js`;
+		}
+	}
+
+	return null;
+}
