@@ -16,11 +16,11 @@ module.exports = {
 	async execute(interaction) {
 		await interaction.deferReply();
 
-		const command = interaction.options.getString('command').toLowerCase();
+		const command = interaction.options.getString('command');
 		if(!command) {
 			generalHelp(interaction);
 		} else {
-			detailedHelp(interaction, command);
+			detailedHelp(interaction, command.toLowerCase());
 		}
 
 	},
