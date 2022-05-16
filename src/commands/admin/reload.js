@@ -14,7 +14,7 @@ module.exports = {
 		)
 		.setDefaultPermission(false),
 	permissions: ['OWNER'],
-	category: 'information',
+	category: 'admin',
 
 	async execute(interaction) {
 		await interaction.deferReply({ ephemeral: true });
