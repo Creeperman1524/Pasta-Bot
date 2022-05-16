@@ -1,13 +1,32 @@
 const { MessageEmbed } = require('discord.js');
 const { version } = require('../config.json');
 
-// Sets the version for the bot
+/**
+ * Gives a standardized embed that commands can use
+ * @returns {MessageEmbed} The standardized embed
+ */
 function newEmbed() {
 	return new MessageEmbed()
 		.setFooter({ text: `Version ${version}` });
 }
 
-// All of the embed colors for the bot
+/**
+ * Truncates and adds ellipses (...) to a string of text if longer than the value provided
+ * @param {String} text The text that should be tested
+ * @param {number} length The maximum length the text should have
+ * @returns {String} the truncated text (if applicable)
+ */
+function truncateText(text, length) {
+	if (text.length <= length - 3) {
+		return text;
+	}
+
+	return text.slice(0, length - 3) + '\u2026';
+}
+
+/**
+ * Specific colors that the bot can use and easily be modified
+ */
 const colors = {
 	helpCommand: '0x1cff2b',
 	infoCommand: '0x0088ff',
@@ -28,5 +47,5 @@ const colors = {
 };
 
 module.exports = {
-	newEmbed, colors,
+	newEmbed, colors, truncateText,
 };

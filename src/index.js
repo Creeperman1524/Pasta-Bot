@@ -1,11 +1,10 @@
-// Packages
 const fs = require('fs');
 const { Client, Intents, Collection } = require('discord.js');
+
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
-
-// Config
 const { newEmbed, colors } = require('./util/embeds.js');
+const { readFromDatabase } = require('./util/database.js');
 const { token } = require('./hidden.json');
 
 // Creates the bot client
@@ -93,7 +92,7 @@ async function reactionRoleHandler(reaction, user, method) {
 	if(user.id == client.user.id) return;
 
 	// Reads from the database
-	const data = JSON.parse(fs.readFileSync('./src/storage.json'));
+	const data = readFromDatabase();
 	const reactionMessages = data.reactionMessages;
 
 	// Reaction partials

@@ -1,6 +1,5 @@
 const { logger } = require('../logging.js');
-const fs = require('fs');
-
+const { readFromDatabase, writeToDatabase } = require('../util/database.js');
 const deployCommands = require('../deploy-commands.js');
 const { commandRefreshInterval } = require('../config.json');
 
@@ -10,8 +9,7 @@ module.exports = {
 
 	// Refreshes commands on startup
 	async execute(client) {
-		const raw = fs.readFileSync('./src/storage.json');
-		const data = JSON.parse(raw);
+		const data = readFromDatabase();
 
 		const currentTime = Date.now();
 
@@ -21,7 +19,7 @@ module.exports = {
 			data.commandUpdate = currentTime + (commandRefreshInterval * 60000);
 
 			// Updates time
-			fs.writeFileSync('./storage.json', JSON.stringify(data));
+			writeToDatabase(data);
 		} else {
 			logger.child({ mode: 'DEPLOY' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
 		}

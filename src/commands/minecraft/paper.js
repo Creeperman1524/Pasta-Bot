@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fetch = require('node-fetch');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors, truncateText } = require('../../util/embeds.js');
 const { mcServerVersion } = require('../../config.json');
 
 module.exports = {
@@ -10,7 +10,6 @@ module.exports = {
 	category: 'minecraft',
 
 	async execute(interaction) {
-
 		await interaction.deferReply();
 
 		const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}/`;
@@ -50,11 +49,3 @@ module.exports = {
 		});
 	},
 };
-
-function truncateText(text, length) {
-	if (text.length <= length - 3) {
-		return text;
-	}
-
-	return text.substr(0, length - 3) + '\u2026';
-}

@@ -8,8 +8,6 @@ module.exports = {
 	category: 'information',
 
 	async execute(interaction) {
-
-		// "so and so is thinking"
 		await interaction.deferReply();
 
 		const pingEmbed = newEmbed()
