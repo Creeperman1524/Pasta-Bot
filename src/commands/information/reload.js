@@ -74,7 +74,7 @@ module.exports = {
 };
 
 async function findFile(commandName) {
-	const commandFolder = './commands';
+	const commandFolder = './src/commands';
 	const folders = await fs.readdirSync(commandFolder);
 
 	for(const category of folders) {

@@ -18,11 +18,11 @@ const client = new Client({
 
 
 client.commands = new Collection();
-const commandFolders = fs.readdirSync('./commands');
+const commandFolders = fs.readdirSync('./src/commands');
 
 // Gather commands from folders
 for(const folder of commandFolders) {
-	const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+	const commandFiles = fs.readdirSync(`./src/commands/${folder}`).filter(file => file.endsWith('.js'));
 	for (const file of commandFiles) {
 		const command = require(`./commands/${folder}/${file}`);
 		client.commands.set(command.data.name, command);
@@ -93,7 +93,7 @@ async function reactionRoleHandler(reaction, user, method) {
 	if(user.id == client.user.id) return;
 
 	// Reads from the database
-	const data = JSON.parse(fs.readFileSync('./storage.json'));
+	const data = JSON.parse(fs.readFileSync('./src/storage.json'));
 	const reactionMessages = data.reactionMessages;
 
 	// Reaction partials

@@ -10,7 +10,7 @@ module.exports = {
 
 	// Refreshes commands on startup
 	async execute(client) {
-		const raw = fs.readFileSync('./storage.json');
+		const raw = fs.readFileSync('./src/storage.json');
 		const data = JSON.parse(raw);
 
 		const currentTime = Date.now();

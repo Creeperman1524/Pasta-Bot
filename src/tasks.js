@@ -2,7 +2,7 @@ const { logger } = require('./logging.js');
 const fs = require('fs');
 
 const tasks = [];
-const taskFiles = fs.readdirSync('./tasks');
+const taskFiles = fs.readdirSync('./src/tasks');
 
 // Gather tasks from folder
 for (const file of taskFiles) {

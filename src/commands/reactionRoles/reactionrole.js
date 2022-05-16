@@ -326,7 +326,7 @@ async function removeRolefromMessage(interaction) {
 
 
 function readFromDatabase() {
-	const raw = fs.readFileSync('./storage.json');
+	const raw = fs.readFileSync('./src/storage.json');
 	return JSON.parse(raw);
 }
 
