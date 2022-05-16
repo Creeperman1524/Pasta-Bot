@@ -1,5 +1,20 @@
 ## :scroll: Changelog
 
+#### 0.8.5 - Major cleanup and bugfixes
+- Added a way to update the internal minecraft version
+- Moved and renamed internal files
+- Updated the `/help` command
+	- Completely rewrote to match with the `0.7.1` update
+	- Added paginated embeds (with buttons!)
+	- Added individual command help with extra info
+- Fixed the `/server backup` command
+	- Updated the backup directory after moving the server to an ssd
+	- Added the discord timestamps for relative times
+	- Added better error handling to not crash the bot
+- Fixed the `/reload` command
+	- Fixed after the `0.7.1` update
+	- Added better error handling
+- Cleaned up code comments and imports
 #### 0.8.4 - Standardized embeds (4/13/22)
 - Created a module for embeds to have the same look and version number
 	- Added a table for color values to quick change the colors of the embeds
