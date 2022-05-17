@@ -1,17 +1,18 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fetch = require('node-fetch');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors, truncateText } = require('../../util/embeds.js');
+const { mcServerVersion } = require('../../config.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('paper')
 		.setDescription('A command to display the most recent update to the paper server'),
+	category: 'minecraft',
 
 	async execute(interaction) {
-
 		await interaction.deferReply();
 
-		const url = 'https://papermc.io/api/v2/projects/paper/versions/1.18.2/';
+		const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}/`;
 
 		// Gets the data
 		const response = await fetch(url);
@@ -37,7 +38,7 @@ module.exports = {
 			}
 		}
 
-		updateEmbed.setTitle('Recent 1.18.2 Paper Updates')
+		updateEmbed.setTitle(`Recent ${mcServerVersion} Paper Updates`)
 			.setURL('https://papermc.io/downloads')
 			.setColor(colors.paperCommand)
 			.addFields(fields)
@@ -48,11 +49,3 @@ module.exports = {
 		});
 	},
 };
-
-function truncateText(text, length) {
-	if (text.length <= length - 3) {
-		return text;
-	}
-
-	return text.substr(0, length - 3) + '\u2026';
-}

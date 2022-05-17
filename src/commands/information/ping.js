@@ -5,10 +5,9 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('ping')
 		.setDescription('Checks the ping of the bot'),
+	category: 'information',
 
 	async execute(interaction) {
-
-		// "so and so is thinking"
 		await interaction.deferReply();
 
 		const pingEmbed = newEmbed()

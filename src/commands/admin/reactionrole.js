@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
+const { readFromDatabase, writeToDatabase } = require('../../util/database.js');
 const { logger } = require('../../logging.js');
-const fs = require('fs');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -75,6 +75,7 @@ module.exports = {
 
 		.setDefaultPermission(false),
 	permissions: ['MESSAGES'],
+	category: 'admin',
 
 	async execute(interaction) {
 		await interaction.deferReply();
@@ -321,16 +322,6 @@ async function removeRolefromMessage(interaction) {
 	interaction.editReply({ embeds: [replyEmbed] });
 
 	writeToDatabase(data);
-}
-
-
-function readFromDatabase() {
-	const raw = fs.readFileSync('./storage.json');
-	return JSON.parse(raw);
-}
-
-function writeToDatabase(data) {
-	fs.writeFileSync('./storage.json', JSON.stringify(data));
 }
 
 // Searched for a valid reaction message in the server

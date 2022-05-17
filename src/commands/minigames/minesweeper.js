@@ -443,6 +443,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('minesweeper')
 		.setDescription('Start a game of minesweeper'),
+	category: 'minigames',
 
 	async execute(interaction) {
 		await interaction.deferReply();
