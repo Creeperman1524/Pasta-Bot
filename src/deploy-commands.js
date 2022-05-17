@@ -2,7 +2,7 @@ const fs = require('fs');
 const {	REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
-const { clientId, token } = require('./hidden.json');
+const { clientId, token } = require('../hidden.json');
 const { logger } = require('./logging.js');
 
 const rest = new REST({ version: '9' }).setToken(token);

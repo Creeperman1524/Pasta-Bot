@@ -1,7 +1,7 @@
 const mcping = require('mcping-js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { mcServerPort, mcServerVersion } = require('../../config.json');
-const { mcServerIP, backupsDirectory } = require('../../hidden.json');
+const { mcServerIP, backupsDirectory } = require('../../../hidden.json');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
 const fs = require('fs');

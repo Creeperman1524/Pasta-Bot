@@ -1,7 +1,7 @@
 const { logger } = require('../logging.js');
 const mcping = require('mcping-js');
 
-const { mcServerIP } = require('../hidden.json');
+const { mcServerIP } = require('../../hidden.json');
 const { mcServerPort } = require('../config.json');
 
 module.exports = {
