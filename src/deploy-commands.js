@@ -18,7 +18,8 @@ module.exports = {
 
 		await updateCommands(client);
 
-		await updateCommandPermissions(client);
+		logger.child({ mode: 'DEPLOY' }).warn('Bypassing application (/) permission check (discord permission system v2)');
+		// await updateCommandPermissions(client);
 	},
 };
 
