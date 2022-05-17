@@ -5,7 +5,7 @@ const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
 const { newEmbed, colors } = require('./util/embeds.js');
 const { readFromDatabase } = require('./util/database.js');
-const { token } = require('./hidden.json');
+const { token } = require('../hidden.json');
 
 // Creates the bot client
 const client = new Client({
