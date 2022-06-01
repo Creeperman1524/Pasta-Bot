@@ -10,7 +10,8 @@ module.exports = {
 		.addStringOption(option =>
 			option.setName('command')
 				.setDescription('The command to reload')
-				.setRequired(true),
+				.setRequired(true)
+				.setAutocomplete(true),
 		)
 		.setDefaultPermission(false),
 	permissions: ['OWNER'],
@@ -71,6 +72,19 @@ module.exports = {
 			embeds: [successEmbed],
 		});
 	},
+
+	async autocomplete(interaction) {
+		const focusedValue = interaction.options.getFocused();
+
+		// Maps the command names to an array
+		const choices = interaction.client.commands.map(command => command.data.name);
+		const filtered = choices.filter(choice => choice.startsWith(focusedValue));
+
+		// Responds with the command names that match what's currently typed
+		await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
+
+	},
+
 };
 
 async function findFile(commandName) {

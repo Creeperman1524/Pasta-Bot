@@ -1,5 +1,8 @@
 ## :scroll: Changelog
 
+#### 0.8.6 - Autocompletion
+- Adds a system where commands can pass suggested values that the user can use when using a command
+	- `help`, `reload`  (as of `0.8.6`)
 #### 0.8.5 - Major cleanup and bugfixes
 - Added a way to update the internal minecraft version
 - Moved and renamed internal files

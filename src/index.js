@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { Client, Intents, Collection } = require('discord.js');
+const { Client, Intents, Collection, AutocompleteInteraction } = require('discord.js');
 
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
@@ -35,10 +35,14 @@ client.once('ready', async () => {
 	logger.child({ mode: 'STARTUP' }).info('Bot is active');
 });
 
-// Command Handeling
+// Interaction handling
 client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
+	if (interaction.isCommand()) interactionCommand(interaction);
+	if (interaction.isAutocomplete()) autocompleteCommand(interaction);
+});
 
+// Command handling
+async function interactionCommand(interaction) {
 	const command = client.commands.get(interaction.commandName); // Gets the corresponding command
 
 	if (!command) return; // If the command doesn't exist, return
@@ -77,7 +81,28 @@ client.on('interactionCreate', async interaction => {
 			ephemeral: true,
 		});
 	}
-});
+}
+
+async function autocompleteCommand(interaction) {
+	const command = client.commands.get(interaction.commandName);
+
+	try {
+		command.autocomplete(interaction);
+	} catch (error) {
+		logger.child({
+			mode: 'AUTOCOMPLETE',
+			metaData: {
+				user: interaction.user.username,
+				userid: interaction.user.id,
+				guild: interaction.guild.name,
+				guildid: interaction.guild.id,
+				command: interaction.commandName,
+				commandid: interaction.commandId,
+			},
+		}).error(error);
+	}
+
+}
 
 // Listens for reaction changes for the reaction roles
 client.on('messageReactionAdd', async (reaction, user) => {
