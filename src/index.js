@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { Client, Intents, Collection, AutocompleteInteraction } = require('discord.js');
+const { Client, Intents, Collection } = require('discord.js');
 
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
