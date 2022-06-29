@@ -1,7 +1,6 @@
 const mcping = require('mcping-js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { mcServerPort, mcServerVersion } = require('../../config.json');
-const { mcServerIP, backupsDirectory } = require('../../../hidden.json');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
 const fs = require('fs');
@@ -97,10 +96,10 @@ function backupsCommand(interaction) {
 	// Finds the earliest backup for that day
 	let backup1, backup2, backup3, backup4;
 	try {
-		backup1 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date1)))[0];
-		backup2 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date2)))[0];
-		backup3 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date3)))[0];
-		backup4 = fs.readdirSync(backupsDirectory).filter(file => file.startsWith(convertDate(date4)))[0];
+		backup1 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date1)))[0];
+		backup2 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date2)))[0];
+		backup3 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date3)))[0];
+		backup4 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date4)))[0];
 	} catch (error) {
 		logger.child({
 			mode: 'SERVER BACKUP',
@@ -170,10 +169,10 @@ function statusCommand(interaction) {
 
 	// Checks if the user input a server
 	if (ip == null) {
-		const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
+		const server = new mcping.MinecraftServer(process.env.mcServerIP, mcServerPort);
 
 		// Pings the server
-		pingServer(server, interaction, mcServerIP);
+		pingServer(server, interaction, process.env.mcServerIP);
 
 		return;
 	} else {
@@ -266,7 +265,7 @@ function ipCommand(interaction) {
 		.addFields(
 			{
 				name: 'IP',
-				value: `\`${mcServerIP}\``,
+				value: `\`${process.env.mcServerIP}\``,
 				inline: true,
 			},
 			{
@@ -289,7 +288,7 @@ function mapCommand(interaction) {
 	const mapEmbed = newEmbed()
 		.setTitle('Server Map')
 		.setColor(colors.serverMapCommand)
-		.setDescription(`Server map: [http://${mcServerIP}:8123](http://${mcServerIP}:8123)`);
+		.setDescription(`Server map: [http://${process.env.mcServerIP}:8123](http://${process.env.mcServerIP}:8123)`);
 
 	interaction.editReply({ embeds: [mapEmbed] });
 }

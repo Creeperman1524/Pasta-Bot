@@ -3,6 +3,10 @@
 #### 0.8.6 - Autocompletion
 - Adds a system where commands can pass suggested values that the user can use when using a command
 	- `help`, `reload`  (as of `0.8.6`)
+- Added environment variables
+	- Added a `dev` environment which is also reflected in the bot version
+	- Replaced the `hidden.json` file with a `.env` for better security and ease of use
+	- Updated all private variables to use this system
 #### 0.8.5 - Major cleanup and bugfixes
 - Added a way to update the internal minecraft version
 - Moved and renamed internal files

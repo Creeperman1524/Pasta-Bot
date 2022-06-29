@@ -6,8 +6,13 @@ const { version } = require('../config.json');
  * @returns {MessageEmbed} The standardized embed
  */
 function newEmbed() {
-	return new MessageEmbed()
-		.setFooter({ text: `Version ${version}` });
+	if(process.env.NODE_ENV == 'dev') {
+		return new MessageEmbed()
+			.setFooter({ text: `Version ${version} - DEV` });
+	} else {
+		return new MessageEmbed()
+			.setFooter({ text: `Version ${version}` });
+	}
 }
 
 /**

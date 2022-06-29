@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const { Client, Intents, Collection } = require('discord.js');
 
@@ -5,7 +6,6 @@ const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
 const { newEmbed, colors } = require('./util/embeds.js');
 const { readFromDatabase } = require('./util/database.js');
-const { token } = require('../hidden.json');
 
 // Creates the bot client
 const client = new Client({
@@ -192,4 +192,5 @@ async function reactionRoleHandler(reaction, user, method) {
 }
 
 // Logs the bot in
-client.login(token);
+console.log(process.env.token);
+client.login(process.env.token);

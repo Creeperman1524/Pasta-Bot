@@ -2,10 +2,9 @@ const fs = require('fs');
 const {	REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 
-const { clientId, token } = require('../hidden.json');
 const { logger } = require('./logging.js');
 
-const rest = new REST({ version: '9' }).setToken(token);
+const rest = new REST({ version: '9' }).setToken(process.env.token);
 
 const commands = [];
 const guildIDs = [];
@@ -46,7 +45,7 @@ async function updateCommands() {
 	// Updates global slash commands
 	try {
 		await rest.put(
-			Routes.applicationCommands(clientId),
+			Routes.applicationCommands(process.env.clientID),
 			{ body: commandData },
 		);
 		logger.child({ mode: 'DEPLOY' }).info('Successfully reloaded application (/) commands.');
@@ -69,7 +68,7 @@ async function updateCommandPermissions(client) {
 				if(permission) fullPermissions.push(permission);
 			}
 			await rest.put(
-				Routes.guildApplicationCommandsPermissions(clientId, id),
+				Routes.guildApplicationCommandsPermissions(process.env.clientID, id),
 				{ body: fullPermissions },
 			);
 		}

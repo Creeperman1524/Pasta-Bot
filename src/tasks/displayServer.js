@@ -1,7 +1,6 @@
 const { logger } = require('../logging.js');
 const mcping = require('mcping-js');
 
-const { mcServerIP } = require('../../hidden.json');
 const { mcServerPort } = require('../config.json');
 
 module.exports = {
@@ -11,7 +10,7 @@ module.exports = {
 
 	// Updates the bot's status periodically
 	async execute(client) {
-		const server = new mcping.MinecraftServer(mcServerIP, mcServerPort);
+		const server = new mcping.MinecraftServer(process.env.mcServerIP, mcServerPort);
 
 		let activity = '';
 		let status = 'dnd';

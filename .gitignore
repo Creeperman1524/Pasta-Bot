@@ -1,4 +1,4 @@
-hidden.json
+.env
 .vscode/*
 storage.json
 logs/
