@@ -5,7 +5,7 @@ const fs = require('fs');
  * @param {JSON} data A JSON object of data to be written to the data (overwrites the entire thing)
  */
 function writeToDatabase(data) {
-	fs.writeFileSync('./storage.json', JSON.stringify(data));
+	fs.writeFileSync('./src/storage.json', JSON.stringify(data));
 }
 
 /**
