@@ -1,22 +1,14 @@
-const fs = require('fs');
+const { logger } = require('../logging.js');
 
 /**
- * Writes information to the database (a json file)
- * @param {JSON} data A JSON object of data to be written to the data (overwrites the entire thing)
+ * Logs some information about the data being saved and saves it to the database
+ * @param {mongoose.model} schema The schema which to save to the database
  */
-function writeToDatabase(data) {
-	fs.writeFileSync('./storage.json', JSON.stringify(data));
-}
-
-/**
- * Reads from the database (a json file)
- * @returns Returns the entire datapase as a JSON object
- */
-function readFromDatabase() {
-	const raw = fs.readFileSync('./src/storage.json');
-	return JSON.parse(raw);
+function writeToDatabase(schema) {
+	logger.child({ mode: 'DATABASE', metaData: { id: schema.id, type: { botID: schema.botID, guildID: schema.guildId, userID: schema.userID } } }).info('Saving information');
+	schema.save();
 }
 
 module.exports = {
-	writeToDatabase, readFromDatabase,
+	writeToDatabase,
 };

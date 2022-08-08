@@ -1,7 +1,9 @@
 const { logger } = require('../logging.js');
-const { readFromDatabase, writeToDatabase } = require('../util/database.js');
 const deployCommands = require('../deploy-commands.js');
 const { commandRefreshInterval } = require('../config.json');
+
+const database = require('../util/database.js');
+const botConfig = require('../schemas/botConfigs.js');
 
 module.exports = {
 	name: 'updateCommands',
@@ -9,19 +11,34 @@ module.exports = {
 
 	// Refreshes commands on startup
 	async execute(client) {
-		const data = readFromDatabase();
-
 		const currentTime = Date.now();
 
-		// Refreshes commands only if it hasn't within the last 30 minutes
-		if(data.commandUpdate < currentTime) {
-			await deployCommands.execute(client);
-			data.commandUpdate = currentTime + (commandRefreshInterval * 60000);
+		// Reads from the database
+		const data = await botConfig.findOne({ botID: process.env.clientID });
 
-			// Updates time
-			writeToDatabase(data);
+		// If the data doesn't exist, create one
+		if(!data) {
+			logger.child({ mode: 'DATABASE' }).warn('Bot configs not saved, creating a new one');
+			const saveTime = await botConfig.create({
+				botID: process.env.clientID,
+				commandsLastUpdated: Date.now(),
+			});
+			database.writeToDatabase(saveTime);
+			return;
+		}
+
+		// Refreshes commands only if it hasn't within the last 30 minutes
+		if(data.commandsLastUpdated < currentTime) {
+			await deployCommands.execute(client);
+
+			// Updates time to the database
+			const updatedTime = await botConfig.findOneAndUpdate({
+				botID: process.env.clientID,
+				commandsLastUpdated: currentTime + (commandRefreshInterval * 60000),
+			});
+			database.writeToDatabase(updatedTime);
 		} else {
-			logger.child({ mode: 'DEPLOY' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandUpdate - currentTime) / 60000) + ' minutes');
+			logger.child({ mode: 'DEPLOY' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandsLastUpdated - currentTime) / 60000) + ' minutes');
 		}
 	},
 };

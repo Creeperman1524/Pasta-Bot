@@ -192,5 +192,4 @@ async function reactionRoleHandler(reaction, user, method) {
 }
 
 // Logs the bot in
-console.log(process.env.token);
 client.login(process.env.token);
