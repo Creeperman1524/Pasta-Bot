@@ -327,7 +327,7 @@ async function removeRolefromMessage(interaction) {
 // Searched for a valid reaction message in the server
 async function findMessage(interaction, reactionGuild) {
 	const messageLink = interaction.options.getString('messagelink');
-	const messageID = messageLink.slice(-18);
+	const messageID = messageLink.split('/')[6];
 
 	// If that message isn't a reaction message
 	if(!reactionGuild[messageID]) {
