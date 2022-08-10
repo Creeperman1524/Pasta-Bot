@@ -5,7 +5,8 @@ const { Client, Intents, Collection } = require('discord.js');
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
 const { newEmbed, colors } = require('./util/embeds.js');
-const { readFromDatabase } = require('./util/database.js');
+
+const guildConfigSchema = require('./schemas/guildConfigs.js');
 
 // Creates the bot client
 const client = new Client({
@@ -120,23 +121,26 @@ async function reactionRoleHandler(reaction, user, method) {
 	if(user.id == client.user.id) return;
 
 	// Reads from the database
-	const data = readFromDatabase();
-	const reactionMessages = data.reactionMessages;
+	const data = await guildConfigSchema.findOne({ guildID: reaction.message.guildId });
+
+	// Checks to see if the guild has a reaction role message
+	if(!data) return;
+	if(!data.reactionMessages) return;
 
 	// Reaction partials
-	if(reaction.message.partial) await reaction.message.fetch();
+	{if(reaction.message.partial) await reaction.message.fetch();}
 	if(reaction.partial) await reaction.fetch();
 
 	// User partials
 	if(user.partial) await user.fetch();
 
 	// Checks if the reaction was to a reaction message
-	if(!reactionMessages[reaction.message.guildId]) return;
-	if(!reactionMessages[reaction.message.guildId][reaction.message.id]) return;
+	const reactionMessages = data.reactionMessages;
+	if(!reactionMessages[reaction.message.id]) return;
 
 	let role;
 	// Tries to find the role in the server
-	for(const storageRole of reactionMessages[reaction.message.guildId][reaction.message.id]) {
+	for(const storageRole of reactionMessages[reaction.message.id]) {
 		if(storageRole[1] == reaction.emoji.name) {
 			role = reaction.message.guild.roles.cache.get(storageRole[0]);
 		}
