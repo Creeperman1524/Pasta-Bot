@@ -23,7 +23,7 @@ module.exports = {
 				botID: process.env.clientID,
 				commandsLastUpdated: Date.now(),
 			});
-			database.writeToDatabase(saveTime, 'BOT TIME');
+			database.writeToDatabase(saveTime, 'CREATED BOT TIME');
 			return;
 		}
 
@@ -36,7 +36,7 @@ module.exports = {
 				botID: process.env.clientID,
 				commandsLastUpdated: currentTime + (commandRefreshInterval * 60000),
 			});
-			database.writeToDatabase(updatedTime, 'BOT TIME');
+			database.writeToDatabase(updatedTime, 'UPDATED BOT TIME');
 		} else {
 			logger.child({ mode: 'DEPLOY' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandsLastUpdated - currentTime) / 60000) + ' minutes');
 		}
