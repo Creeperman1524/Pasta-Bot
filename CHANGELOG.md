@@ -1,5 +1,12 @@
 ## :scroll: Changelog
 
+### 0.9.0 - Database
+- Added a MongoDB database that the bot can interface with 
+	- Logs connections and outages 
+- Removed `storage.json` and stored the information in the database
+	- Stores the bot command reload timer
+	- Added guild specific configurations 
+	- Updated the `/reactionroles` command to use the database
 #### 0.8.6 - Autocompletion
 - Adds a system where commands can pass suggested values that the user can use when using a command
 	- `help`, `reload`  (as of `0.8.6`)
