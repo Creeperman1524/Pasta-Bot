@@ -44,6 +44,7 @@ client.on('interactionCreate', async interaction => {
 
 // Command handling
 async function interactionCommand(interaction) {
+	console.log(interaction.options._subcommand);
 	const command = client.commands.get(interaction.commandName); // Gets the corresponding command
 
 	if (!command) return; // If the command doesn't exist, return
@@ -57,6 +58,7 @@ async function interactionCommand(interaction) {
 				userid: interaction.user.id,
 				guild: interaction.guild.name,
 				guildid: interaction.guild.id,
+				subcommand: interaction.options._subcommand,
 			},
 		}).info(`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`);
 
@@ -69,6 +71,7 @@ async function interactionCommand(interaction) {
 				userid: interaction.user.id,
 				guild: interaction.guild.name,
 				guildid: interaction.guild.id,
+				subcommand: interaction.options._subcommand,
 			},
 		}).error(error);
 
