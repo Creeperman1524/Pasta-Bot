@@ -3,6 +3,7 @@ const { MessageEmbed } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
+const mongoose = require('mongoose');
 const database = require('../../util/database.js');
 const guildConfigSchema = require('../../schemas/guildConfigs.js');
 
@@ -129,8 +130,7 @@ async function createReactionMessage(interaction) {
 		await channel.send({ embeds: [baseEmbed] }).then(async (msg) => {
 			// Creates an empty object of reactionMessages
 			reactionMessages[msg.id] = [];
-			const newReactionMessage = await guildConfigSchema.findOneAndUpdate({
-				guildID: interaction.guildId,
+			const newReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 				reactionMessages: reactionMessages,
 				lastEdited: Date.now(),
 			});
@@ -184,8 +184,7 @@ async function deleteReactionMessage(interaction) {
 				},
 			}).error);
 		delete reactionMessages[message.id];
-		const deletedReactionMessage = await guildConfigSchema.findOneAndUpdate({
-			guildID: interaction.guildId,
+		const deletedReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 			reactionMessages: reactionMessages,
 			lastEdited: Date.now(),
 		});
@@ -271,8 +270,7 @@ async function addRoletoMessage(interaction) {
 	// Edits database
 	reactionMessages[message.id].push([role.id, emoji]);
 
-	const newRole = await guildConfigSchema.findOneAndUpdate({
-		guildID: interaction.guildId,
+	const newRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 		reactionMessages: reactionMessages,
 		lastEdited: Date.now(),
 	});
@@ -353,8 +351,7 @@ async function removeRolefromMessage(interaction) {
 		}
 	}
 
-	const deleteRole = await guildConfigSchema.findOneAndUpdate({
-		guildID: interaction.guildId,
+	const deleteRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 		reactionMessages: reactionMessages,
 		lastEdited: Date.now(),
 	});
