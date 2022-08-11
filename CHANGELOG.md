@@ -1,6 +1,6 @@
 ## :scroll: Changelog
 
-### 0.9.0 - Database
+### 0.9.0 - Database (8/9/22)
 - Added a MongoDB database that the bot can interface with 
 	- Logs connections and outages 
 - Removed `storage.json` and stored the information in the database
