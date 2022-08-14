@@ -1,11 +1,6 @@
-const { MessageEmbed, Collection } = require('discord.js');
+const { MessageEmbed, Collection, MessageActionRow, MessageButton } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
-const { logger } = require('../../logging.js');
-
-// TODO: first click guaranteed to be safe, how to play the game menu
-
-const emojiList = ['⬅️', '➡️', '⬆️', '⬇️', '🔽', '🔴'];
 
 const numOfMines = 10;
 const size = 8;
@@ -17,6 +12,7 @@ function createGame(myInteraction) {
 	// Creates a game object
 	const game = {
 		board: [],
+		buttons: [],
 		flags: 0,
 		tilesLeft: size * size,
 		player: {
@@ -26,7 +22,7 @@ function createGame(myInteraction) {
 			lost: false,
 			won: false,
 		},
-		reactionCollector: null,
+		componentCollector: null,
 		interaction: myInteraction, // The user command
 		embed: null, // The game/embeds sent
 		timeout: 10 * 60000, // The expiration timer for the game
@@ -50,78 +46,62 @@ function startGame(game) {
 		.setColor(colors.minesweeperCommand)
 		.addFields({
 			name: 'Bombs Left',
-			value: `${numOfMines}`,
+			value: `\`${numOfMines}\``,
 			inline: true,
 		}, {
 			name: 'Current Player',
 			value: game.interaction.user.toString(),
 			inline: true,
+		}, {
+			name: 'Game Expires',
+			value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
+			inline: false,
 		})
-		.setDescription(text)
-		.setFooter({ text: `${newEmbed().footer.text} | Ends at` })
-		.setTimestamp(new Date().getTime() + game.timeout);
+		.setDescription(text);
+
+	// Creates the user buttons
+	const row1 = new MessageActionRow()
+		.addComponents(
+			createButton('flag', '🚩', 'SUCCESS'), // Flag button
+			createButton('up', '⬆️', 'SECONDARY'), // Up button
+			createButton('dig', '⛏️', 'DANGER'), // Dig button
+		);
+	const row2 = new MessageActionRow()
+		.addComponents(
+			createButton('left', '⬅️', 'SECONDARY'), // Left button
+			createButton('down', '⬇️', 'SECONDARY'), // Down button
+			createButton('right', '➡️', 'SECONDARY'), // Right button
+		);
 
 	// Adds the reactions after sending the board
-	game.interaction.editReply({ embeds: [minesweeperEmbed] }).then(async embed => {
+	game.interaction.editReply({ embeds: [minesweeperEmbed], components: [row1, row2] }).then(async embed => {
 		game.embed = embed;
-
-		// Adds the reactions to the message
-		try {
-			for (const emoji of emojiList) await embed.react(emoji);
-		} catch (error) {
-			logger.child({
-				mode: 'MINESWEEPER',
-				metaData: {
-					user: game.interaction.user.username,
-					userid: game.interaction.user.id,
-					guild: game.interaction.guild.name,
-					guildid: game.interaction.guild.id,
-				},
-			}).error(`One of the emojis failed to react: ${error}`);
-		}
+		game.buttons = [row1, row2];
 
 		// Waits for user input
-		listenForReactions(game);
+		awaitInput(game);
 	});
 
 	return;
 }
 
-// Listens for the user input
-async function listenForReactions(game) {
-	game.reactionCollector = game.embed.createReactionCollector({ filter: (reaction, user) => emojiList.includes(reaction.emoji.name) && user.id == game.interaction.user.id, time: game.timeout });
+// Helper function to make the buttons
+function createButton(ID, emoji, style) {
+	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
+}
 
-	let move = '';
+// Listens for the user input
+async function awaitInput(game) {
+	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: 'BUTTON', time: game.timeout });
 
 	// Detects and sends the move the player wants
-	game.reactionCollector.on('collect', (reaction) => {
-		reaction.users.remove(game.interaction.user.id);
-		switch (reaction.emoji.name) {
-		case emojiList[0]:
-			move = 'left';
-			break;
-		case emojiList[1]:
-			move = 'right';
-			break;
-		case emojiList[2]:
-			move = 'up';
-			break;
-		case emojiList[3]:
-			move = 'down';
-			break;
-		case emojiList[4]:
-			move = 'dig';
-			break;
-		case emojiList[5]:
-			move = 'flag';
-			break;
-		default:
-			break;
-		}
-		gameLoop(game, move);
+	game.componentCollector.on('collect', (button) => {
+		button.deferUpdate();
+		if(button.user.id !== game.interaction.user.id) return;
+		gameLoop(game, button.customId);
 	});
 
-	game.reactionCollector.on('end', () => {
+	game.componentCollector.on('end', () => {
 		// Checks if the user has already won the game, if not automatically fail it
 		if(!game.player.won) {
 			lose(game);
