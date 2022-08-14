@@ -258,7 +258,7 @@ function generateText(game) {
 			// Displays the mines
 			switch (tile.status) {
 			case 0: // Hidden
-				text += ':white_large_square:';
+				text += '⬜';
 				break;
 			case 1: // Shown
 
@@ -268,7 +268,7 @@ function generateText(game) {
 					text += getNumber(tile.num);
 					break;
 				case true: // Is a mine
-					text += ':bomb:';
+					text += '💣';
 					game.player.lost = true;
 					if (tile.x == game.player.x && tile.y == game.player.y) tile.status = 5; // Changes the player tile to a boom
 					break;
@@ -276,31 +276,30 @@ function generateText(game) {
 				break;
 
 			case 2: // Player
-				text += ':sunglasses:';
+				text += '😎';
 				break;
 			case 3: // Flag
-				text += ':red_square:';
+				text += '🟥';
 				break;
 			case 4: // Border
-				text += ':green_square:';
+				text += '🟩';
 				break;
 			case 5: // Exploded Bomb
-				text += ':boom:';
+				text += '💥';
 				break;
 			case 6: // Incorrect flag
-				text += ':x:';
+				text += '❌';
 				break;
 			}
 		}
 		text += '\n';
 	}
-
 	return text;
 }
 
 // Translates integers to discord emojis
 function getNumber(number) {
-	const numbers = [':blue_square:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:'];
+	const numbers = ['🟦', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣'];
 	return numbers[number];
 }
 
