@@ -41,10 +41,26 @@ function createGame(myInteraction) {
 // Starts a new game
 function startGame(game) {
 
+	// Creates the user buttons
+	const row1 = new MessageActionRow()
+		.addComponents(
+			createButton('flag', '🚩', 'SUCCESS'), // Flag button
+			createButton('up', '⬆️', 'SECONDARY'), // Up button
+			createButton('dig', '⛏️', 'DANGER'), // Dig button
+		);
+	const row2 = new MessageActionRow()
+		.addComponents(
+			createButton('left', '⬅️', 'SECONDARY'), // Left button
+			createButton('down', '⬇️', 'SECONDARY'), // Down button
+			createButton('right', '➡️', 'SECONDARY'), // Right button
+		);
+	game.buttons = [row1, row2];
+
 	// Selects a random player emoji and wall color
 	game.player.emoji = playerEmojis[Math.floor(Math.random() * playerEmojis.length)];
 	game.player.walls = wallColors[Math.floor(Math.random() * wallColors.length)];
 
+	// Generates the board
 	game.board = generateBoard(game.board);
 	updateBoard(game); // Adds the player
 	const text = generateText(game);
@@ -68,24 +84,9 @@ function startGame(game) {
 		})
 		.setDescription(text);
 
-	// Creates the user buttons
-	const row1 = new MessageActionRow()
-		.addComponents(
-			createButton('flag', '🚩', 'SUCCESS'), // Flag button
-			createButton('up', '⬆️', 'SECONDARY'), // Up button
-			createButton('dig', '⛏️', 'DANGER'), // Dig button
-		);
-	const row2 = new MessageActionRow()
-		.addComponents(
-			createButton('left', '⬅️', 'SECONDARY'), // Left button
-			createButton('down', '⬇️', 'SECONDARY'), // Down button
-			createButton('right', '➡️', 'SECONDARY'), // Right button
-		);
-
 	// Adds the reactions after sending the board
 	game.interaction.editReply({ embeds: [minesweeperEmbed], components: [row1, row2] }).then(async embed => {
 		game.embed = embed;
-		game.buttons = [row1, row2];
 
 		// Waits for user input
 		awaitInput(game);
@@ -141,8 +142,7 @@ function gameLoop(game, move) {
 
 		game.player.won = true;
 
-		game.interaction.editReply({ embeds: [embed] });
-		game.embed.reactions.removeAll();
+		game.interaction.editReply({ embeds: [embed], components: [] });
 		games.delete(game.interaction.id);
 
 	} else if (game.player.lost) {
@@ -159,7 +159,7 @@ function gameLoop(game, move) {
 			inline: true,
 		};
 
-		game.interaction.editReply({ embeds: [embed] });
+		game.interaction.editReply({ embeds: [embed], components: [game.buttons[0], game.buttons[1]] });
 	}
 	// Waits for the user's input
 }
@@ -192,8 +192,7 @@ function lose(game) {
 		inline: false,
 	};
 
-	game.interaction.editReply({ embeds: [embed] });
-	game.embed.reactions.removeAll();
+	game.interaction.editReply({ embeds: [embed], components: [] });
 	games.delete(game.interaction.id);
 }
 
@@ -201,19 +200,15 @@ function updatePlayer(game, move) {
 	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
 	switch (move) {
 	case 'up':
-		if (game.player.x <= 1) return;
 		game.player.x--;
 		break;
 	case 'down':
-		if (game.player.x >= game.board.length - 2) return;
 		game.player.x++;
 		break;
 	case 'left':
-		if (game.player.y <= 1) return;
 		game.player.y--;
 		break;
 	case 'right':
-		if (game.player.y >= game.board[game.player.x].length - 2) return;
 		game.player.y++;
 		break;
 	default:
@@ -229,16 +224,10 @@ function updateBoard(game, move) {
 	// Digging/Flagging a tile
 	switch (move) {
 	case 'dig':
-		// Cannot dig a flag or already shown tile
-		if (game.player.tileStatus == 1 || game.player.tileStatus == 3) return;
-
 		floodFill(game, game.player.x, game.player.y);
 		game.player.tileStatus = 1;
 		break;
 	case 'flag':
-		// Cannot place a flag on a shown tile
-		if (game.player.tileStatus == 1) return;
-
 		if (game.player.tileStatus !== 3) {
 			// Not on a flag AND is on a hidden tile
 			game.board[game.player.x][game.player.y].status = 3;
@@ -252,6 +241,15 @@ function updateBoard(game, move) {
 		}
 		break;
 	}
+
+	// Disable the buttons based on the position of the player
+	game.buttons[0].components[1].setDisabled(game.player.x <= 1);											// up button
+	game.buttons[1].components[1].setDisabled(game.player.x >= game.board.length - 2); 						// down button
+	game.buttons[1].components[0].setDisabled(game.player.y <= 1); 											// left button
+	game.buttons[1].components[2].setDisabled(game.player.y >= game.board[game.player.x].length - 2); 		// right button
+
+	game.buttons[0].components[0].setDisabled(game.player.tileStatus == 1);									// flag
+	game.buttons[0].components[2].setDisabled(game.player.tileStatus == 1 || game.player.tileStatus == 3);	// dig
 }
 
 // Generates the text for the UI
