@@ -1,6 +1,7 @@
 const { MessageEmbed, Collection, MessageActionRow, MessageButton } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
+const { logger } = require('../../logging.js');
 
 const numOfMines = 10;
 const size = 8;
@@ -129,8 +130,10 @@ function gameLoop(game, move) {
 	// Creates the discord text
 	const text = generateText(game);
 
-	// Player has won the game
-	if (game.tilesLeft == numOfMines) {
+	if (game.player.lost) {
+		// Lose the game
+		lose(game);
+	} else if (game.tilesLeft == numOfMines) {
 		// Win the game
 		const lastEmbed = game.embed.embeds[0];
 		const embed = new MessageEmbed(lastEmbed).setDescription(text);
@@ -144,11 +147,6 @@ function gameLoop(game, move) {
 
 		game.interaction.editReply({ embeds: [embed], components: [] });
 		games.delete(game.interaction.id);
-
-	} else if (game.player.lost) {
-		// Lose the game
-		lose(game);
-
 	} else {
 		// Updates the game's stats
 		const lastEmbed = game.embed.embeds[0];
@@ -164,7 +162,7 @@ function gameLoop(game, move) {
 	// Waits for the user's input
 }
 
-function lose(game) {
+async function lose(game) {
 	for (let x = 0; x < size + 2; x++) {
 		for (let y = 0; y < size + 2; y++) {
 			// Avoids the boom and walls
@@ -192,7 +190,20 @@ function lose(game) {
 		inline: false,
 	};
 
-	game.interaction.editReply({ embeds: [embed], components: [] });
+	// In case the channel/interaction was deleted
+	try {
+		await game.interaction.editReply({ embeds: [embed], components: [] });
+	} catch (error) {
+		logger.child({
+			mode: 'MINESWEEPER',
+			metaData: { user: game.interaction.user.username, userid: game.interaction.user.id, guild: game.interaction.guild.name, guildid: game.interaction.guild.id },
+		}).warn(`Minesweeper game by '${game.interaction.user.username}' could not be changed in '${game.interaction.guild.name}'`);
+		logger.child({
+			mode: 'MINESWEEPER',
+			metaData: { user: game.interaction.user.username, userid: game.interaction.user.id, guild: game.interaction.guild.name, guildid: game.interaction.guild.id },
+		}).error(error);
+	}
+
 	games.delete(game.interaction.id);
 }
 
@@ -405,7 +416,7 @@ function generateMines() {
 			x: randomNumber() + 1,
 			y: randomNumber() + 1,
 		};
-		if (!mines.some(positionMatch.bind(null, mine))) {
+		if (!(mines.some(positionMatch.bind(null, mine)) || (mine.x == 1 && mine.y == 1))) {
 			mines.push(mine);
 		}
 	}
