@@ -7,6 +7,9 @@ const size = 8;
 
 const games = new Collection();
 
+const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫'];
+const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴'];
+
 // Creates a game for a user
 function createGame(myInteraction) {
 	// Creates a game object
@@ -16,6 +19,8 @@ function createGame(myInteraction) {
 		flags: 0,
 		tilesLeft: size * size,
 		player: {
+			emoji: '',
+			walls: '',
 			x: 1,
 			y: 1,
 			tileStatus: 0,
@@ -36,13 +41,17 @@ function createGame(myInteraction) {
 // Starts a new game
 function startGame(game) {
 
+	// Selects a random player emoji and wall color
+	game.player.emoji = playerEmojis[Math.floor(Math.random() * playerEmojis.length)];
+	game.player.walls = wallColors[Math.floor(Math.random() * wallColors.length)];
+
 	game.board = generateBoard(game.board);
 	updateBoard(game); // Adds the player
 	const text = generateText(game);
 
 	// Creates the board
 	const minesweeperEmbed = newEmbed()
-		.setTitle('Minesweeper')
+		.setTitle('Minesweeper 💣')
 		.setColor(colors.minesweeperCommand)
 		.addFields({
 			name: 'Bombs Left',
@@ -107,8 +116,6 @@ async function awaitInput(game) {
 			lose(game);
 		}
 	});
-
-
 }
 
 function gameLoop(game, move) {
@@ -276,13 +283,13 @@ function generateText(game) {
 				break;
 
 			case 2: // Player
-				text += '😎';
+				text += game.player.emoji;
 				break;
 			case 3: // Flag
 				text += '🟥';
 				break;
 			case 4: // Border
-				text += '🟩';
+				text += game.player.walls;
 				break;
 			case 5: // Exploded Bomb
 				text += '💥';
