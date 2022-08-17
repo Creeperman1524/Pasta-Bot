@@ -58,8 +58,6 @@ module.exports = {
 
 	// Commands
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		switch (interaction.options.getSubcommand()) {
 		case 'status':
 			statusCommand(interaction);

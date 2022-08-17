@@ -8,8 +8,6 @@ module.exports = {
 	category: 'information',
 
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		const pingEmbed = newEmbed()
 			.setTitle('Ping')
 			.setColor(colors.pingCommand)

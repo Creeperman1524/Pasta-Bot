@@ -10,8 +10,6 @@ module.exports = {
 	category: 'minecraft',
 
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}/`;
 
 		// Gets the data

@@ -446,7 +446,6 @@ module.exports = {
 	category: 'minigames',
 
 	async execute(interaction) {
-		await interaction.deferReply();
 		createGame(interaction);
 	},
 };

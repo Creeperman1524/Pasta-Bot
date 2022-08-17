@@ -3,7 +3,6 @@ const { MessageEmbed } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
-const mongoose = require('mongoose');
 const database = require('../../util/database.js');
 const guildConfigSchema = require('../../schemas/guildConfigs.js');
 
@@ -81,7 +80,6 @@ module.exports = {
 	category: 'admin',
 
 	async execute(interaction) {
-		await interaction.deferReply();
 		switch (interaction.options.getSubcommand()) {
 		case 'create':
 			createReactionMessage(interaction);
