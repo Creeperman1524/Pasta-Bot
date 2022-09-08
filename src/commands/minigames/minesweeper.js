@@ -403,15 +403,54 @@ function randomNumber() {
 	return Math.floor(Math.random() * size);
 }
 
+function generateHelpMenu() {
+	return newEmbed()
+		.setTitle('How to Play Minesweeper 💣')
+		.setColor(colors.minesweeperCommand)
+		.setDescription('__Minesweeper__ is a game about avoiding mines and clicking tiles. You begin with a board that is full of *hidden tiles*. Under these tiles are randomly generated mines and it is your job to find them. Here are a few actions to help you in your minesweeper career! ')
+		.addFields({
+			name: 'Movement 🎮',
+			value: 'Movement is as simple as it gets, using the movement buttons below you can guide your character around the board to wherever you see fit. The buttons automatically grey out when an illegal move could be performed.',
+		}, {
+			name: 'Digging ⛏️',
+			value: 'Digging is one of the core features of minesweeper. Clicking the button will dig the tile beneath your character. It may reveal a tile (meaning you\'re safe) or a bomb (losing the game). **The number on the tile revealed indicates how many mines are within a 3x3 area centered on that tile.** If the tile is 0, a regular cleared tile will be placed there instead.\n\n*P.S. the top right tile will never be a mine ;)*',
+		}, {
+			name: 'Flagging 🚩',
+			value: 'Flags are a useful (but not necessary) feature of the game. You can flag spots that you *know for sure* are mines to help aid in completing the game. It also helps not accidentally blowing yourself up as you cannot dig flagged tiles.',
+		}, {
+			name: 'Winning/Losing 💥',
+			value: 'If you are skillful enough, you can clear every single tile except the mines on the entire board. Congratulations! You won!! If you were the unlucky fellow who dug up that mine, you lost :(',
+		})
+	}
+
 // The discord command bits
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('minesweeper')
-		.setDescription('Start a game of minesweeper'),
+		.setDescription('A minesweeper minigame')
+
+		// start game
+		.addSubcommand(subcommand => subcommand
+			.setName('start')
+			.setDescription('Start a game of minesweeper'),
+		)
+
+		// help
+		.addSubcommand(subcommand => subcommand
+			.setName('help')
+			.setDescription('Open a help menu on minesweeper'),
+		)
 	category: 'minigames',
 
 	async execute(interaction) {
 		await interaction.deferReply();
-		createGame(interaction);
+
+		switch (interaction.options.getSubcommand()) {
+		case 'start':
+			createGame(interaction);
+			break;
+		case 'help':
+			interaction.editReply({ embeds: [generateHelpMenu()] });
+			break;
 	},
 };
