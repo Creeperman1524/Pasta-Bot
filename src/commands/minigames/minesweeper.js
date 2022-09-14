@@ -3,6 +3,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
+const database = require('../../util/database.js');
+const minesweeperStatsSchema = require('../../schemas/minesweeperStats.js');
+
 const numOfMines = 10;
 const size = 8;
 
@@ -19,6 +22,7 @@ function createGame(myInteraction) {
 		buttons: [],
 		flags: 0,
 		tilesLeft: size * size,
+		startTime: 0,
 		player: {
 			emoji: '',
 			walls: '',
@@ -124,6 +128,9 @@ async function awaitInput(game) {
 // The main game loop to update everything
 function gameLoop(game, move) {
 
+	// Starts the timer on the first click
+	if(game.startTime == 0) game.startTime = Date.now();
+
 	updatePlayer(game, move);
 	updateBoard(game, move);
 
@@ -131,10 +138,17 @@ function gameLoop(game, move) {
 
 	// Lose, win, or update the game information
 	if (game.player.lost) {
+		// Saves the data and stops the timer, returns if there's a faster time
+		saveData(game.interaction, false, game.startTime, Date.now());
+
 		// Lose the game
 		lose(game);
 	} else if (game.tilesLeft == numOfMines) {
 		// Win the game
+
+		// Saves the data and stops the timer, returns if there's a faster time
+		const fasterTime = saveData(game.interaction, true, game.startTime, Date.now());
+
 		const lastEmbed = game.embed.embeds[0];
 		const embed = new MessageEmbed(lastEmbed).setDescription(text);
 		embed.fields = {
@@ -403,6 +417,37 @@ function randomNumber() {
 	return Math.floor(Math.random() * size);
 }
 
+// Saves the new data to the database and returns if there was a new fastest time
+async function saveData(interaction, won, startTime, endTime) {
+	// Reads from the database
+	let data = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
+
+	// Checks to see if the user is in the database
+	if(!data) {
+		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new user stats for minesweeper');
+		const minesweeperStats = await minesweeperStatsSchema.create({
+			userID: interaction.user.id,
+		});
+		database.writeToDatabase(minesweeperStats, 'NEW MINESWEEPER STATS');
+
+		data = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
+	}
+
+	// Checks if there was a faster time (and that you won that game)
+	const isFasterTime = data.fastestTime > (endTime - startTime);
+	const fasterTime = isFasterTime && won ? (endTime - startTime) : data.fastestTime;
+
+	// Updates the stats of the user
+	const newMinesweeperStats = await minesweeperStatsSchema.findOneAndUpdate({ userID: interaction.user.id }, {
+		wins: (data.wins + (won ? 1 : 0)),
+		totalGames: (data.totalGames + 1),
+		fastestTime: fasterTime,
+	});
+	database.writeToDatabase(newMinesweeperStats, 'UPDATED MINESWEEPER STATS');
+
+	return isFasterTime;
+}
+
 function generateHelpMenu() {
 	return newEmbed()
 		.setTitle('How to Play Minesweeper 💣')
@@ -420,8 +465,8 @@ function generateHelpMenu() {
 		}, {
 			name: 'Winning/Losing 💥',
 			value: 'If you are skillful enough, you can clear every single tile except the mines on the entire board. Congratulations! You won!! If you were the unlucky fellow who dug up that mine, you lost :(',
-		})
-	}
+		});
+}
 
 // The discord command bits
 module.exports = {
