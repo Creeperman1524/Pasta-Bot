@@ -5,6 +5,7 @@ const { logger } = require('../../logging.js');
 
 const database = require('../../util/database.js');
 const minesweeperStatsSchema = require('../../schemas/minesweeperStats.js');
+const { leaderboard } = require('../../util/leaderboard.js');
 
 const numOfMines = 10;
 const size = 8;
@@ -434,8 +435,8 @@ async function saveData(interaction, won, startTime, endTime) {
 	}
 
 	// Checks if there was a faster time (and that you won that game)
-	const isFasterTime = data.fastestTime > (endTime - startTime);
-	const fasterTime = isFasterTime && won ? (endTime - startTime) : data.fastestTime;
+	const isFasterTime = data.fastestTime > ((endTime - startTime) / 1000);
+	const fasterTime = isFasterTime && won ? ((endTime - startTime) / 1000) : data.fastestTime;
 
 	// Updates the stats of the user
 	const newMinesweeperStats = await minesweeperStatsSchema.findOneAndUpdate({ userID: interaction.user.id }, {
@@ -468,6 +469,46 @@ function generateHelpMenu() {
 		});
 }
 
+async function leaderboards(interaction) {
+	if(interaction.options.getString('type') == 'fastest') { // Fastest times
+
+		// Gets all users who have a fastest time (with an actual time)
+		const users = await minesweeperStatsSchema.find({ fastestTime : { $lte : 10 * 60 * 1000 } });
+
+		// Creates the embed
+		const fastestTimesEmbed = newEmbed()
+			.setTitle('Leaderboard - Fastest Times')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(leaderboard(users, true, 'fastestTime', interaction.user.id));
+		interaction.editReply({ embeds: [fastestTimesEmbed] });
+
+	} else if(interaction.options.getString('type') == 'played') { // Most plays
+
+		// Gets all users who have played at least 1 game
+		const users = await minesweeperStatsSchema.find({ totalGames : { $gt : 0 } });
+
+		// Creates the embed
+		const mostPlayedEmbed = newEmbed()
+			.setTitle('Leaderboard - Most Played')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(leaderboard(users, false, 'totalGames', interaction.user.id));
+		interaction.editReply({ embeds: [mostPlayedEmbed] });
+
+	} else if(interaction.options.getString('type') == 'wins') { // Most wins
+
+		// Gets all users who have won at least 1 game
+		const users = await minesweeperStatsSchema.find({ wins : { $gt : 0 } });
+
+		// Creates the embed
+		const mostWinsEmbed = newEmbed()
+			.setTitle('Leaderboard - Most Wins')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(leaderboard(users, false, 'wins', interaction.user.id));
+		interaction.editReply({ embeds: [mostWinsEmbed] });
+
+	}
+}
+
 // The discord command bits
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -485,6 +526,23 @@ module.exports = {
 			.setName('help')
 			.setDescription('Open a help menu on minesweeper'),
 		)
+
+		// leaderboards
+		.addSubcommand(subcommand => subcommand
+			.setName('leaderboards')
+			.setDescription('Showcases the global leaderboards for minesweeper')
+			.addStringOption(option => option
+				.setName('type')
+				.setDescription('The type of leaderboard to show')
+				.setRequired(true)
+				.addChoices(
+					{ name: 'fastest', value: 'fastest' },
+					{ name: 'most played', value: 'played' },
+					{ name: 'most wins', value: 'wins' },
+				),
+			),
+		)
+
 	category: 'minigames',
 
 	async execute(interaction) {
@@ -497,5 +555,9 @@ module.exports = {
 		case 'help':
 			interaction.editReply({ embeds: [generateHelpMenu()] });
 			break;
+		case 'leaderboards':
+			leaderboards(interaction);
+			break;
+		}
 	},
 };
