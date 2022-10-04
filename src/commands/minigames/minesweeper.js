@@ -127,7 +127,7 @@ async function awaitInput(game) {
 }
 
 // The main game loop to update everything
-function gameLoop(game, move) {
+async function gameLoop(game, move) {
 
 	// Starts the timer on the first click
 	if(game.startTime == 0) game.startTime = Date.now();
@@ -140,7 +140,7 @@ function gameLoop(game, move) {
 	// Lose, win, or update the game information
 	if (game.player.lost) {
 		// Saves the data and stops the timer, returns if there's a faster time
-		saveData(game.interaction, false, game.startTime, Date.now());
+		await saveData(game.interaction, false, game.startTime, Date.now());
 
 		// Lose the game
 		lose(game);
@@ -148,15 +148,19 @@ function gameLoop(game, move) {
 		// Win the game
 
 		// Saves the data and stops the timer, returns if there's a faster time
-		const fasterTime = saveData(game.interaction, true, game.startTime, Date.now());
+		const fasterTime = await saveData(game.interaction, true, game.startTime, Date.now());
 
 		const lastEmbed = game.embed.embeds[0];
 		const embed = new MessageEmbed(lastEmbed).setDescription(text);
-		embed.fields = {
+		embed.fields = [{
 			name: 'You Win!',
 			value: 'Thanks for playing! :grin:',
 			inline: false,
-		};
+		}, {
+			name: fasterTime ? '[PB] Time Completed' : 'Time Completed',
+			value: `\`${(Date.now() - game.startTime) / 1000}s\``,
+			inline: false,
+		}];
 
 		game.player.won = true;
 
