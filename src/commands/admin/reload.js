@@ -18,8 +18,6 @@ module.exports = {
 	category: 'admin',
 
 	async execute(interaction) {
-		await interaction.deferReply({ ephemeral: true });
-
 		// Retrieves the command
 		const commandName = interaction.options.getString('command').toLowerCase();
 		const command = interaction.client.commands.get(commandName);

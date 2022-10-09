@@ -15,8 +15,6 @@ module.exports = {
 	category: 'information',
 
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		const command = interaction.options.getString('command');
 		if(!command) {
 			generalHelp(interaction);

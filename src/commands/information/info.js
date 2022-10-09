@@ -45,7 +45,7 @@ module.exports = {
 			})
 			.setTimestamp(buildDate);
 
-		interaction.reply({
+		interaction.editReply({
 			embeds: [infoEmbed],
 			components: [row],
 		});

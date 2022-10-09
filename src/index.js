@@ -48,6 +48,8 @@ async function interactionCommand(interaction) {
 
 	if (!command) return; // If the command doesn't exist, return
 
+	await interaction.deferReply();
+
 	// Tries to run the command
 	try {
 		logger.child({
@@ -60,7 +62,6 @@ async function interactionCommand(interaction) {
 				subcommand: interaction.options._subcommand,
 			},
 		}).info(`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`);
-
 		await command.execute(interaction);
 	} catch (error) {
 		logger.child({
@@ -79,7 +80,7 @@ async function interactionCommand(interaction) {
 			.setColor(colors.error)
 			.setDescription('There was an error trying to execute that command!');
 
-		return interaction.reply({
+		return interaction.editReply({
 			embeds : [errorEmbed],
 			ephemeral: true,
 		});
