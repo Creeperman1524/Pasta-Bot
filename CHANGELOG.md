@@ -1,5 +1,26 @@
 ## :scroll: Changelog
 
+#### 0.9.1 - Minesweeper Update (10/9/22)
+- Added more randomized decorative pieces
+	- The player emoji is randomized per game
+	- The wall colors are randomized per game
+- Added a How to Play menu
+- Added multiple subcommands 
+	- `start` to start a new game
+	- `help` to bring up the help menu
+	- `leaderboard` to show many leaderboards
+	- `stats` to show user stats
+- Added data-saving
+	- Allows for multiple leaderboards (fastest times, most wins, total games)
+	- Allows users to see their own stats as well
+- Changed the emoji-based movement to button-based
+- Fixed many bugs
+	- Fixed the "first click bug"
+		- The top left tile is never a bomb
+	- Emojis are better optimized as unicode
+	- Fixed bombs sometimes not "exploding"
+	- Fixed a bot crash when a channel/thread with an activate game is deleted
+	- Made the "ends at" timestamp nicer 
 ### 0.9.0 - Database (8/9/22)
 - Added a MongoDB database that the bot can interface with 
 	- Logs connections and outages 
