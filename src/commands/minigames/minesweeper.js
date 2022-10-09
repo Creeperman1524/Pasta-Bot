@@ -513,6 +513,60 @@ async function leaderboards(interaction) {
 	}
 }
 
+async function generateStatsEmbed(interaction) {
+	if(interaction.options.getUser('user')) { // Stats of another user
+		const stats = await minesweeperStatsSchema.findOne({ userID: interaction.options.getUser('user').id });
+
+		// If the user inputted a user that's not in the database
+		if(stats == null) {
+			const warnEmbed = newEmbed()
+				.setTitle('No Data')
+				.setColor(colors.warn)
+				.setDescription('That user is not in the database!');
+			interaction.editReply({ embeds: [warnEmbed] });
+			return;
+		}
+
+		const statsEmbed = newEmbed()
+			.setTitle('User Statistics')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(
+				`**User - <@${interaction.options.getUser('user').id}>**
+				**Wins**: \`${stats.wins}\`
+				**Total Games**: \`${stats.totalGames}\`
+				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
+				**Fastest Time**: \`${stats.fastestTime}s\``,
+			);
+
+		interaction.editReply({ embeds: [statsEmbed] });
+
+	} else { // Stats of the user
+		const stats = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
+
+		if(stats == null) {
+			const warnEmbed = newEmbed()
+				.setTitle('No Data')
+				.setColor(colors.warn)
+				.setDescription('You haven\'t played any games!');
+			interaction.editReply({ embeds: [warnEmbed] });
+			return;
+		}
+
+		const statsEmbed = newEmbed()
+			.setTitle('User Statistics')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(
+				`**User - <@${interaction.user.id}>**
+				**Wins**: \`${stats.wins}\`
+				**Total Games**: \`${stats.totalGames}\`
+				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
+				**Fastest Time**: \`${stats.fastestTime}s\``,
+			);
+
+		interaction.editReply({ embeds: [statsEmbed] });
+	}
+}
+
 // The discord command bits
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -547,6 +601,15 @@ module.exports = {
 			),
 		)
 
+		// user stats
+		.addSubcommand(subcommand => subcommand
+			.setName('stats')
+			.setDescription('Gets the stats of a user')
+			.addUserOption(option => option
+				.setName('user')
+				.setDescription('The user to view the stats of'),
+			),
+		),
 	category: 'minigames',
 
 	async execute(interaction) {
@@ -561,6 +624,9 @@ module.exports = {
 			break;
 		case 'leaderboards':
 			leaderboards(interaction);
+			break;
+		case 'stats':
+			generateStatsEmbed(interaction);
 			break;
 		}
 	},
