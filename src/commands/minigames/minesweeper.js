@@ -616,8 +616,6 @@ module.exports = {
 	category: 'minigames',
 
 	async execute(interaction) {
-		await interaction.deferReply();
-
 		switch (interaction.options.getSubcommand()) {
 		case 'start':
 			createGame(interaction);
