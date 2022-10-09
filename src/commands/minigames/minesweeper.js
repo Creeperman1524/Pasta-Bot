@@ -453,6 +453,7 @@ async function saveData(interaction, won, startTime, endTime) {
 	return isFasterTime;
 }
 
+// Generates the help menu to show to the user
 function generateHelpMenu() {
 	return newEmbed()
 		.setTitle('How to Play Minesweeper 💣')
@@ -473,6 +474,7 @@ function generateHelpMenu() {
 		});
 }
 
+// Sends the different leaderboards to the user depending on the type
 async function leaderboards(interaction) {
 	if(interaction.options.getString('type') == 'fastest') { // Fastest times
 
@@ -513,6 +515,7 @@ async function leaderboards(interaction) {
 	}
 }
 
+// Sends the user's stats depending on who they want
 async function generateStatsEmbed(interaction) {
 	if(interaction.options.getUser('user')) { // Stats of another user
 		const stats = await minesweeperStatsSchema.findOne({ userID: interaction.options.getUser('user').id });
