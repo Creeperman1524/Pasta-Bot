@@ -9,7 +9,7 @@ function writeToDatabase(schema, type) {
 		id: schema.id,
 		type: {
 			botID: schema.botID,
-			guildID: schema.guildId,
+			guildID: schema.guildID,
 			userID: schema.userID,
 			type: this.type,
 		},
