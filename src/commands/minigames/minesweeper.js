@@ -538,7 +538,7 @@ async function generateStatsEmbed(interaction) {
 				**Wins**: \`${stats.wins}\`
 				**Total Games**: \`${stats.totalGames}\`
 				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
-				**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}s\``,
+				**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}\``,
 			);
 
 		interaction.editReply({ embeds: [statsEmbed] });
@@ -563,7 +563,7 @@ async function generateStatsEmbed(interaction) {
 				**Wins**: \`${stats.wins}\`
 				**Total Games**: \`${stats.totalGames}\`
 				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
-				**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}s\``,
+				**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}\``,
 			);
 
 		interaction.editReply({ embeds: [statsEmbed] });
