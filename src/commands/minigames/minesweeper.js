@@ -148,7 +148,8 @@ async function gameLoop(game, move) {
 		// Win the game
 
 		// Saves the data and stops the timer, returns if there's a faster time
-		const fasterTime = await saveData(game.interaction, true, game.startTime, Date.now());
+		const endTime = Date.now();
+		const fasterTime = await saveData(game.interaction, true, game.startTime, endTime);
 
 		const lastEmbed = game.embed.embeds[0];
 		const embed = new MessageEmbed(lastEmbed).setDescription(text);
@@ -158,7 +159,7 @@ async function gameLoop(game, move) {
 			inline: false,
 		}, {
 			name: fasterTime ? '[PB] Time Completed' : 'Time Completed',
-			value: `\`${(Date.now() - game.startTime) / 1000}s\``,
+			value: `\`${(endTime - game.startTime) / 1000}s\``,
 			inline: false,
 		}];
 
