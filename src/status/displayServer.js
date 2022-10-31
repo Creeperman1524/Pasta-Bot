@@ -20,6 +20,7 @@ module.exports = {
 				if (!(typeof err === 'undefined' || err === null)) {
 					// console.log(err);
 					resolve(['an offline server :(', 'dnd']);
+					return;
 				}
 
 				// Server online with no players
