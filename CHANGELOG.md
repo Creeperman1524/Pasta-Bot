@@ -1,5 +1,13 @@
 ## :scroll: Changelog
 
+#### 0.9.2 - Activity System (10/30/22)
+- Added new Activity System
+	- Added a new rotating status system
+	- Minecraft server takes control of the icon, and is only shown when someone is online
+	- Rotates through multiple statuses
+- Added Special Calendar Events
+	- Added an activity that displays a countdown for upcoming events
+	- Added the `events.json` file to add more events
 #### 0.9.1 - Minesweeper Update (10/9/22)
 - Added more randomized decorative pieces
 	- The player emoji is randomized per game
