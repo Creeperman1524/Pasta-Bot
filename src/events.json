@@ -1,13 +1,22 @@
 {
 	"events": {
-		"Halloween": [22, 10, 31, 0, 0],
-		"Election Day": [22, 11, 8, 0, 0],
-		"Thanksgiving": [22, 11, 24, 0, 0],
-		"Winter Break": [22, 12, 23, 11, 42],
-		"Christmas": [22, 12, 25, 0, 0],
-		"New Years": [23, 1, 1, 0, 0],
-		"Valentine's Day": [23, 2, 14, 0, 0],
-		"St. Patrick's Day": [23, 3, 17, 0, 0],
-		"Graduation": [23, 6, 19, 0, 0]
+		"Halloween": 		[22, 10, 31, 0, 0],
+		"Election Day": 	[22, 11, 8, 0, 0],
+		"Thanksgiving": 	[22, 11, 24, 0, 0],
+		"Winter Break": 	[22, 12, 23, 11, 42],
+		"Christmas": 		[22, 12, 25, 0, 0],
+		"New Years": 		[23, 1, 1, 0, 0],
+		"MLK Jr. Day": 		[23, 1, 16, 0, 0],
+		"Lunar New Year": 	[23, 1, 22, 0, 0],
+		"Groundhog Day": 	[23, 2, 2, 0, 0],
+		"Superbowl": 		[23, 2, 12, 18, 0],
+		"Valentine's Day": 	[23, 2, 14, 0, 0],
+		"President's Day": 	[23, 2, 20, 0, 0],
+		"Daylight Savings":	[23, 3, 12, 2, 0],
+		"St. Patrick's Day": 	[23, 3, 17, 0, 0],
+		"Spring Break": 	[23, 3, 31, 11, 42],
+		"April Fool's": 	[23, 4, 1, 0, 0],
+		"Easter": 		[23, 4, 9, 0, 0],
+		"Graduation": 		[23, 6, 19, 0, 0]
 	}
 }
