@@ -45,6 +45,7 @@ const colors = {
 	serverPaperCommand: '0x5fc2d4',
 	minesweeperCommand: '0x232323',
 	reactionRolesCommand: '0x3274ba',
+	tictactoeCommand: '0xdecc00',
 
 	success: '0x009f00',
 	warn: '0xfdff63',
