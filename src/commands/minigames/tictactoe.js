@@ -11,6 +11,11 @@ const emojis = {
 	'O': '⭕',
 	'confirm': '✔️',
 	'deny': '✖️',
+
+	'currentPlayer': '🧑',
+	'waitingPlayer': '👤',
+	'currentBot': '🤖',
+	'waitingBot': '👤',
 };
 
 // Creates a new game for the user
@@ -19,7 +24,8 @@ function createGame(myInteraction) {
 		board: [], 					// The internal array of the board
 		buttons: [],				// The button representation of the board
 		confirmation: [], 			// The buttons to accept or deny the play request
-		player1Turn: false, 		// Whether or not it's player1's turn
+		player1Turn: true,	 		// Whether or not it's player1's turn
+		player1: null,				// THe user object of player1
 		player2: null, 				// The user object of player2
 		player2Accepted: false, 	// Whether or not player2 accepeted the game
 		componentCollector: null,	// The main component collect for the game
@@ -56,6 +62,7 @@ function startGame(game) {
 			createButton('8', emojis.blank, 'SECONDARY'), // XXX
 		);
 	game.buttons = [row1, row2, row3];
+	game.player1 = game.interaction.user;
 
 	if(!game.interaction.options.getUser('user')) {
 		// Playing against the bot
@@ -84,6 +91,18 @@ function startGameBot(game) {
 function startGameUser(game) {
 	game.player2 = game.interaction.options.getUser('user');
 
+	// Tries to play against themselves
+	if(game.player2.id == game.player1.id || game.player2.bot) {
+		const invalidUser = newEmbed()
+			.setTitle('Invalid User!')
+			.setColor(colors.error)
+			.setDescription('You cannot play against that user!');
+
+		game.interaction.editReply({ embeds: [invalidUser], components: [] });
+		games.delete(game.interaction.id);
+		return;
+	}
+
 	const confirmationRow = new MessageActionRow()
 		.addComponents(
 			createButton('yes', emojis.confirm, 'SUCCESS'),
@@ -92,9 +111,9 @@ function startGameUser(game) {
 
 	// Embed to ask player2
 	const requestEmbed = newEmbed()
-		.setTitle('Tic-Tac-Toe')
+		.setTitle('Tic-Tac-Toe Duel Request')
 		.setColor(colors.tictactoeCommand)
-		.setDescription(`<@${game.interaction.user.id}> is challenging you to a game!\nReact below if you wish to accept!`)
+		.setDescription(`<@${game.player1.id}> is challenging you to a game!\nReact below if you wish to accept!`)
 		.addFields({
 			name: 'Time to Accept',
 			value: `<t:${Math.round((new Date().getTime() + 60000) / 1000)}:R>`,
@@ -103,7 +122,6 @@ function startGameUser(game) {
 
 	// Sends the game to the channel and waits for confirmation
 	game.interaction.editReply({ content: `<@${game.player2.id}>`, embeds: [requestEmbed], components:[confirmationRow] }).then(async embed => {
-		game.embed = embed;
 
 		// Waits to accept request
 		const confirmationCollector = embed.createMessageComponentCollector({ componentType: 'BUTTON', time: 1 * 60000 });
@@ -113,10 +131,30 @@ function startGameUser(game) {
 
 			if(button.customId == 'no' && !game.player2Accepted) deniedRequest(game, false);
 
+			// Player2 accepted request
 			game.player2Accepted = true;
 			confirmationCollector.stop(); // Disposes of the collector
 
-			// TODO: initialize the game board, awaitInput()
+			game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+
+			const tictactoeEmbed = newEmbed()
+				.setTitle('Tic-Tac-Toe')
+				.setColor(colors.tictactoeCommand)
+				.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingPlayer}`)
+				.addFields({
+					name: 'Time Left',
+					value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
+					inline: true,
+				});
+
+			// Sends the game
+			game.interaction.editReply({ embeds : [tictactoeEmbed], components: game.buttons }).then(async e => {
+				game.embed = e;
+
+				// Waits for the user's input
+				awaitInput(game);
+			});
+
 		});
 
 		// Ran out of time
@@ -141,16 +179,35 @@ function deniedRequest(game, timeout) {
 function awaitInput(game) {
 	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: 'BUTTON', time: game.timeout });
 
+	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
 		button.deferUpdate();
-
-		// TODO: playing the game
+		if((game.player1Turn && button.user.id !== game.player1.id) || (!game.player1Turn && button.user.id !== game.player2.id)) return; // Used linear algebra solver to invert this
+		gameLoop(game, button.customId, game.player1Turn ? game.player1 : game.player2);
 	});
 
+	// When the timer runs out/the interaction or channel is deleted
 	game.componentCollector.on('end', () => {
 		// TODO: ran out of time
 	});
 
+}
+
+function gameLoop(game, move, player) {
+	// * Note: When the bot makes a move, it won't fire the collector
+
+	// check if it's the bot's turn
+
+	// Converts from 0-8 to board coordinates
+	const x = move % 3;
+	const y = Math.floor(move / 3);
+
+	// update the internal board
+	// check for a winner
+	// update display
+	// resend message
+
+	game.player1Turn = !game.player1Turn;
 }
 
 // The discord command bits
