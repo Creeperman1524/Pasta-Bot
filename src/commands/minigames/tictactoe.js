@@ -1,4 +1,4 @@
-const { Collection, MessageActionRow, MessageButton } = require('discord.js');
+const { Collection, MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
@@ -28,6 +28,7 @@ function createGame(myInteraction) {
 		player1: null,				// THe user object of player1
 		player2: null, 				// The user object of player2
 		player2Accepted: false, 	// Whether or not player2 accepeted the game
+		winner: 0,					// The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
 		componentCollector: null,	// The main component collect for the game
 		interaction: myInteraction,	// The user command
 		embed: null, 				// The game/embed sent
@@ -85,6 +86,7 @@ function startGameBot(game) {
 	console.log('playing against bot');
 
 	// TODO: initialize the game for the bot
+	game.interaction.editReply({ content: 'we are still working on this :^)' });
 }
 
 // Initializes the game to play against another user
@@ -113,7 +115,7 @@ function startGameUser(game) {
 	const requestEmbed = newEmbed()
 		.setTitle('Tic-Tac-Toe Duel Request')
 		.setColor(colors.tictactoeCommand)
-		.setDescription(`<@${game.player1.id}> is challenging you to a game!\nReact below if you wish to accept!`)
+		.setDescription(`<@${game.player1.id}> is challenging you to a game!\nClick below if you wish to accept!`)
 		.addFields({
 			name: 'Time to Accept',
 			value: `<t:${Math.round((new Date().getTime() + 60000) / 1000)}:R>`,
@@ -183,31 +185,173 @@ function awaitInput(game) {
 	game.componentCollector.on('collect', (button) => {
 		button.deferUpdate();
 		if((game.player1Turn && button.user.id !== game.player1.id) || (!game.player1Turn && button.user.id !== game.player2.id)) return; // Used linear algebra solver to invert this
-		gameLoop(game, button.customId, game.player1Turn ? game.player1 : game.player2);
+		gameLoop(game, button.customId);
 	});
 
 	// When the timer runs out/the interaction or channel is deleted
 	game.componentCollector.on('end', () => {
-		// TODO: ran out of time
+		// Ran out of time with no winner
+		if(game.winner == 0) {
+			// TODO: ran out of time
+		}
 	});
-
 }
 
-function gameLoop(game, move, player) {
+function gameLoop(game, move) {
 	// * Note: When the bot makes a move, it won't fire the collector
 
 	// check if it's the bot's turn
+	//   makes the bot move
+	//   otherwise do the player logic
 
 	// Converts from 0-8 to board coordinates
 	const x = move % 3;
 	const y = Math.floor(move / 3);
 
-	// update the internal board
-	// check for a winner
-	// update display
-	// resend message
+	// Updates the internal board and checks for a winner
+	game.board[y][x] = game.player1Turn ? 1 : -1;
 
-	game.player1Turn = !game.player1Turn;
+	const winner = checkWinner(game.board);
+	game.winner = winner;
+
+	// Updates display
+	updateDisplay(game, game.board);
+
+	// Someone won the game
+	if(game.winner != 0) {
+		win(game);
+	} else {
+		// No winners yet
+
+		// If it's player1's turn, set up the board for player2, vice versa
+		let description;
+		if(game.player1Turn) {
+			description = `${emojis.waitingPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.currentPlayer}`;
+		} else {
+			description = `${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingPlayer}`;
+		}
+
+		// Resend message
+		const lastEmbed = game.embed.embeds[0];
+		const embed = new MessageEmbed(lastEmbed).setDescription(description);
+
+		game.interaction.editReply({ embeds: [embed], components: game.buttons });
+
+		// Flips the player's turn
+		game.player1Turn = !game.player1Turn;
+	}
+}
+
+// Converts the board to discord buttons
+function updateDisplay(game, board) {
+	for (let y = 0; y < 3; y++) {
+		for (let x = 0; x < 3; x++) {
+			const pos = board[y][x];
+
+			// Sets the buttons
+			game.buttons[y].components[x].setStyle(
+				pos == 0 ? 'SECONDARY' : 'PRIMARY',
+			).setEmoji(
+				pos == 0 ? emojis.blank : pos == -1 ? emojis.O : emojis.X,
+			).setDisabled(pos != 0);
+		}
+	}
+}
+
+// Checks if there is a winner for the current board
+// Returns 1 for player1, -1 for player2, 2, for tie, 0 for none
+function checkWinner(board) {
+	let winner = 0;
+
+	// Rows
+	for (let y = 0; y < 3; y++) {
+		if(board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0) winner = board[y][0];
+	}
+
+	// Columns
+	for (let x = 0; x < 3; x++) {
+		if(board[0][x] == board[1][x] && board[0][x] == board[2][x] && board[0][x] != 0) winner = board[0][x];
+	}
+
+	// Positive diagonal
+	if (board[2][0] == board[1][1] && board[2][0] == board[0][2]) winner = board[2][0];
+
+	// Negative diagonal
+	if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) winner = board[0][0];
+
+	let full = true;
+	for (let y = 0; y < 3; y++) {
+		for (let x = 0; x < 3; x++) {
+			if(board[y][x] == 0) full = false;
+		}
+	}
+
+	if(full && winner == 0) winner = 2;
+	return winner;
+}
+
+function displayWinningPositions(game, board) {
+	// Rows
+	for (let y = 0; y < 3; y++) {
+		if(board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0) {
+			game.buttons[y].components[0].setStyle('SUCCESS');
+			game.buttons[y].components[1].setStyle('SUCCESS');
+			game.buttons[y].components[2].setStyle('SUCCESS');
+		}
+	}
+
+	// Columns
+	for (let x = 0; x < 3; x++) {
+		if(board[0][x] == board[1][x] && board[0][x] == board[2][x] && board[0][x] != 0) {
+			game.buttons[0].components[x].setStyle('SUCCESS');
+			game.buttons[1].components[x].setStyle('SUCCESS');
+			game.buttons[2].components[x].setStyle('SUCCESS');
+		}
+	}
+
+	// Positive diagonal
+	if (board[2][0] == board[1][1] && board[2][0] == board[0][2]) {
+		game.buttons[2].components[0].setStyle('SUCCESS');
+		game.buttons[1].components[1].setStyle('SUCCESS');
+		game.buttons[0].components[2].setStyle('SUCCESS');
+	}
+
+	// Negative diagonal
+	if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) {
+		game.buttons[0].components[0].setStyle('SUCCESS');
+		game.buttons[1].components[1].setStyle('SUCCESS');
+		game.buttons[2].components[2].setStyle('SUCCESS');
+	}
+
+}
+
+// Ends the game after someone wins
+function win(game) {
+	displayWinningPositions(game, game.board);
+
+	// Disables all buttons
+	for (let y = 0; y < 3; y++) {
+		for (let x = 0; x < 3; x++) {
+			game.buttons[y].components[x].setDisabled(true);
+		}
+	}
+
+	// Tells the winner
+	let description;
+	if(game.winner == 2) {
+		description = 'Tie!';
+	} else {
+		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
+	}
+
+	// Updates the message
+	const lastEmbed = game.embed.embeds[0];
+	const embed = new MessageEmbed(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`);
+	embed.fields = [];
+
+	// Removes the game from memory
+	game.interaction.editReply({ embeds: [embed], components: game.buttons });
+	games.delete(game.interaction.id);
 }
 
 // The discord command bits
