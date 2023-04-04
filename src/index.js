@@ -91,7 +91,7 @@ async function autocompleteCommand(interaction) {
 	const command = client.commands.get(interaction.commandName);
 
 	try {
-		command.autocomplete(interaction);
+		// command.autocomplete(interaction);  // TODO: wait for discord.js fix
 	} catch (error) {
 		logger.child({
 			mode: 'AUTOCOMPLETE',
