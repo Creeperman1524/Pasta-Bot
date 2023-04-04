@@ -17,6 +17,11 @@
 		"Spring Break": 	[23, 3, 31, 11, 42],
 		"April Fool's": 	[23, 4, 1, 0, 0],
 		"Easter": 		[23, 4, 9, 0, 0],
-		"Graduation": 		[23, 6, 19, 0, 0]
+		"Mother's Day":		[23, 5, 14, 0, 0],
+		"Prom":			[23, 5, 19, 18, 0],
+		"Memorial Day":		[23, 5, 29, 0, 0],
+		"Father's Day":		[23, 6, 18, 0, 0],
+		"Graduation": 		[23, 6, 20, 9, 0],
+		"Independence Day":	[23, 7, 4, 0, 0],
 	}
 }
