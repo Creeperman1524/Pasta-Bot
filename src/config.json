@@ -3,5 +3,5 @@
 	"statusInterval": "20",
 	"commandRefreshInterval": "30",
 	"mcServerPort": "25565",
-	"mcServerVersion": "1.19.3"
+	"mcServerVersion": "1.20.1"
 }
