@@ -8,6 +8,10 @@
 - Added Special Calendar Events
 	- Added an activity that displays a countdown for upcoming events
 	- Added the `events.json` file to add more events
+- Added Birthdays (7/6/23)
+	- Added an activity that displays a countdown for upcoming birthdays
+	- Added the `birthdays.json` file to add more birthdays
+	- Displays "Happy birthday" on each specific day, before resuming the countdown at 7pm
 #### 0.9.1 - Minesweeper Update (10/9/22)
 - Added more randomized decorative pieces
 	- The player emoji is randomized per game
