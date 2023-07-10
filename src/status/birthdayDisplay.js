@@ -12,7 +12,7 @@ module.exports = {
 			// Finds the first birthday that's after today
 			// or currently today to display before 7pm
 			const bdate = convertDate(birthdays[b], now);
-			if(bdate.getTime() > now || (bdate.getMonth() == now.getMonth() && bdate.getDay() == now.getDay() && now.getHours() < 19)) {
+			if(bdate.getTime() > now || (bdate.getMonth() == now.getMonth() && bdate.getDate() == now.getDate() && now.getHours() < 19)) {
 				break;
 			}
 		}
