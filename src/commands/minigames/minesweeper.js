@@ -465,7 +465,7 @@ function generateHelpMenu() {
 			value: 'Movement is as simple as it gets, using the movement buttons below you can guide your character around the board to wherever you see fit. The buttons automatically grey out when an illegal move could be performed.',
 		}, {
 			name: 'Digging ⛏️',
-			value: 'Digging is one of the core features of minesweeper. Clicking the button will dig the tile beneath your character. It may reveal a tile (meaning you\'re safe) or a bomb (losing the game). **The number on the tile revealed indicates how many mines are within a 3x3 area centered on that tile.** If the tile is 0, a regular cleared tile will be placed there instead.\n\n*P.S. the top right tile will never be a mine ;)*',
+			value: 'Digging is one of the core features of minesweeper. Clicking the button will dig the tile beneath your character. It may reveal a tile (meaning you\'re safe) or a bomb (losing the game). **The number on the tile revealed indicates how many mines are within a 3x3 area centered on that tile.** If the tile is 0, a regular cleared tile will be placed there instead.\n\n*P.S. the top left tile will never be a mine ;)*',
 		}, {
 			name: 'Flagging 🚩',
 			value: 'Flags are a useful (but not necessary) feature of the game. You can flag spots that you *know for sure* are mines to help aid in completing the game. It also helps not accidentally blowing yourself up as you cannot dig flagged tiles.',
