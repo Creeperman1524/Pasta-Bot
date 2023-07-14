@@ -14,7 +14,7 @@ const emojis = {
 
 	'currentPlayer': '🧑',
 	'waitingPlayer': '👤',
-	'currentBot': '🤖',
+	'currentBot': '🍝',
 	'waitingBot': '👤',
 };
 
@@ -27,12 +27,13 @@ function createGame(myInteraction) {
 		player1Turn: true,	 		// Whether or not it's player1's turn
 		player1: null,				// THe user object of player1
 		player2: null, 				// The user object of player2
-		player2Accepted: false, 	// Whether or not player2 accepeted the game
+		bot: false,
+		player2Accepted: false, 	// Whether or not player2 accepted the game
 		winner: 0,					// The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
 		componentCollector: null,	// The main component collect for the game
 		interaction: myInteraction,	// The user command
 		embed: null, 				// The game/embed sent
-		timeout: 10 * 60000, 		// The expiration timer for the gamee
+		timeout: 10 * 60000, 		// The expiration timer for the game
 	};
 
 	// Adds it to the game object
@@ -79,21 +80,37 @@ function createButton(ID, emoji, style) {
 	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
-// Initializes the game to play agains the bot
+// Initializes the game to play against the bot
 function startGameBot(game) {
-	game.player2 = 'bot';
+	game.player2 = game.interaction.client.user;
+	game.bot = true;
 
-	console.log('playing against bot');
+	game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
 
-	// TODO: initialize the game for the bot
-	game.interaction.editReply({ content: 'we are still working on this :^)' });
+	const tictactoeEmbed = newEmbed()
+		.setTitle('Tic-Tac-Toe')
+		.setColor(colors.tictactoeCommand)
+		.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingBot}`)
+		.addFields({
+			name: 'Time Left',
+			value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
+			inline: true,
+		});
+
+	// Sends the game
+	game.interaction.editReply({ embeds : [tictactoeEmbed], components: game.buttons }).then(async e => {
+		game.embed = e;
+
+		// Waits for the user's input
+		awaitInput(game);
+	});
 }
 
 // Initializes the game to play against another user
 function startGameUser(game) {
 	game.player2 = game.interaction.options.getUser('user');
 
-	// Tries to play against themselves
+	// Tries to play against themselves or a bot
 	if(game.player2.id == game.player1.id || game.player2.bot) {
 		const invalidUser = newEmbed()
 			.setTitle('Invalid User!')
@@ -192,18 +209,12 @@ function awaitInput(game) {
 	game.componentCollector.on('end', () => {
 		// Ran out of time with no winner
 		if(game.winner == 0) {
-			// TODO: ran out of time
+			lose(game);
 		}
 	});
 }
 
 function gameLoop(game, move) {
-	// * Note: When the bot makes a move, it won't fire the collector
-
-	// check if it's the bot's turn
-	//   makes the bot move
-	//   otherwise do the player logic
-
 	// Converts from 0-8 to board coordinates
 	const x = move % 3;
 	const y = Math.floor(move / 3);
@@ -226,9 +237,9 @@ function gameLoop(game, move) {
 		// If it's player1's turn, set up the board for player2, vice versa
 		let description;
 		if(game.player1Turn) {
-			description = `${emojis.waitingPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.currentPlayer}`;
+			description = `${emojis.waitingPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${game.bot ? emojis.currentBot : emojis.currentPlayer}`;
 		} else {
-			description = `${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingPlayer}`;
+			description = `${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${game.bot ? emojis.waitingBot : emojis.waitingPlayer}`;
 		}
 
 		// Resend message
@@ -240,6 +251,19 @@ function gameLoop(game, move) {
 		// Flips the player's turn
 		game.player1Turn = !game.player1Turn;
 	}
+
+	if(!game.bot || game.player1Turn) return;
+
+	// Bot's move
+	const botMove = findBestMove(game);
+	gameLoop(game, botMove);
+
+}
+
+function findBestMove(game) {
+	// TODO: minimax algorithm
+
+	return 0; // 0-9
 }
 
 // Converts the board to discord buttons
@@ -329,6 +353,8 @@ function displayWinningPositions(game, board) {
 function win(game) {
 	displayWinningPositions(game, game.board);
 
+	// TODO: save data
+
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
@@ -336,13 +362,41 @@ function win(game) {
 		}
 	}
 
-	// Tells the winner
+	// Displays the winner
 	let description;
 	if(game.winner == 2) {
 		description = 'Tie!';
 	} else {
 		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
 	}
+
+	// Updates the message
+	const lastEmbed = game.embed.embeds[0];
+	const embed = new MessageEmbed(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`);
+	embed.fields = [];
+
+	// Removes the game from memory
+	game.interaction.editReply({ embeds: [embed], components: game.buttons });
+	games.delete(game.interaction.id);
+}
+
+// Ends the game if someone takes too long
+function lose(game) {
+
+	// TODO: save data
+
+	// Disables all buttons
+	for (let y = 0; y < 3; y++) {
+		for (let x = 0; x < 3; x++) {
+			game.buttons[y].components[x].setDisabled(true);
+		}
+	}
+
+	// Determines who took too long
+	// * Someone could wait until the end of the timer, make a move, and other player loses
+	const loser = game.player1Turn ? game.player1 : game.player2;
+
+	const description = `<@${loser.id}> took too long!`;
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
