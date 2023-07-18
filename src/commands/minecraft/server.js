@@ -296,7 +296,7 @@ function seedCommand(interaction) {
 	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
 		.setColor(colors.serverSeedCommand)
-		.setDescription('Seed: `-2856535938574691800`');
+		.setDescription('Seed: `8783748933437244995`');
 
 	interaction.editReply({ embeds: [seedEmbed] });
 }
