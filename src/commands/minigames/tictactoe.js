@@ -12,7 +12,7 @@ const emojis = {
 	'confirm': '✔️',
 	'deny': '✖️',
 
-	'currentPlayer': '🧑',
+	'currentPlayer': '😎',
 	'waitingPlayer': '👤',
 	'currentBot': '🍝',
 	'waitingBot': '👤',
@@ -27,7 +27,7 @@ function createGame(myInteraction) {
 		player1Turn: true,	 		// Whether or not it's player1's turn
 		player1: null,				// THe user object of player1
 		player2: null, 				// The user object of player2
-		bot: false,
+		bot: false,					// Whether the game is against the bot
 		player2Accepted: false, 	// Whether or not player2 accepted the game
 		winner: 0,					// The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
 		componentCollector: null,	// The main component collect for the game
@@ -214,7 +214,7 @@ function awaitInput(game) {
 	});
 }
 
-function gameLoop(game, move) {
+async function gameLoop(game, move) {
 	// Converts from 0-8 to board coordinates
 	const x = move % 3;
 	const y = Math.floor(move / 3);
@@ -231,6 +231,7 @@ function gameLoop(game, move) {
 	// Someone won the game
 	if(game.winner != 0) {
 		win(game);
+		return;
 	} else {
 		// No winners yet
 
@@ -256,14 +257,99 @@ function gameLoop(game, move) {
 
 	// Bot's move
 	const botMove = findBestMove(game);
+	await sleep(1000);
 	gameLoop(game, botMove);
 
 }
 
-function findBestMove(game) {
-	// TODO: minimax algorithm
+// Sleep function for a small pause
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-	return 0; // 0-9
+// Finds the best move for the bot to make (minimizer)
+function findBestMove(game) {
+	let bestEval = 99;
+	let bestMove = -1; // 0-9
+
+	// Tries to make all possible moves
+	for(let y = 0; y < 3; y++) {
+		for(let x = 0; x < 3; x++) {
+			if(game.board[y][x] != 0) continue; // Already a move there
+
+			game.board[y][x] = -1; // Makes the move
+			const moveEval = MinimaxAlphaBeta(game.board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
+
+			if(moveEval < bestEval) { // Minimizing
+				bestEval = moveEval;
+				bestMove = (y * 3) + (x % 3);
+			}
+
+			game.board[y][x] = 0; // Unmake the move
+		}
+	}
+
+	return bestMove;
+}
+
+// Evaluates how good a move is by seeing if it can win by playing every single game
+// Player = maximizer, bot = minimizer
+function MinimaxAlphaBeta(board, depth, alpha, beta, isMaximizingPlayer) {
+	const score = checkWinner(board);
+
+	if(score == 1) return (score * 10) - depth; // Player won
+	if(score == -1) return (score * 10) + depth; // Bot won
+	if(score == 2) return 0; // Tie
+
+	if(isMaximizingPlayer) {
+		// Player is maximizing
+		let maxEval = -99;
+
+		// Tries every possible move on the board
+		for(let y = 0; y < 3; y++) {
+			for(let x = 0; x < 3; x++) {
+				if(board[y][x] != 0) continue; // Already a move there
+
+				board[y][x] = 1; // Makes the move
+
+				// Evaluates the move
+				const e = MinimaxAlphaBeta(board, depth + 1, alpha, beta, false);
+				maxEval = Math.max(maxEval, e);
+
+				board[y][x] = 0; // Unmake move
+
+				// Trim tree if a better move exists elsewhere
+				alpha = Math.max(alpha, e);
+				if (beta <= alpha) break;
+			}
+		}
+
+		return maxEval;
+	} else {
+		// Bot is minimizing
+		let minEval = 99;
+
+		// Tries every possible move on the board
+		for(let y = 0; y < 3; y++) {
+			for(let x = 0; x < 3; x++) {
+				if(board[y][x] != 0) continue; // Already a move there
+
+				board[y][x] = -1; // Makes the move
+
+				// Evaluates the move
+				const e = MinimaxAlphaBeta(board, depth + 1, alpha, beta, true);
+				minEval = Math.min(minEval, e);
+
+				board[y][x] = 0; // Unmake move
+
+				// Trim tree if a better move exists elsewhere
+				beta = Math.min(beta, e);
+				if(beta <= alpha) break;
+			}
+		}
+
+		return minEval;
+	}
 }
 
 // Converts the board to discord buttons
