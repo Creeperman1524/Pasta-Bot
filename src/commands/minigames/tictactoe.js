@@ -3,6 +3,9 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
+const database = require('../../util/database.js');
+const tictactoeStatsSchema = require('../../schemas/tictactoeStats.js');
+
 const games = new Collection();
 
 const emojis = {
@@ -25,7 +28,7 @@ function createGame(myInteraction) {
 		buttons: [],				// The button representation of the board
 		confirmation: [], 			// The buttons to accept or deny the play request
 		player1Turn: true,	 		// Whether or not it's player1's turn
-		player1: null,				// THe user object of player1
+		player1: null,				// The user object of player1
 		player2: null, 				// The user object of player2
 		bot: false,					// Whether the game is against the bot
 		player2Accepted: false, 	// Whether or not player2 accepted the game
@@ -209,7 +212,7 @@ function awaitInput(game) {
 	game.componentCollector.on('end', () => {
 		// Ran out of time with no winner
 		if(game.winner == 0) {
-			lose(game);
+			ranOutOfTime(game);
 		}
 	});
 }
@@ -230,7 +233,7 @@ async function gameLoop(game, move) {
 
 	// Someone won the game
 	if(game.winner != 0) {
-		win(game);
+		gameEnded(game);
 		return;
 	} else {
 		// No winners yet
@@ -256,8 +259,9 @@ async function gameLoop(game, move) {
 	if(!game.bot || game.player1Turn) return;
 
 	// Bot's move
+	// TODO: randomize bot move
 	const botMove = findBestMove(game);
-	await sleep(1000);
+	await sleep(Math.random() * 1000);
 	gameLoop(game, botMove);
 
 }
@@ -436,10 +440,11 @@ function displayWinningPositions(game, board) {
 }
 
 // Ends the game after someone wins
-function win(game) {
+function gameEnded(game) {
 	displayWinningPositions(game, game.board);
 
-	// TODO: save data
+	saveData(game.player1.id, game.winner == 2 ? 0 : game.winner, game.bot);	// Saves p1
+	saveData(game.player2.id, game.winner == 2 ? 0 : -game.winner, false); 		// Saves p2 (works for PastaBot too!)
 
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
@@ -467,9 +472,10 @@ function win(game) {
 }
 
 // Ends the game if someone takes too long
-function lose(game) {
+function ranOutOfTime(game) {
 
-	// TODO: save data
+	saveData(game.player1.id, game.player1Turn ? -1 : 1, game.bot);	// Saves p1
+	saveData(game.player2.id, game.player1Turn ? 1 : -1, false);	// Saves p2 (works for PastaBot too!)
 
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
@@ -492,6 +498,36 @@ function lose(game) {
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });
 	games.delete(game.interaction.id);
+}
+
+// Saves the new data to the database
+// Final: 1 - player, -1 - p2, 0 - tie
+async function saveData(userid, final, bot) {
+	// Reads from the database
+	let data = await tictactoeStatsSchema.findOne({ userID: userid });
+
+	// Checks to see if the user is in the database
+	if(!data) {
+		logger.child({ mode: 'DATABASE', metaData: { userID: userid } }).info('Creating new user stats for tictactoe');
+		const tictactoeStats = await tictactoeStatsSchema.create({
+			userID: userid,
+		});
+		database.writeToDatabase(tictactoeStats, 'NEW TICTACTOE STATS');
+
+		data = await tictactoeStatsSchema.findOne({ userID: userid });
+	}
+
+	// Updates the stats of the user
+	const newTictactoeStats = await tictactoeStatsSchema.findOneAndUpdate({ userID: userid }, {
+		winsHuman: data.winsHuman + (!bot && final == 1 ? 1 : 0),
+		winsBot: data.winsBot + (bot && final == 1 ? 1 : 0),
+		lossesHuman: data.lossesBot + (!bot && final == -1 ? 1 : 0),
+		lossesBot: data.lossesBot + (bot && final == -1 ? 1 : 0),
+		totalHuman: data.totalHuman + (!bot ? 1 : 0),
+		totalBot: data.totalBot + (bot ? 1 : 0),
+	});
+
+	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
 
 // The discord command bits
