@@ -21,6 +21,24 @@ const emojis = {
 	'waitingBot': '👤',
 };
 
+const botMessages = {
+	'easy': [ // 90-50%
+		'I\'ll go easy on you this time 😄',
+		'I\'ll let you have this one… 😏',
+	],
+	'medium': [ // 50-25%
+		'I see you\'ve been improving… 👀',
+		'You\'re still no match for me! 😤',
+		'Too hard for you? 🤣',
+	],
+	'hard': [ // 25-10%
+		'Get ready to be destroyed! 😈',
+		'I\'ve been practicing for you 😉',
+		'You wish you could defeat me! 😆',
+		'I. SEE. EVERYTHING 👁️',
+	],
+};
+
 // Creates a new game for the user
 function createGame(myInteraction) {
 	const game = {
@@ -31,6 +49,8 @@ function createGame(myInteraction) {
 		player1: null,				// The user object of player1
 		player2: null, 				// The user object of player2
 		bot: false,					// Whether the game is against the bot
+		botMessage: '',				// The difficulty message the bot says
+		playerWinRate: 0.5,			// The winrate of the player
 		player2Accepted: false, 	// Whether or not player2 accepted the game
 		winner: 0,					// The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
 		componentCollector: null,	// The main component collect for the game
@@ -83,17 +103,40 @@ function createButton(ID, emoji, style) {
 	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
+// Gets the bot winrate of the player
+async function getWinRate(game) {
+	const userData = await tictactoeStatsSchema.findOne({ userID: game.player1.id });
+
+	if(!userData || userData.totalBot == 0) return 0.5;
+
+	return userData.winsBot / userData.totalBot;
+}
+
+function generateRandomMessage(mistakeChance) {
+	console.log('mistake ' + mistakeChance);
+	if(mistakeChance < 0.25) {
+		return botMessages['hard'][Math.floor(Math.random() * botMessages['hard'].length)];
+	} else if (mistakeChance < 0.5) {
+		return botMessages['medium'][Math.floor(Math.random() * botMessages['medium'].length)];
+	} else {
+		return botMessages['easy'][Math.floor(Math.random() * botMessages['easy'].length)];
+	}
+}
+
 // Initializes the game to play against the bot
-function startGameBot(game) {
+async function startGameBot(game) {
 	game.player2 = game.interaction.client.user;
 	game.bot = true;
+
+	game.playerWinRate = await getWinRate(game);
+	game.botMessage = generateRandomMessage(await determineMistakeChance(game.playerWinRate));
 
 	game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
 
 	const tictactoeEmbed = newEmbed()
 		.setTitle('Tic-Tac-Toe')
 		.setColor(colors.tictactoeCommand)
-		.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingBot}`)
+		.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingBot}\n${game.botMessage}`)
 		.addFields({
 			name: 'Time Left',
 			value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
@@ -246,6 +289,8 @@ async function gameLoop(game, move) {
 			description = `${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${game.bot ? emojis.waitingBot : emojis.waitingPlayer}`;
 		}
 
+		if(game.botMessage != '') description += '\n' + game.botMessage;
+
 		// Resend message
 		const lastEmbed = game.embed.embeds[0];
 		const embed = new MessageEmbed(lastEmbed).setDescription(description);
@@ -259,11 +304,41 @@ async function gameLoop(game, move) {
 	if(!game.bot || game.player1Turn) return;
 
 	// Bot's move
-	// TODO: randomize bot move
-	const botMove = findBestMove(game);
+	const mistakeChance = await determineMistakeChance(game.playerWinRate);
+	let botMove = -1;
+
+	if(Math.random() > mistakeChance) {
+		botMove = findBestMove(game);
+	} else {
+		botMove = findRandomMove(game);
+	}
+
 	await sleep(Math.random() * 1000);
 	gameLoop(game, botMove);
 
+}
+
+// Determines the bot's chance of making a mistake based on the player's win rate
+// 0% winrate, 90% chance of mistake
+// 100% winrate, 10% chance of mistake
+// 50% default with no winrate
+// mistake chance = 0.9 * 0.111 ^ winrate
+async function determineMistakeChance(winRate) {
+	return 0.9 * Math.pow(0.1111, winRate);
+}
+
+// Returns a random valid move
+function findRandomMove(game) {
+	const validMoves = [];
+
+	for(let y = 0; y < 3; y++) {
+		for(let x = 0; x < 3; x++) {
+			if(game.board[y][x] != 0) continue; // Already a move there
+			validMoves.push((y * 3) + (x % 3));
+		}
+	}
+
+	return validMoves[Math.floor(Math.random() * validMoves.length)];
 }
 
 // Sleep function for a small pause
@@ -274,7 +349,7 @@ function sleep(ms) {
 // Finds the best move for the bot to make (minimizer)
 function findBestMove(game) {
 	let bestEval = 99;
-	let bestMove = -1; // 0-9
+	let bestMove = -1; // 0-8
 
 	// Tries to make all possible moves
 	for(let y = 0; y < 3; y++) {
