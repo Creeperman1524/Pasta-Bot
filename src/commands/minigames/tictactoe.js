@@ -5,6 +5,7 @@ const { logger } = require('../../logging.js');
 
 const database = require('../../util/database.js');
 const tictactoeStatsSchema = require('../../schemas/tictactoeStats.js');
+const { leaderboardMulti } = require('../../util/leaderboard.js');
 
 const games = new Collection();
 
@@ -596,15 +597,45 @@ async function saveData(userid, final, bot) {
 	const newTictactoeStats = await tictactoeStatsSchema.findOneAndUpdate({ userID: userid }, {
 		winsHuman: data.winsHuman + (!bot && final == 1 ? 1 : 0),
 		winsBot: data.winsBot + (bot && final == 1 ? 1 : 0),
+		wins: data.wins + (final == 1 ? 1 : 0),
 		lossesHuman: data.lossesBot + (!bot && final == -1 ? 1 : 0),
 		lossesBot: data.lossesBot + (bot && final == -1 ? 1 : 0),
 		totalHuman: data.totalHuman + (!bot ? 1 : 0),
 		totalBot: data.totalBot + (bot ? 1 : 0),
+		totalGames: data.totalGames + 1,
 	});
 
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
 
+// Sends the different leaderboards to the user depending on the type
+async function leaderboards(interaction) {
+	if(interaction.options.getString('type') == 'played') { // Most plays
+
+		// Gets all users who have played at least 1 game
+		const users = await tictactoeStatsSchema.find({ totalGames : { $gt : 0 } });
+
+		// Creates the embed
+		const mostPlayedEmbed = newEmbed()
+			.setTitle('Leaderboard - Most Played')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(leaderboardMulti(users, false, ['totalGames', 'totalBot', 'totalHuman'], ['Total Games', 'Total Bot Games', 'Total Human Games'], interaction.user.id));
+		interaction.editReply({ embeds: [mostPlayedEmbed] });
+
+	} else if(interaction.options.getString('type') == 'wins') { // Most wins
+
+		// Gets all users who have won at least 1 game
+		const users = await tictactoeStatsSchema.find({ wins : { $gt : 0 } });
+
+		// Creates the embed
+		const mostWinsEmbed = newEmbed()
+			.setTitle('Leaderboard - Most Wins')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(leaderboardMulti(users, false, ['wins', 'winsBot', 'winsHuman'], ['Total Wins', 'Bot Wins', 'Human Wins'], interaction.user.id));
+		interaction.editReply({ embeds: [mostWinsEmbed] });
+
+	}
+}
 // The discord command bits
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -619,12 +650,30 @@ module.exports = {
 				.setName('user')
 				.setDescription('The user you wish to play against'),
 			),
+		// leaderboards
+		.addSubcommand(subcommand => subcommand
+			.setName('leaderboards')
+			.setDescription('Showcases the global leaderboards for tic-tac-toe')
+			.addStringOption(option => option
+				.setName('type')
+				.setDescription('The type of leaderboard to show')
+				.setRequired(true)
+				.addChoices(
+					{ name: 'most played', value: 'played' },
+					{ name: 'most wins', value: 'wins' },
+				),
+			),
 		),
+
+	category: 'minigames',
 
 	execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 		case 'start':
 			createGame(interaction);
+			break;
+		case 'leaderboards':
+			leaderboards(interaction);
 			break;
 		}
 
