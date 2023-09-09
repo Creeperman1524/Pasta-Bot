@@ -636,6 +636,74 @@ async function leaderboards(interaction) {
 
 	}
 }
+
+// Sends the user's stats depending on who they want
+async function generateStatsEmbed(interaction) {
+	if(interaction.options.getUser('user')) { // Stats of another user
+		const stats = await tictactoeStatsSchema.findOne({ userID: interaction.options.getUser('user').id });
+
+		// If the user inputted a user that's not in the database
+		if(stats == null) {
+			const warnEmbed = newEmbed()
+				.setTitle('No Data')
+				.setColor(colors.warn)
+				.setDescription('That user is not in the database!');
+			interaction.editReply({ embeds: [warnEmbed] });
+			return;
+		}
+
+		const statsEmbed = newEmbed()
+			.setTitle('User Statistics')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(
+				`**User - <@${interaction.options.getUser('user').id}>**
+
+				**Wins**: \`${stats.wins}\` total
+					*Bot*: \`${stats.winsBot}\`
+					*Human*: \`${stats.winsHuman}\`
+				**Total Games**: \`${stats.totalGames}\` total
+					*Bot*: \`${stats.totalBot}\`
+					*Human*: \`${stats.totalHuman}\`
+				
+				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\``,
+			);
+
+		interaction.editReply({ embeds: [statsEmbed] });
+
+	} else { // Stats of the user
+		const stats = await tictactoeStatsSchema.findOne({ userID: interaction.user.id });
+
+		if(stats == null) {
+			const warnEmbed = newEmbed()
+				.setTitle('No Data')
+				.setColor(colors.warn)
+				.setDescription('You haven\'t played any games!');
+			interaction.editReply({ embeds: [warnEmbed] });
+			return;
+		}
+
+		const statsEmbed = newEmbed()
+			.setTitle('User Statistics')
+			.setColor(colors.minesweeperCommand)
+			.setDescription(
+				`**User - <@${interaction.user.id}>**
+
+				**Wins**: \`${stats.wins}\` total
+					*Bot*: \`${stats.winsBot}\`
+					*Human*: \`${stats.winsHuman}\`
+				**Total Games**: \`${stats.totalGames}\` total
+					*Bot*: \`${stats.totalBot}\`
+					*Human*: \`${stats.totalHuman}\`
+				
+				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
+					*Bot*: \`${Math.round((stats.winsBot / stats.totalBot) * 1000) / 10}%\`
+					*Human*: \`${Math.round((stats.winsHuman / stats.totalHuman) * 1000) / 10}%\``,
+			);
+
+		interaction.editReply({ embeds: [statsEmbed] });
+	}
+}
+
 // The discord command bits
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -650,6 +718,7 @@ module.exports = {
 				.setName('user')
 				.setDescription('The user you wish to play against'),
 			),
+		)
 		// leaderboards
 		.addSubcommand(subcommand => subcommand
 			.setName('leaderboards')
@@ -663,6 +732,16 @@ module.exports = {
 					{ name: 'most wins', value: 'wins' },
 				),
 			),
+		)
+
+		// user stats
+		.addSubcommand(subcommand => subcommand
+			.setName('stats')
+			.setDescription('Gets the stats of a user')
+			.addUserOption(option => option
+				.setName('user')
+				.setDescription('The user to view the stats of'),
+			),
 		),
 
 	category: 'minigames',
@@ -674,6 +753,9 @@ module.exports = {
 			break;
 		case 'leaderboards':
 			leaderboards(interaction);
+			break;
+		case 'stats':
+			generateStatsEmbed(interaction);
 			break;
 		}
 
