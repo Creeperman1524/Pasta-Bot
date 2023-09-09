@@ -608,6 +608,20 @@ async function saveData(userid, final, bot) {
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
 
+function generateHelpMenu() {
+	return newEmbed()
+		.setTitle('How to Play Tic-Tac-Toe ❌⭕')
+		.setColor(colors.tictactoeCommand)
+		.setDescription('__Tic-Tac-Toe__ is a two-player game of Xs and Os. Each player takes turns placing their respective piece on the 3x3 game board. You can challenge your friend to a duel or test your skills against PastaBot himself!')
+		.addFields({
+			name: 'Winning 😏',
+			value: 'The game is won when you get all of your pieces in a row or diaganol of 3. Try to sneakily setup a position where you can get 2 rows at a same time! Your opponent can only block one >:)',
+		}, {
+			name: 'Bot 🍝',
+			value: 'PastaBot has been practicing his skills just for you, adapting his play depending on how good you are. Be warned, he might get a bit cocky sometimes...',
+		});
+}
+
 // Sends the different leaderboards to the user depending on the type
 async function leaderboards(interaction) {
 	if(interaction.options.getString('type') == 'played') { // Most plays
@@ -719,6 +733,13 @@ module.exports = {
 				.setDescription('The user you wish to play against'),
 			),
 		)
+
+		// help
+		.addSubcommand(subcommand => subcommand
+			.setName('help')
+			.setDescription('Open a help menu on tic-tac-toe'),
+		)
+
 		// leaderboards
 		.addSubcommand(subcommand => subcommand
 			.setName('leaderboards')
@@ -750,6 +771,9 @@ module.exports = {
 		switch (interaction.options.getSubcommand()) {
 		case 'start':
 			createGame(interaction);
+			break;
+		case 'help':
+			interaction.editReply({ embeds: [generateHelpMenu()] });
 			break;
 		case 'leaderboards':
 			leaderboards(interaction);
