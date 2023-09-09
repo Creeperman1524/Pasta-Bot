@@ -1,5 +1,18 @@
 ## :scroll: Changelog
 
+#### 0.9.3 - Tic Tac Toe (9/8/23)
+- Added a fully fledged Tic Tac Toe game
+	- User can request other user's to duel them head-to-head
+	- Buttons are used as the game board
+	- Players can go against PastaBot
+		- Adapts its difficulty depending on their win ratio
+		- Might get cocky sometimes...
+- Added user statistics
+	- Players can view their own statistics and other users
+- Added leaderboards
+	- Leaderboards can be sorted by most wins or most games played
+	- They show both the total and separate bot and human scores
+- Added Tic Tac Toe help menu
 #### 0.9.2 - Activity System (10/30/22)
 - Added new Activity System
 	- Added a new rotating status system
