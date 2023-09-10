@@ -90,7 +90,7 @@ function startGame(game) {
 	game.buttons = [row1, row2, row3];
 	game.player1 = game.interaction.user;
 
-	if(!game.interaction.options.getUser('user')) {
+	if(!game.interaction.options.getUser('user') || game.interaction.options.getUser('user').id == game.interaction.client.user) {
 		// Playing against the bot
 		startGameBot(game);
 	} else {
@@ -114,7 +114,6 @@ async function getWinRate(game) {
 }
 
 function generateRandomMessage(mistakeChance) {
-	console.log('mistake ' + mistakeChance);
 	if(mistakeChance < 0.25) {
 		return botMessages['hard'][Math.floor(Math.random() * botMessages['hard'].length)];
 	} else if (mistakeChance < 0.5) {
@@ -632,7 +631,7 @@ async function leaderboards(interaction) {
 		// Creates the embed
 		const mostPlayedEmbed = newEmbed()
 			.setTitle('Leaderboard - Most Played')
-			.setColor(colors.minesweeperCommand)
+			.setColor(colors.tictactoeCommand)
 			.setDescription(leaderboardMulti(users, false, ['totalGames', 'totalBot', 'totalHuman'], ['Total Games', 'Total Bot Games', 'Total Human Games'], interaction.user.id));
 		interaction.editReply({ embeds: [mostPlayedEmbed] });
 
@@ -644,7 +643,7 @@ async function leaderboards(interaction) {
 		// Creates the embed
 		const mostWinsEmbed = newEmbed()
 			.setTitle('Leaderboard - Most Wins')
-			.setColor(colors.minesweeperCommand)
+			.setColor(colors.tictactoeCommand)
 			.setDescription(leaderboardMulti(users, false, ['wins', 'winsBot', 'winsHuman'], ['Total Wins', 'Bot Wins', 'Human Wins'], interaction.user.id));
 		interaction.editReply({ embeds: [mostWinsEmbed] });
 
@@ -653,69 +652,37 @@ async function leaderboards(interaction) {
 
 // Sends the user's stats depending on who they want
 async function generateStatsEmbed(interaction) {
-	if(interaction.options.getUser('user')) { // Stats of another user
-		const stats = await tictactoeStatsSchema.findOne({ userID: interaction.options.getUser('user').id });
+	// Boolean whether the user is searching for another user
+	const otherUser = interaction.options.getUser('user') != null;
+	const stats = await tictactoeStatsSchema.findOne({ userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id });
 
-		// If the user inputted a user that's not in the database
-		if(stats == null) {
-			const warnEmbed = newEmbed()
-				.setTitle('No Data')
-				.setColor(colors.warn)
-				.setDescription('That user is not in the database!');
-			interaction.editReply({ embeds: [warnEmbed] });
-			return;
-		}
-
-		const statsEmbed = newEmbed()
-			.setTitle('User Statistics')
-			.setColor(colors.minesweeperCommand)
-			.setDescription(
-				`**User - <@${interaction.options.getUser('user').id}>**
-
-				**Wins**: \`${stats.wins}\` total
-					*Bot*: \`${stats.winsBot}\`
-					*Human*: \`${stats.winsHuman}\`
-				**Total Games**: \`${stats.totalGames}\` total
-					*Bot*: \`${stats.totalBot}\`
-					*Human*: \`${stats.totalHuman}\`
-				
-				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\``,
-			);
-
-		interaction.editReply({ embeds: [statsEmbed] });
-
-	} else { // Stats of the user
-		const stats = await tictactoeStatsSchema.findOne({ userID: interaction.user.id });
-
-		if(stats == null) {
-			const warnEmbed = newEmbed()
-				.setTitle('No Data')
-				.setColor(colors.warn)
-				.setDescription('You haven\'t played any games!');
-			interaction.editReply({ embeds: [warnEmbed] });
-			return;
-		}
-
-		const statsEmbed = newEmbed()
-			.setTitle('User Statistics')
-			.setColor(colors.minesweeperCommand)
-			.setDescription(
-				`**User - <@${interaction.user.id}>**
-
-				**Wins**: \`${stats.wins}\` total
-					*Bot*: \`${stats.winsBot}\`
-					*Human*: \`${stats.winsHuman}\`
-				**Total Games**: \`${stats.totalGames}\` total
-					*Bot*: \`${stats.totalBot}\`
-					*Human*: \`${stats.totalHuman}\`
-				
-				**Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
-					*Bot*: \`${Math.round((stats.winsBot / stats.totalBot) * 1000) / 10}%\`
-					*Human*: \`${Math.round((stats.winsHuman / stats.totalHuman) * 1000) / 10}%\``,
-			);
-
-		interaction.editReply({ embeds: [statsEmbed] });
+	if(stats == null) {
+		const warnEmbed = newEmbed()
+			.setTitle('No Data')
+			.setColor(colors.warn)
+			.setDescription('You haven\'t played any games!');
+		interaction.editReply({ embeds: [warnEmbed] });
+		return;
 	}
+
+	// Formatting is weird to fix mobile formatting issue
+	const statsEmbed = newEmbed()
+		.setTitle('User Statistics')
+		.setColor(colors.tictactoeCommand)
+		.setDescription(
+			`**User - <@${otherUser ? interaction.options.getUser('user').id : interaction.user.id}>**
+
+**Current Standings**:
+*(total | bot | human)*
+Wins: \`${stats.wins}\` | \`${stats.winsBot}\` | \`${stats.winsHuman}\`
+Draws: \`${stats.totalGames - stats.wins - stats.lossesBot - stats.lossesHuman}\` | \`${stats.totalBot - stats.winsBot - stats.lossesBot}\` | \`${stats.totalHuman - stats.winsHuman - stats.lossesHuman}\`
+Losses: \`${stats.lossesBot + stats.lossesHuman}\` | \`${stats.lossesBot}\` | \`${stats.lossesHuman}\`\n
+**Win Ratio**: \`${stats.totalGames != 0 ? Math.round((stats.wins / stats.totalGames) * 1000) / 10 : 0}%\`
+Bot: \`${stats.totalBot != 0 ? Math.round((stats.winsBot / stats.totalBot) * 1000) / 10 : 0}%\`
+Human: \`${stats.totalHuman != 0 ? Math.round((stats.winsHuman / stats.totalHuman) * 1000) / 10 : 0}%\``,
+		);
+
+	interaction.editReply({ embeds: [statsEmbed] });
 }
 
 // The discord command bits

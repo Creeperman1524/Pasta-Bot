@@ -17,14 +17,14 @@ function leaderboard(users, ascending, variable, userID) {
 
 	// Adds the surrounding text to be displayed on the leaderboard
 	let description = topLeaderboard.map((user, index) => {
-		return `**\`${index + 1}\`** - **<@${user.userID}>** : \`${user[variable]}\``;
+		return `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
 	}).join('\n');
 
 	// Adds the user's stats at the bottom if they are not on the list
 	sortedUsers.map((user, index) => {
 		if(user.userID == userID && index + 1 > amountToShow) {
 			description += '\n`⋮`\n';
-			description += `**\`${index + 1}\`** - **<@${user.userID}>** : \`${user[variable]}\``;
+			description += `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
 		}
 	});
 
@@ -50,17 +50,17 @@ function leaderboardMulti(users, ascending, variables, display, userID) {
 	const topLeaderboard = sortedUsers.slice(0, amountToShow);
 
 	// Adds the header to the leaderboard
-	let description = '`' + display[0] + '`';
+	let description = '*(' + display[0];
 
 	for(let i = 1; i < display.length; i++) {
-		description += ' | `' + display[i] + '`';
+		description += ' | ' + display[i];
 	}
 
-	description += '\n';
+	description += '*)\n';
 
 	// Adds the surrounding text to be displayed on the leaderboard
 	description += topLeaderboard.map((user, index) => {
-		let desc = `**\`${index + 1}\`** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
+		let desc = `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
 		for(let i = 1; i < variables.length; i++) {
 			desc += ` | \`${user[variables[i]]}\``;
 		}
@@ -71,7 +71,7 @@ function leaderboardMulti(users, ascending, variables, display, userID) {
 	sortedUsers.map((user, index) => {
 		if(user.userID == userID && index + 1 > amountToShow) {
 			description += '\n`⋮`\n';
-			description += `**\`${index + 1}\`** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
+			description += `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
 			for(let i = 1; i < variables.length; i++) {
 				description += ` | \`${user[variables[i]]}\``;
 			}
