@@ -597,7 +597,7 @@ async function saveData(userid, final, bot) {
 		winsHuman: data.winsHuman + (!bot && final == 1 ? 1 : 0),
 		winsBot: data.winsBot + (bot && final == 1 ? 1 : 0),
 		wins: data.wins + (final == 1 ? 1 : 0),
-		lossesHuman: data.lossesBot + (!bot && final == -1 ? 1 : 0),
+		lossesHuman: data.lossesHuman + (!bot && final == -1 ? 1 : 0),
 		lossesBot: data.lossesBot + (bot && final == -1 ? 1 : 0),
 		totalHuman: data.totalHuman + (!bot ? 1 : 0),
 		totalBot: data.totalBot + (bot ? 1 : 0),
