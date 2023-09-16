@@ -230,10 +230,12 @@ async function lose(game) {
 // Updates the player's position
 function updatePlayer(game, move) {
 	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
-	if(move == 'up') game.player.x--;
-	else if(move == 'down') game.player.x++;
-	else if(move == 'left') game.player.y--;
-	else if(move == 'right') game.player.y++;
+
+	// Extra bounds checks (even though the buttons can handle it) for sudden API lag spikes
+	if(move == 'up' && !(game.player.x <= 1)) game.player.x--;
+	else if(move == 'down' && !(game.player.x >= game.board.length - 2)) game.player.x++;
+	else if(move == 'left' && !(game.player.y <= 1)) game.player.y--;
+	else if(move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2)) game.player.y++;
 }
 
 // Updates the board and controls from the given move
