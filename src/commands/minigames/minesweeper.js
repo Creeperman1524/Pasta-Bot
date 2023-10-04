@@ -12,8 +12,10 @@ const size = 8;
 
 const games = new Collection();
 
-const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫', '⬛'];
-const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴', '😵‍💫', '😴', '🙃'];
+// const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫', '⬛'];
+const wallColors = ['🟧', '🟪', '🟫', '⬛'];
+// const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴', '😵‍💫', '😴', '🙃'];
+const playerEmojis = ['🎃', '😎', '😨', '💀', '👻', '😈'];
 
 // Creates a new game for a user
 function createGame(myInteraction) {
@@ -73,7 +75,7 @@ function startGame(game) {
 
 	// Creates the board
 	const minesweeperEmbed = newEmbed()
-		.setTitle('Minesweeper 💣')
+		.setTitle('Minesweeper 🎃')
 		.setColor(colors.minesweeperCommand)
 		.addFields({
 			name: 'Bombs Left',
