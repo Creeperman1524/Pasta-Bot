@@ -12,10 +12,8 @@ const size = 8;
 
 const games = new Collection();
 
-// const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫', '⬛'];
-const wallColors = ['🟧', '🟪', '🟫', '⬛'];
-// const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴', '😵‍💫', '😴', '🙃'];
-const playerEmojis = ['🎃', '😎', '😨', '💀', '👻', '😈'];
+const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫', '⬛'];
+const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴', '😵‍💫', '😴', '🙃'];
 
 // Creates a new game for a user
 function createGame(myInteraction) {
