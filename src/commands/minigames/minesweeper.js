@@ -73,7 +73,7 @@ function startGame(game) {
 
 	// Creates the board
 	const minesweeperEmbed = newEmbed()
-		.setTitle('Minesweeper 🎃')
+		.setTitle('Minesweeper 💣')
 		.setColor(colors.minesweeperCommand)
 		.addFields({
 			name: 'Bombs Left',
