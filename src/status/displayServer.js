@@ -8,14 +8,11 @@ module.exports = {
 	// Returns the status info on the minecraft server
 	async execute() {
 		const server = new mcping.MinecraftServer(process.env.mcServerIP, mcServerPort);
-
-		let activity = '';
-		let status = 'dnd';
-
 		return new Promise((resolve) => {
 
 			// Pings the server for information
 			server.ping(1000, 758, (err, res) => {
+
 				// Server offline/errored
 				if (!(typeof err === 'undefined' || err === null)) {
 					// console.log(err);
@@ -25,8 +22,14 @@ module.exports = {
 
 				// Server online with no players
 				if (typeof res.players.sample === 'undefined') {
-					status = 'idle';
-					activity = res.players.online + '/' + res.players.max + ' players';
+					resolve([res.players.online + '/' + res.players.max + ' players', 'idle']);
+					return;
+				}
+
+				// Server is in sleep mode
+				if(res.players.sample.length == 0) {
+					resolve(['a sleepy server', 'idle']);
+					return;
 				}
 
 				// Gets the online players
@@ -34,18 +37,13 @@ module.exports = {
 
 				// Server online with players
 				if (!(typeof res.players.sample === 'undefined')) {
-					status = 'online';
 
-					for (let i = 0; i < res.players.sample.length; i++) {
-						onlinePlayers.push(res.players.sample[i].name);
-					}
+					for(const player of res.players.sample) onlinePlayers.push(player.name);
 					onlinePlayers = onlinePlayers.sort().join(', ');
 
-					activity = res.players.online + '/' + res.players.max + ' players -\n ' + onlinePlayers;
+					resolve([res.players.online + '/' + res.players.max + ' players -\n ' + onlinePlayers, 'online']);
+					return;
 				}
-
-				// Returns the information on the server
-				resolve([activity, status]);
 			});
 		});
 	},

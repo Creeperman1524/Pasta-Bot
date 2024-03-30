@@ -213,6 +213,9 @@ function pingServer(server, interaction, ip) {
 			if (typeof res.players.sample == 'undefined') {
 				// No one is online
 				serverStatus = '*No one is playing!*';
+			} else if(res.players.sample.length == 0) {
+				// Server is sleeping
+				serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
 			} else {
 				// People are online
 				for (let i = 0; i < res.players.sample.length; i++) {
@@ -220,8 +223,7 @@ function pingServer(server, interaction, ip) {
 				}
 				onlinePlayers = onlinePlayers.sort().join(', ');
 
-				serverStatus = '**' + res.players.online + '/' + res.players.max +
-					'**' + ' player(s) online.\n\n' + onlinePlayers;
+				serverStatus = '**' + res.players.online + '/' + res.players.max + '**' + ' player(s) online.\n\n' + onlinePlayers;
 
 			}
 			if (hasIcon === 'yes') {
