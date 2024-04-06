@@ -11,7 +11,7 @@ module.exports = {
 		return new Promise((resolve) => {
 
 			// Pings the server for information
-			server.ping(1000, 758, (err, res) => {
+			server.ping(1000, 765, (err, res) => {
 
 				// Server offline/errored
 				if (!(typeof err === 'undefined' || err === null)) {

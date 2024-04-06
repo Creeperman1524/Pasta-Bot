@@ -186,7 +186,8 @@ function statusCommand(interaction) {
 let favicon, hasIcon, serverStatus;
 
 function pingServer(server, interaction, ip) {
-	server.ping(1000, 757, (err, res) => {
+	server.ping(1000, 765, (err, res) => {
+
 		// Determines if it's online or not
 		if (err) {
 
