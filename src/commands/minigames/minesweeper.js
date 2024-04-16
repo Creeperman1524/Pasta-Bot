@@ -173,7 +173,7 @@ async function gameLoop(game, move) {
 		const embed = new MessageEmbed(lastEmbed).setDescription(text);
 		embed.fields[0] = {
 			name: 'Bombs Left',
-			value: `${numOfMines - game.flags}`,
+			value: `\`${numOfMines - game.flags}\``,
 			inline: true,
 		};
 
