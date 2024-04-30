@@ -3,12 +3,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { mcServerPort, mcServerVersion } = require('../../config.json');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
-const fs = require('fs');
 const fetch = require('node-fetch');
 const { logger } = require('../../logging');
-
-// Date when the minecraft server restarts/backs up
-const buildDate = new Date();
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -25,22 +21,10 @@ module.exports = {
 			),
 		)
 
-		// backups
-		.addSubcommand(subcommand => subcommand
-			.setName('backups')
-			.setDescription('View the backup information of the server'),
-		)
-
 		// ip
 		.addSubcommand(subcommand => subcommand
 			.setName('ip')
 			.setDescription('The ip address of the Minecraft server'),
-		)
-
-		// map
-		.addSubcommand(subcommand => subcommand
-			.setName('map')
-			.setDescription('The web-hosted map of the Minecraft server'),
 		)
 
 		// seed
@@ -49,10 +33,10 @@ module.exports = {
 			.setDescription('The seed of the Minecraft server'),
 		)
 
-		// version
+		// wakeup
 		.addSubcommand(subcommand => subcommand
-			.setName('version')
-			.setDescription('The version of the minecraft server'),
+			.setName('wakeup')
+			.setDescription('Wakes up the server from its sleeping mode'),
 		),
 	category: 'minecraft',
 
@@ -62,104 +46,18 @@ module.exports = {
 		case 'status':
 			statusCommand(interaction);
 			break;
-		case 'backups':
-			backupsCommand(interaction);
-			break;
 		case 'ip':
 			ipCommand(interaction);
-			break;
-		case 'map':
-			mapCommand(interaction);
 			break;
 		case 'seed':
 			seedCommand(interaction);
 			break;
-		case 'version':
-			await versionCommand(interaction);
+		case 'wakeup':
+			await wakeupCommand(interaction);
 			break;
 		}
 	},
 };
-
-
-// Backups command
-function backupsCommand(interaction) {
-
-	// Estimated days of the latest backups
-	const date1 = buildDate;
-	const date2 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 1));
-	const date3 = new Date(new Date(buildDate).setDate(buildDate.getDate() - 2));
-	const date4 = new Date(new Date(buildDate).setDate(buildDate.getDate() - buildDate.getDay()));
-
-	// Finds the earliest backup for that day
-	let backup1, backup2, backup3, backup4;
-	try {
-		backup1 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date1)))[0];
-		backup2 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date2)))[0];
-		backup3 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date3)))[0];
-		backup4 = fs.readdirSync(process.env.backupDirectory).filter(file => file.startsWith(convertDate(date4)))[0];
-	} catch (error) {
-		logger.child({
-			mode: 'SERVER BACKUP',
-			metaData: {
-				user: interaction.user.username,
-				userid: interaction.user.id,
-				guild: interaction.guild.name,
-				guildid: interaction.guild.id,
-			},
-		}).error(error);
-
-		const errorEmbed = newEmbed()
-			.setTitle('Error!')
-			.setColor(colors.error)
-			.setDescription('There was a problem retrieving backups.');
-
-		interaction.editReply({ embeds: [errorEmbed] });
-		return;
-	}
-
-	// The text for each backup
-	const formatedDate1 = checkBackup(backup1);
-	const formatedDate2 = checkBackup(backup2);
-	const formatedDate3 = checkBackup(backup3);
-	const formatedDate4 = checkBackup(backup4);
-
-	const backupsEmbed = newEmbed()
-		.setTitle('Backups')
-		.setColor(colors.serverBackupCommand)
-		.setDescription('**Daily** backups are made everyday at 4am, and only the last 3 days are kept.\n**Weekly** backups are made every Sunday at 4am, and are kept permanently')
-		.addFields({
-			name: '__**Daily**__',
-			value: `• ${formatedDate1}\n• ${formatedDate2}\n• ${formatedDate3}`,
-			inline: true,
-		}, {
-			name: '__**Weekly**__',
-			value: `• ${formatedDate4}`,
-			inline: true,
-		});
-
-	interaction.editReply({ embeds: [backupsEmbed] });
-}
-
-function convertDate(oldDate) {
-	const newDate = new Date(oldDate);
-	return newDate.toLocaleDateString('lt-LV').replaceAll('-', '.');
-}
-
-function checkBackup(backup) {
-	let formatedDate;
-
-	// Checks if the backup exists
-	if(backup) {
-		const date = new Date(backup.slice(0, 4), backup.slice(5, 7) - 1, backup.slice(8, 10), backup.slice(11, 13), backup.slice(14, 16));
-		formatedDate = `<t:${date.getTime() / 1000}:f> (<t:${date.getTime() / 1000}:R>)`;
-	} else {
-		formatedDate = '*No Backup!*';
-	}
-
-	return formatedDate;
-}
-
 
 // Status command
 function statusCommand(interaction) {
@@ -271,7 +169,7 @@ function ipCommand(interaction) {
 			},
 			{
 				name: 'Port',
-				value: '`25565`',
+				value: `\`${mcServerPort}\``,
 				inline: true,
 			},
 			{
@@ -279,19 +177,14 @@ function ipCommand(interaction) {
 				value: '`Minecraft Java Edition`',
 				inline: true,
 			},
+			{
+				name: 'Version',
+				value: `\`${mcServerVersion}\` - Fabric`,
+				inline: true,
+			},
 		);
 
 	interaction.editReply({ embeds: [ipEmbed] });
-}
-
-// Map command
-function mapCommand(interaction) {
-	const mapEmbed = newEmbed()
-		.setTitle('Server Map')
-		.setColor(colors.serverMapCommand)
-		.setDescription(`Server map: [http://${process.env.mcServerIP}:8123](http://${process.env.mcServerIP}:8123)`);
-
-	interaction.editReply({ embeds: [mapEmbed] });
 }
 
 // Seed command
@@ -299,28 +192,58 @@ function seedCommand(interaction) {
 	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
 		.setColor(colors.serverSeedCommand)
-		.setDescription('Seed: `8783748933437244995`');
+		.setDescription(`Seed: \`${process.env.mcServerSeed}\``);
 
 	interaction.editReply({ embeds: [seedEmbed] });
 }
 
+// Wakeup command
+async function wakeupCommand(interaction) {
+	const statusURL = `http://${process.env.mcServerIP}:8123/status`;
+	const wakeupURL = `http://${process.env.mcServerIP}:8123/wakeup`;
 
-let data = null;
-async function getCurrentVersion() {
-	const url = `https://papermc.io/api/v2/projects/paper/versions/${mcServerVersion}`;
+	const responseEmbed = newEmbed()
+		.setTitle('Server Sleeping Status')
+		.setColor(colors.serverWakeupCommand)
+		.setDescription('`Contacting server...`');
 
-	const response = await fetch(url);
-	data = await response.json();
+	interaction.editReply({ embeds: [responseEmbed] });
+
+	try {
+		const rawStatus = await fetch(statusURL);
+		const status = await rawStatus.json();
+
+		if(status.status == 'Sleeping') {
+			// Notify the user that the server is waking up
+			responseEmbed.setDescription(`Server is currently **sleeping** 😴. \`Waking it up...\`\n\nThe server sleeps to save power and computer resources. Logging on or running this command will have the server avaliable <t:${Math.floor((Date.now() + (3 * 60 * 1000)) / 1000)}:R>`);
+
+			// Wakes the server up
+			await fetch(wakeupURL, {
+				method: 'POST',
+				body: null,
+			});
+
+		} else if(status.status == 'Running') {
+			// Notify the user that the server is running
+			responseEmbed.setDescription('Server is currently **running** 🏃. Go play on it :D');
+		}
+	} catch (error) {
+		// Handle any API errors (mostly due from the server being offline)
+		if(error != undefined) {
+			logger.child({
+				mode: 'SERVER',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+				},
+			}).error(error);
+		}
+
+		// Notify the user the server is offline
+		responseEmbed.setDescription('Server is currently **offline** ❌ (or something terrible has gone wrong!).\nPlease contact the server owner for any details.');
+	}
+
+	interaction.editReply({ embeds: [responseEmbed] });
 }
-
-// Version command
-async function versionCommand(interaction) {
-	const versionEmbed = newEmbed(0)
-		.setTitle('Paper Version')
-		.setColor(colors.serverPaperCommand)
-		.setDescription(`The server is currently running: **Paper version git-Paper-${data.builds[data.builds.length - 1]} (MC: ${data.version})**`);
-
-	interaction.editReply({ embeds: [versionEmbed] });
-}
-
-getCurrentVersion();
