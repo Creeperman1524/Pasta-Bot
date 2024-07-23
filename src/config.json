@@ -3,5 +3,26 @@
 	"statusInterval": "20",
 	"commandRefreshInterval": "30",
 	"mcServerPort": "25565",
-	"mcServerVersion": "1.20.4"
+	"mcServerVersion": "1.20.4",
+
+	"configs": {
+		"enable-logging": "boolean",
+		"enable-minecraft": "boolean",
+		"enable-minesweeper": "boolean",
+		"enable-reaction-roles": "boolean",
+		"enable-tictactoe": "boolean",
+		"enable-valorant-roles": "boolean",
+
+		"logging-channel": "channel",
+
+		"valorant-role-iron": "role",
+		"valorant-role-bronze": "role",
+		"valorant-role-silverj": "role",
+		"valorant-role-gold": "role",
+		"valorant-role-platnium": "role",
+		"valorant-role-diamond": "role",
+		"valorant-role-ascendant": "role",
+		"valorant-role-immortal": "role",
+		"valorant-role-radiant": "role"
+  }
 }

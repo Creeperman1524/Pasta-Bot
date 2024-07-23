@@ -46,6 +46,7 @@ const colors = {
 	reactionRolesCommand: '0x3274ba',
 	tictactoeCommand: '0xdecc00',
 	valorantCommand: '#bd3944',
+	configCommand: '#a9cc9f',
 
 	success: '0x009f00',
 	warn: '0xfdff63',
