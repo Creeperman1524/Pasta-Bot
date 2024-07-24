@@ -148,12 +148,11 @@ async function updateRole(interaction) {
 	}
 
 	// Removes all other rank roles
-	const guildMember = await interaction.guild.members.cache.find(mem => mem.id === interaction.user.id);
+	const guildMember = await interaction.guild.members.fetch(interaction.user.id);
 	const rolesToRemove = [];
 
-	// TODO: not iteratble, so use Object.entries()
 	for(const rankRoleId of Object.values(guildData.valorantRoles)) {
-		const roleToRemove = interaction.guild.roles.cache.get(rankRoleId);
+		const roleToRemove = await interaction.guild.roles.fetch(rankRoleId);
 
 		// The role doesn't exist in the server but exists in the database, meaning it was deleted
 		if(!roleToRemove) {
@@ -177,7 +176,7 @@ async function updateRole(interaction) {
 	await guildMember.roles.remove(rolesToRemove);
 
 	// Adds the rank role to the user
-	const roleToAdd = interaction.guild.roles.cache.get(guildData.valorantRoles[rankRoleName]);
+	const roleToAdd = await interaction.guild.roles.fetch(guildData.valorantRoles[rankRoleName]);
 
 	// All roles should be checked from above, so if it's missing it's most likely an unrated role
 	if(!roleToAdd) {

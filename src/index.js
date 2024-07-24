@@ -142,7 +142,7 @@ async function reactionRoleHandler(reaction, user, method) {
 	// Tries to find the role in the server
 	for(const storageRole of reactionMessages[reaction.message.id]) {
 		if(storageRole[1] == reaction.emoji.name) {
-			role = reaction.message.guild.roles.cache.get(storageRole[0]);
+			role = await reaction.message.guild.roles.fetch(storageRole[0]);
 		}
 	}
 
