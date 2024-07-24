@@ -103,19 +103,16 @@ async function createReactionMessage(interaction) {
 
 	// Checks to see if the guild has any saved data
 	if(!data) {
-		logger.child({ mode: 'DATABASE', metaData: { guildID: interaction.guildId } }).info('Creating new guild configs file for reaction roles');
-		// Creates an empty object of reactionMessages
+		logger.child({ mode: 'DATABASE', metaData: { guildID: interaction.guildId } }).info('Creating new guild configs file');
 		const guildConfigs = await guildConfigSchema.create({
 			guildID: interaction.guildId,
-			reactionMessages: {},
-			lastEdited: Date.now(),
 		});
-		database.writeToDatabase(guildConfigs, 'NEW REACTION ROLES GUILD CONFIG');
+		database.writeToDatabase(guildConfigs, 'NEW GUILD CONFIG');
 
 		data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 	}
 
-	const reactionMessages = data.reactionMessages;
+	const reactionMessages = data.reactionMessages || {};
 
 	// Sends the base message
 	const channel = interaction.options.getChannel('channel');
@@ -130,7 +127,6 @@ async function createReactionMessage(interaction) {
 			reactionMessages[msg.id] = [];
 			const newReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 				reactionMessages: reactionMessages,
-				lastEdited: Date.now(),
 			});
 			database.writeToDatabase(newReactionMessage, 'NEW REACTION ROLE MESSAGE');
 
@@ -159,7 +155,7 @@ async function createReactionMessage(interaction) {
 async function deleteReactionMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data) {
+	if(!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -184,7 +180,6 @@ async function deleteReactionMessage(interaction) {
 		delete reactionMessages[message.id];
 		const deletedReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 			reactionMessages: reactionMessages,
-			lastEdited: Date.now(),
 		});
 		database.writeToDatabase(deletedReactionMessage, 'DELETED REACTION ROLE MESSAGE');
 
@@ -206,7 +201,7 @@ async function deleteReactionMessage(interaction) {
 async function addRoletoMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data) {
+	if(!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -270,7 +265,6 @@ async function addRoletoMessage(interaction) {
 
 	const newRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 		reactionMessages: reactionMessages,
-		lastEdited: Date.now(),
 	});
 	database.writeToDatabase(newRole, 'ADDED REACTION ROLE');
 
@@ -286,7 +280,7 @@ async function addRoletoMessage(interaction) {
 async function removeRolefromMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data) {
+	if(!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -351,7 +345,6 @@ async function removeRolefromMessage(interaction) {
 
 	const deleteRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
 		reactionMessages: reactionMessages,
-		lastEdited: Date.now(),
 	});
 	database.writeToDatabase(deleteRole, 'REMOVED REACTION ROLE');
 
