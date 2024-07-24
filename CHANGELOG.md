@@ -1,5 +1,16 @@
 ## :scroll: Changelog
 
+# This chanelog and the versioning scheme will most likely be updated to "backfill" all previous updates and give a more up-to-date changelog based on the commit history (though that might take some time)
+
+#### 0.9.4 - Valorant Roles (7/23/24)
+- Added a valorant role system
+    - Users can link their riot id and discord account using `/valorant link`
+    - They can update their role in participating servers using `/valorant update-role`
+- Added a `/config` command to change guild-specific features
+    - Can enable specific modules (though the specific functionality is not implemented)
+    - Can assigned a logging channel (also not implemented)
+    - Can assign roles to be used for the valorant roles system
+    - Can view configs with `/config view`
 #### 0.9.3 - Tic Tac Toe (9/8/23)
 - Added a fully fledged Tic Tac Toe game
 	- User can request other user's to duel them head-to-head
@@ -113,3 +124,4 @@
 
 ### 0.7.0 - *Minesweeper* (11/24/21)
 - Added a full working minesweeper minigame
+

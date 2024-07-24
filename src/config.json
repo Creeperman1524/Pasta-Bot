@@ -1,5 +1,5 @@
 {
-	"version": "0.9.3",
+	"version": "0.9.4",
 	"statusInterval": "20",
 	"commandRefreshInterval": "30",
 	"mcServerPort": "25565",
