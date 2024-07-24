@@ -27,7 +27,8 @@ async function setConfig(interaction) {
 	const rule = interaction.options.getString('rule');
 
 	// Checks if the rule is valid
-	if(!validateRule(rule, interaction)) return;
+	const valid = await validateRule(rule, interaction);
+	if(!valid) return;
 
 	const type = configs[rule];
 	let option;
@@ -77,19 +78,19 @@ async function setConfig(interaction) {
 	// TODO: maybe make this better than hard coding all these
 	if(rule.match(/valorant-role-/)) {
 		// Valorant roles
-		newValue = option.name;
+		newValue = `<@&${option.id}>`;
 
 		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
 		valorantRoles[rankName] = option.id;
 	} else if(rule.match(/enable-/)) {
 		// Modules
-		newValue = option;
+		newValue = `\`${option}\``;
 
 		const moduleName = rule.match(/enable-(?<name>(.*))/).groups.name;
 		modules[moduleName] = option;
 	} else {
 		// Did not make custom save path for rule!!
-		newValue = 'nil';
+		newValue = '`nil`';
 		logger.child({ mode: 'CONFIG', metaData: { userID: interaction.user.id, guildID: interaction.guildId } }).warn(`A custom save path is not made for rule '${rule}'`);
 	}
 
@@ -104,7 +105,7 @@ async function setConfig(interaction) {
 	const confirmationEmbed = newEmbed()
 		.setTitle('Success!')
 		.setColor(colors.success)
-		.setDescription(`\`${rule}\` was successfully set to \`${newValue}\``);
+		.setDescription(`\`${rule}\` was successfully set to ${newValue}`);
 
 	await interaction.editReply({
 		embeds: [confirmationEmbed],
@@ -134,7 +135,8 @@ async function viewConfig(interaction) {
 	const rule = interaction.options.getString('rule');
 
 	// Checks if the rule is valid
-	if(!validateRule(rule, interaction)) return;
+	const valid = await validateRule(rule, interaction);
+	if(!valid) return;
 
 	let value;
 
@@ -143,7 +145,7 @@ async function viewConfig(interaction) {
 		// Valorant roles
 
 		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
-		value = valorantRoles[rankName] ? `<@&${valorantRoles[rankName]}>` : '\`Unassigned\`';
+		value = valorantRoles[rankName] ? `<@&${valorantRoles[rankName]}>` : '`Unassigned`';
 	} else if(rule.match(/enable-/)) {
 		// Modules
 
