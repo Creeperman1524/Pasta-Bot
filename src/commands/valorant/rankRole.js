@@ -4,10 +4,11 @@ const { logger } = require('../../logging.js');
 
 const database = require('../../util/database.js');
 const valorantConfigSchema = require('../../schemas/valorantConfig.js');
+const guildConfigSchema = require('../../schemas/guildConfigs.js');
 
-// const header = {
-//	'Authorization': process.env.valorantToken,
-// };
+const header = {
+	'Authorization': process.env.valorantToken,
+};
 
 async function linkCommand(interaction) {
 	let data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
@@ -63,6 +64,148 @@ async function linkCommand(interaction) {
 	});
 }
 
+async function updateRole(interaction) {
+	const userData = await valorantConfigSchema.findOne({ userID: interaction.user.id });
+
+	// Checks if the user's account is linked
+	if(!userData) {
+		const noUserDataEmbed = newEmbed()
+			.setTitle('Account not linked!')
+			.setColor(colors.warn)
+			.setDescription('Your account is not linked! Please use `/valorant link` to link your riot games account.');
+
+		await interaction.editReply({
+			embeds: [noUserDataEmbed],
+		});
+
+		return;
+	}
+
+	const fetchingEmbed = newEmbed()
+		.setTitle('Fetching data...')
+		.setColor(colors.valorantCommand)
+		.setDescription('Fetching valorant data...');
+
+	await interaction.editReply({
+		embeds: [fetchingEmbed],
+	});
+
+	const name = userData.name;
+	const tagline = userData.tagline;
+
+	// Finds the current rank of the account
+	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/mmr/na/pc/${name}/${tagline}`,
+		{ method: 'GET', headers: header },
+	);
+
+	let rankData = await rankResponse.json();
+
+	// Something has gone wrong
+	if(rankData.errors || rankData.status != 200) {
+		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(rankData);
+		let description = '';
+
+		switch(rankData.errors[0].code) {
+		case 22:
+			description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
+			break;
+		case 24:
+			description = `The account \`${name}#${tagline}\` does not have enough match data. Play more games and try again later!`;
+			break;
+		default:
+			description = 'Something went horribly wrong! Please contact the owner for more information.';
+			break;
+		}
+
+		const errorEmbed = newEmbed()
+			.setTitle('Something went wrong!')
+			.setColor(colors.error)
+			.setDescription(description);
+
+		await interaction.editReply({
+			embeds: [errorEmbed],
+		});
+		return;
+	}
+
+	// Finds the data for the valorant roles
+	rankData = rankData.data;
+	const rank = rankData.current.tier.name;
+	const rankRoleName = rank.split(' ')[0].toLowerCase();
+
+	const guildData = await guildConfigSchema.findOne({ guildID: interaction.guildId });
+
+	// No guild configs exist for this rank
+	if(!guildData || !guildData.valorantRoles || (!guildData.valorantRoles[rankRoleName] && rank != 'Unrated')) {
+		const noConfigEmbed = newEmbed()
+			.setTitle('Role not set!')
+			.setColor(colors.warn)
+			.setDescription(`Your current rank \`${rank}\` does not have a role set to it! **Please contact your server admin.**`);
+
+		await interaction.editReply({
+			embeds: [noConfigEmbed],
+		});
+	}
+
+	// Removes all other rank roles
+	const guildMember = await interaction.guild.members.cache.find(mem => mem.id === interaction.user.id);
+	const rolesToRemove = [];
+
+	// TODO: not iteratble, so use Object.entries()
+	for(const rankRoleId of Object.values(guildData.valorantRoles)) {
+		const roleToRemove = interaction.guild.roles.cache.get(rankRoleId);
+
+		// The role doesn't exist in the server but exists in the database, meaning it was deleted
+		if(!roleToRemove) {
+			// TODO: autofix broken role by removing it from the database
+
+			logger.child({ mode: 'VALORANT ROLE', metaData: { userId: interaction.user.id, guildId: interaction.guildId } }).error(`Rank role '${rankRoleId}' in guild ${interaction.guildId} has desynced`);
+			const desyncedRoleEmbed = newEmbed()
+				.setTitle('Roles misconfigured!')
+				.setColor(colors.error)
+				.setDescription('It seems a role is misconfigured. Please contact your server admin.');
+
+			await interaction.editReply({
+				embeds: [desyncedRoleEmbed],
+			});
+
+			return;
+		}
+
+		rolesToRemove.push(roleToRemove);
+	}
+	await guildMember.roles.remove(rolesToRemove);
+
+	// Adds the rank role to the user
+	const roleToAdd = interaction.guild.roles.cache.get(guildData.valorantRoles[rankRoleName]);
+
+	// All roles should be checked from above, so if it's missing it's most likely an unrated role
+	if(!roleToAdd) {
+		const unratedEmbed = newEmbed()
+			.setTitle('Updated role')
+			.setColor(colors.valorantCommand)
+			.setDescription('Your rank is currently **Unrated**, go grind some more to earn a role!');
+
+		await interaction.editReply({
+			embeds: [unratedEmbed],
+		});
+
+		return;
+	}
+
+	await guildMember.roles.add(roleToAdd);
+
+	const addedRoleEmbed = newEmbed()
+		.setTitle('Updated role')
+		.setColor(colors.valorantCommand)
+		.setDescription(`Your rank of **${rank}** has earned you the role of <@&${roleToAdd.id}>`);
+
+	await interaction.editReply({
+		embeds: [addedRoleEmbed],
+	});
+
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('valorant')
@@ -77,13 +220,13 @@ module.exports = {
 				.setDescription('Your riot ID in the format <name>#<tagline>')
 				.setRequired(true),
 			),
-		),
+		)
 
-	// // update role
-	// .addSubcommand(subcommand => subcommand
-	//	.setName('update-role')
-	//	.setDescription('Update your valorant rank for servers which have roles based on rank'),
-	// ),
+		// update role
+		.addSubcommand(subcommand => subcommand
+			.setName('update-role')
+			.setDescription('Update your valorant rank for servers which have roles based on rank'),
+		),
 
 	category: 'valorant',
 
@@ -92,9 +235,9 @@ module.exports = {
 		case 'link':
 			linkCommand(interaction);
 			break;
-		// case 'update-role':
-		//	console.log('update role');
-		//	break;
+		case 'update-role':
+			updateRole(interaction);
+			break;
 		}
 	},
 };
