@@ -39,10 +39,9 @@ async function updateUser(guildMember, guildData) {
 	// No configs set
 	if(!userData) return;
 
-	const name = userData.name;
-	const tagline = userData.tagline;
+	const PUUID = userData.puuid;
 
-	let rankData = await getRankData(name, tagline);
+	let rankData = await getRankData(PUUID);
 
 	// Something has gone wrong
 	if(rankData.errors || rankData.status != 200) return;
@@ -74,8 +73,8 @@ async function updateUser(guildMember, guildData) {
 }
 
 // Finds the current rank of the account
-async function getRankData(name, tagline) {
-	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/mmr/na/pc/${name}/${tagline}`,
+async function getRankData(PUUID) {
+	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
 		{ method: 'GET', headers: header },
 	);
 
@@ -86,7 +85,7 @@ async function getRankData(name, tagline) {
 		logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited');
 		logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
 
-		return setTimeout(getRankData(name, tagline));
+		return setTimeout(getRankData(PUUID));
 	}
 
 	return rankData;

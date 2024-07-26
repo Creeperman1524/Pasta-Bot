@@ -11,6 +11,15 @@ const header = {
 };
 
 async function linkCommand(interaction) {
+	const fetchingEmbed = newEmbed()
+		.setTitle('Fetching data...')
+		.setColor(colors.valorantCommand)
+		.setDescription('Fetching valorant data...');
+
+	await interaction.editReply({
+		embeds: [fetchingEmbed],
+	});
+
 	let data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 
 	// Checks to see if the user is in the databse
@@ -47,10 +56,45 @@ async function linkCommand(interaction) {
 	const name = match.groups.name;
 	const tagline = match.groups.tagline;
 
+	// Searches the account for the PUUID
+	const userResponse = await fetch(`https://api.henrikdev.xyz/valorant/v2/account/${name}/${tagline}`,
+		{ method: 'GET', headers: header },
+	);
+	const accountData = await userResponse.json();
+
+	// Something has gone wrong
+	if(accountData.errors || accountData.status != 200) {
+		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
+		let description = '';
+
+		switch(accountData.errors[0].code) {
+		case 22:
+			description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
+			break;
+		case 24:
+			description = 'This account does not have enough match data. Play more games and try again later!';
+			break;
+		default:
+			description = 'Someting went horribly wrong! Please contact the owner for more information.';
+			break;
+		}
+
+		const errorEmbed = newEmbed()
+			.setTitle('Something went wrong!')
+			.setColor(colors.error)
+			.setDescription(description);
+
+		await interaction.editReply({
+			embeds: [errorEmbed],
+		});
+		return;
+	}
+
+	const PUUID = accountData.data.puuid;
+
 	// Saves the account information to the valorant config
 	const newValorantConfig = await valorantConfigSchema.findOneAndUpdate({ userID: interaction.user.id }, {
-		name: name,
-		tagline: tagline,
+		puuid: PUUID,
 	});
 	database.writeToDatabase(newValorantConfig, 'UPDATED VALORANT CONFIG');
 
@@ -90,11 +134,10 @@ async function updateRole(interaction) {
 		embeds: [fetchingEmbed],
 	});
 
-	const name = userData.name;
-	const tagline = userData.tagline;
+	const PUUID = userData.puuid;
 
 	// Finds the current rank of the account
-	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/mmr/na/pc/${name}/${tagline}`,
+	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
 		{ method: 'GET', headers: header },
 	);
 
@@ -103,24 +146,11 @@ async function updateRole(interaction) {
 	// Something has gone wrong
 	if(rankData.errors || rankData.status != 200) {
 		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(rankData);
-		let description = '';
-
-		switch(rankData.errors[0].code) {
-		case 22:
-			description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
-			break;
-		case 24:
-			description = `The account \`${name}#${tagline}\` does not have enough match data. Play more games and try again later!`;
-			break;
-		default:
-			description = 'Something went horribly wrong! Please contact the owner for more information.';
-			break;
-		}
 
 		const errorEmbed = newEmbed()
 			.setTitle('Something went wrong!')
 			.setColor(colors.error)
-			.setDescription(description);
+			.setDescription('Something went horribly wrong! Please contact the owner for more information.');
 
 		await interaction.editReply({
 			embeds: [errorEmbed],
