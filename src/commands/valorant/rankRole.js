@@ -125,12 +125,26 @@ async function updateRole(interaction) {
 
 	// Something has gone wrong
 	if(rankData.errors || rankData.status != 200) {
-		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(rankData);
+		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
+		let description = '';
+
+		// Check for deleted account/no played enough account even after linking
+		switch(rankData.errors[0].code) {
+		case 22:
+			description = 'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
+			break;
+		case 24:
+			description = 'This account does not have enough match data. Play more games and try again later!';
+			break;
+		default:
+			description = 'Someting went horribly wrong! Please contact the owner for more information.';
+			break;
+		}
 
 		const errorEmbed = newEmbed()
 			.setTitle('Something went wrong!')
 			.setColor(colors.error)
-			.setDescription('Something went horribly wrong! Please contact the owner for more information.');
+			.setDescription(description);
 
 		await interaction.editReply({
 			embeds: [errorEmbed],
