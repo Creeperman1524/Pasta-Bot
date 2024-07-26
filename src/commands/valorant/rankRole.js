@@ -33,28 +33,8 @@ async function linkCommand(interaction) {
 		data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 	}
 
-	// Checks the format of the provided account
-	const input = interaction.options.getString('account');
-
-	const regex = /^(?<name>.{3,16})#(?<tagline>.{3,5})$/;
-	const match = input.match(regex);
-
-	if(match == null) {
-		// Incorrect format
-		const formatErrorEmbed = newEmbed()
-			.setTitle('Incorrect Format!')
-			.setColor(colors.warn)
-			.setDescription(`The account \`${input}\` has an invalid format. Please use the format of \`<name>#<tagline>\``);
-
-		await interaction.editReply({
-			embeds: [formatErrorEmbed],
-		});
-
-		return;
-	}
-
-	const name = match.groups.name;
-	const tagline = match.groups.tagline;
+	const name = interaction.options.getString('name');
+	const tagline = interaction.options.getString('tagline');
 
 	// Searches the account for the PUUID
 	const userResponse = await fetch(`https://api.henrikdev.xyz/valorant/v2/account/${name}/${tagline}`,
@@ -101,7 +81,7 @@ async function linkCommand(interaction) {
 	const confirmationEmbed = newEmbed()
 		.setTitle('Account Linked!')
 		.setColor(colors.valorantCommand)
-		.setDescription(`Your discord account is now linked with the account \`${input}\``);
+		.setDescription(`Your discord account is now linked with the account \`${name}#${tagline}\``);
 
 	await interaction.editReply({
 		embeds: [confirmationEmbed],
@@ -245,8 +225,13 @@ module.exports = {
 			.setName('link')
 			.setDescription('Link your discord account to a riot id')
 			.addStringOption(option => option
-				.setName('account')
-				.setDescription('Your riot ID in the format <name>#<tagline>')
+				.setName('name')
+				.setDescription('Your account name (before the #)')
+				.setRequired(true),
+			)
+			.addStringOption(option => option
+				.setName('tagline')
+				.setDescription('Your accouint tagline (after the #)')
 				.setRequired(true),
 			),
 		)
