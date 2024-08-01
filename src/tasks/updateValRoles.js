@@ -11,7 +11,7 @@ const header = {
 
 module.exports = {
 	name: 'updateValRoles',
-	mode: 'ONCE',
+	mode: 'TIME',
 	timeHour: 0,
 	timeMinutes: 0,
 
@@ -46,7 +46,7 @@ async function updateUser(guildMember, guildData) {
 	let rankData = await getRankData(PUUID);
 
 	// Something has gone wrong
-	if(!rankData) return;
+	if(!rankData || rankData.errors || rankData.status != 200) return;
 
 	rankData = rankData.data;
 	const rank = rankData.current.tier.name;
