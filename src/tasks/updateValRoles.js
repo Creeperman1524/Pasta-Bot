@@ -3,6 +3,8 @@ const { logger } = require('../logging.js');
 const valorantConfigSchema = require('../schemas/valorantConfig.js');
 const guildConfigSchema = require('../schemas/guildConfigs.js');
 
+const { apiRetries } = require('../config.json');
+
 const header = {
 	'Authorization': process.env.valorantToken,
 };
@@ -44,7 +46,7 @@ async function updateUser(guildMember, guildData) {
 	let rankData = await getRankData(PUUID);
 
 	// Something has gone wrong
-	if(rankData.errors || rankData.status != 200) return;
+	if(!rankData || rankData.errors || rankData.status != 200) return;
 
 	rankData = rankData.data;
 	const rank = rankData.current.tier.name;
@@ -74,19 +76,37 @@ async function updateUser(guildMember, guildData) {
 
 // Finds the current rank of the account
 async function getRankData(PUUID) {
-	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
-		{ method: 'GET', headers: header },
-	);
+	let rankData;
+	let retrievedRank = false;
+	let retries = 0;
 
-	const rankData = await rankResponse.json();
+	// Tries to get the rank
+	while(retries < apiRetries || !retrievedRank) {
+		const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
+			{ method: 'GET', headers: header },
+		);
 
-	// Check for rate limit
-	if(rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].stauts == 429) {
-		logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited');
-		logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
+		rankData = rankResponse ? await rankResponse.json() : null;
 
-		return setTimeout(getRankData(PUUID));
+		// Check for rate limit or other errors
+		if(!rankData || (rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].stauts == 429)) {
+			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited');
+			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
+
+			// Waits for a minute before trying again
+			retries++;
+			await sleep(1 * 60 * 1000);
+		}
+
+		retrievedRank = true;
 	}
 
+	if(retries >= apiRetries) logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Exceeded rate limit, aborting...');
+
 	return rankData;
+}
+
+// A function to pause for a certain amount of time
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
