@@ -11,7 +11,7 @@ const header = {
 
 module.exports = {
 	name: 'updateValRoles',
-	mode: 'TIME',
+	mode: 'ONCE',
 	timeHour: 0,
 	timeMinutes: 0,
 
@@ -46,7 +46,7 @@ async function updateUser(guildMember, guildData) {
 	let rankData = await getRankData(PUUID);
 
 	// Something has gone wrong
-	if(!rankData || rankData.errors || rankData.status != 200) return;
+	if(!rankData) return;
 
 	rankData = rankData.data;
 	const rank = rankData.current.tier.name;
@@ -77,11 +77,10 @@ async function updateUser(guildMember, guildData) {
 // Finds the current rank of the account
 async function getRankData(PUUID) {
 	let rankData;
-	let retrievedRank = false;
 	let retries = 0;
 
 	// Tries to get the rank
-	while(retries < apiRetries || !retrievedRank) {
+	while(retries < apiRetries) {
 		const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
 			{ method: 'GET', headers: header },
 		);
@@ -89,21 +88,21 @@ async function getRankData(PUUID) {
 		rankData = rankResponse ? await rankResponse.json() : null;
 
 		// Check for rate limit or other errors
-		if(!rankData || (rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].stauts == 429)) {
-			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited');
+		if(!rankData || (rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].status == 429)) {
+			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited/errored, trying again in 1 minute...');
 			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
 
 			// Waits for a minute before trying again
 			retries++;
 			await sleep(1 * 60 * 1000);
+			continue;
 		}
 
-		retrievedRank = true;
+		return rankData;
 	}
 
-	if(retries >= apiRetries) logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Exceeded rate limit, aborting...');
-
-	return rankData;
+	logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Exceeded rate limit/errored too many times, aborting...');
+	return null;
 }
 
 // A function to pause for a certain amount of time
