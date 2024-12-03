@@ -16,7 +16,7 @@
     "discord.js-pagination": "^1.0.3",
     "dotenv": "^16.0.1",
     "mcping-js": "^1.5.0",
-    "mongoose": "^6.12.0",
+    "mongoose": "^8.8.3",
     "node-fetch": "^2.6.7",
     "winston": "^3.6.0"
   }
