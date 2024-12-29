@@ -33,6 +33,12 @@ module.exports = {
 			.setDescription('The seed of the Minecraft server'),
 		)
 
+		// map
+		.addSubcommand(subcommand => subcommand
+			.setName('map')
+			.setDescription('The map of the Minecraft server'),
+		)
+
 		// wakeup
 		.addSubcommand(subcommand => subcommand
 			.setName('wakeup')
@@ -52,9 +58,13 @@ module.exports = {
 		case 'seed':
 			seedCommand(interaction);
 			break;
-		case 'wakeup':
-			await wakeupCommand(interaction);
+		case 'map':
+			mapCommand(interaction);
 			break;
+		case 'wakeup':
+			interaction.editReply('This feature has been discontinued (for now). Sorry!');
+			// await wakeupCommand(interaction);
+			// break;
 		}
 	},
 };
@@ -112,9 +122,9 @@ function pingServer(server, interaction, ip) {
 			if (typeof res.players.sample == 'undefined') {
 				// No one is online
 				serverStatus = '*No one is playing!*';
-			} else if(res.players.sample.length == 0) {
-				// Server is sleeping
-				serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
+			// } else if(res.players.sample.length == 0) {
+			// 	// Server is sleeping
+			// 	serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
 			} else {
 				// People are online
 				for (let i = 0; i < res.players.sample.length; i++) {
@@ -195,6 +205,16 @@ function seedCommand(interaction) {
 		.setDescription(`Seed: \`${process.env.mcServerSeed}\``);
 
 	interaction.editReply({ embeds: [seedEmbed] });
+}
+
+// Map command
+function mapCommand(interaction) {
+	const mapEmbed = newEmbed()
+		.setTitle('Server Map')
+		.setColor(colors.serverMapCommand)
+		.setDescription(`Server map: [${process.env.mcServerIP}:8123/](http://${process.env.mcServerIP}:8123/)\nYou can bookmark it for ease of access!`);
+
+	interaction.editReply({ embeds: [mapEmbed] });
 }
 
 // Wakeup command

@@ -41,6 +41,7 @@ const colors = {
 	serverPingCommand: '0x854f2b',
 	serverIPCommand: '0xf99703',
 	serverSeedCommand: '0xff006a',
+	serverMapCommand: '0x9000ff',
 	serverWakeupCommand: '0x5fc2d4',
 	minesweeperCommand: '0x232323',
 	reactionRolesCommand: '0x3274ba',

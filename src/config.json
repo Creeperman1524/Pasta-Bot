@@ -3,7 +3,7 @@
 	"statusInterval": "20",
 	"commandRefreshInterval": "30",
 	"mcServerPort": "25565",
-	"mcServerVersion": "1.20.4",
+	"mcServerVersion": "1.21.4",
 
 	"apiRetries": 5,
 
