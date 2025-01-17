@@ -8,7 +8,7 @@ const { logger } = require('../logging');
  * @param {number} time The time the buttons should be active for (seconds)
  */
 async function paginate(interaction, pages, time) {
-	if(!interaction || !pages || !(pages?.length > 0) || !(time > 10000)) {
+	if (!interaction || !pages || !(pages?.length > 0) || !(time > 10000)) {
 		logger.child({ mode: 'PAGINATION' }).error('Invalid parameters');
 		interaction.editReply({ content: 'Something has gone wrong, please report this to the bot administrator', ephemeral: true });
 	}
@@ -51,7 +51,7 @@ async function paginate(interaction, pages, time) {
 	// When a button is pressed
 	col.on('collect', (i) => {
 		if (i.customId == '1') index--;
-		else if(i.customId === '2') index++;
+		else if (i.customId === '2') index++;
 		else return col.stop();
 
 		// Updates buttons

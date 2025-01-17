@@ -30,12 +30,12 @@ async function updateCommands() {
 	logger.child({ mode: 'DEPLOY' }).info('Started refreshing application (/) commands...');
 
 	// Gather commands from folders
-	for(const folder of commandFolders) {
+	for (const folder of commandFolders) {
 		const commandFiles = fs.readdirSync(`./src/commands/${folder}`).filter(file => file.endsWith('.js'));
 		for (const file of commandFiles) {
 			const command = require(`./commands/${folder}/${file}`);
 			commands.push(command);
-			if(command.data) {
+			if (command.data) {
 				commandData.push(command.data.toJSON());
 				logger.child({ mode: 'DEPLOY' }).debug(`Pushing '${command.data.name}' to command list`);
 			}
@@ -61,11 +61,11 @@ async function updateCommandPermissions(client) {
 	try {
 		logger.child({ mode: 'DEPLOY' }).info('Started refreshing application (/) command permissions...');
 
-		for(const id of guildIDs) {
+		for (const id of guildIDs) {
 			const fullPermissions = [];
-			for(const command of await client.application.commands.fetch()) {
+			for (const command of await client.application.commands.fetch()) {
 				const permission = generatePermissions(command[1], client.guilds.cache.get(id));
-				if(permission) fullPermissions.push(permission);
+				if (permission) fullPermissions.push(permission);
 			}
 			await rest.put(
 				Routes.guildApplicationCommandsPermissions(process.env.clientID, id),
@@ -83,12 +83,12 @@ async function updateCommandPermissions(client) {
 function generatePermissions(discordCommand, guild) {
 	// Pairs API command and file command
 	let command;
-	for(const cmd of commands) {
+	for (const cmd of commands) {
 		if (cmd.data.name == discordCommand.name) command = cmd;
 	}
 
 	// If there are no permissions
-	if(!command.permissions) return null;
+	if (!command.permissions) return null;
 
 	// Base permission object
 	const commandPermission = {
@@ -97,7 +97,7 @@ function generatePermissions(discordCommand, guild) {
 	};
 
 	// Owner permission
-	if(command.permissions[0] == 'OWNER') {
+	if (command.permissions[0] == 'OWNER') {
 		commandPermission.permissions.push({
 			id: '284842415289008138',
 			type: 2,
@@ -107,10 +107,10 @@ function generatePermissions(discordCommand, guild) {
 	}
 
 	// Administrator permission
-	if(command.permissions[0] == 'ADMIN') {
+	if (command.permissions[0] == 'ADMIN') {
 		let count = 0;
 		guild.roles.cache.forEach(role => {
-			if(role.permissions.has('ADMINISTRATOR') && count < 10) {
+			if (role.permissions.has('ADMINISTRATOR') && count < 10) {
 				commandPermission.permissions.push({
 					id: role.id,
 					type: 1,
@@ -122,10 +122,10 @@ function generatePermissions(discordCommand, guild) {
 		});
 	}
 
-	if(command.permissions[0] == 'MESSAGES') {
+	if (command.permissions[0] == 'MESSAGES') {
 		let count = 0;
 		guild.roles.cache.forEach(role => {
-			if(role.permissions.has('MANAGE_MESSAGES') && count < 10) {
+			if (role.permissions.has('MANAGE_MESSAGES') && count < 10) {
 				commandPermission.permissions.push({
 					id: role.id,
 					type: 1,

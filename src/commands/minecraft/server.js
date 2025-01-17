@@ -43,18 +43,18 @@ module.exports = {
 	// Commands
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
-		case 'status':
-			statusCommand(interaction);
-			break;
-		case 'ip':
-			ipCommand(interaction);
-			break;
-		case 'seed':
-			seedCommand(interaction);
-			break;
-		case 'wakeup':
-			await wakeupCommand(interaction);
-			break;
+			case 'status':
+				statusCommand(interaction);
+				break;
+			case 'ip':
+				ipCommand(interaction);
+				break;
+			case 'seed':
+				seedCommand(interaction);
+				break;
+			case 'wakeup':
+				await wakeupCommand(interaction);
+				break;
 		}
 	},
 };
@@ -91,7 +91,7 @@ function pingServer(server, interaction, ip) {
 
 			// Offline
 			const offlineEmbed = newEmbed()
-				.setTitle('Status for ' + ip + ':')
+				.setTitle(`Status for ${ ip }:`)
 				.setColor(colors.serverPingCommand)
 				.setDescription('*Server is offline*');
 			interaction.editReply({
@@ -112,7 +112,7 @@ function pingServer(server, interaction, ip) {
 			if (typeof res.players.sample == 'undefined') {
 				// No one is online
 				serverStatus = '*No one is playing!*';
-			} else if(res.players.sample.length == 0) {
+			} else if (res.players.sample.length == 0) {
 				// Server is sleeping
 				serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
 			} else {
@@ -122,14 +122,14 @@ function pingServer(server, interaction, ip) {
 				}
 				onlinePlayers = onlinePlayers.sort().join(', ');
 
-				serverStatus = '**' + res.players.online + '/' + res.players.max + '**' + ' player(s) online.\n\n' + onlinePlayers;
+				serverStatus = `**${ res.players.online }/${ res.players.max }**` + ` player(s) online.\n\n${ onlinePlayers}`;
 
 			}
 			if (hasIcon === 'yes') {
 				// Sends an embed with an icon image
 				const buffer = Buffer.from(favicon, 'base64');
 				const serverEmbedicon = newEmbed()
-					.setTitle('Status for ' + ip + ':')
+					.setTitle(`Status for ${ ip }:`)
 					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
 					.setThumbnail('attachment://icon.png')
@@ -144,7 +144,7 @@ function pingServer(server, interaction, ip) {
 			} else if (hasIcon === 'no') {
 				// Sends an embed without the icon
 				const serverEmbedNoIcon = newEmbed()
-					.setTitle('Status for ' + ip + ':')
+					.setTitle(`Status for ${ ip }:`)
 					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
 					.addField('Server version:', res.version.name);
@@ -213,7 +213,7 @@ async function wakeupCommand(interaction) {
 		const rawStatus = await fetch(statusURL);
 		const status = await rawStatus.json();
 
-		if(status.status == 'Sleeping') {
+		if (status.status == 'Sleeping') {
 			// Notify the user that the server is waking up
 			responseEmbed.setDescription(`Server is currently **sleeping** 😴. \`Waking it up...\`\n\nThe server sleeps to save power and computer resources. Logging on or running this command will have the server avaliable <t:${Math.floor((Date.now() + (3 * 60 * 1000)) / 1000)}:R>`);
 
@@ -223,13 +223,13 @@ async function wakeupCommand(interaction) {
 				body: null,
 			});
 
-		} else if(status.status == 'Running') {
+		} else if (status.status == 'Running') {
 			// Notify the user that the server is running
 			responseEmbed.setDescription('Server is currently **running** 🏃. Go play on it :D');
 		}
 	} catch (error) {
 		// Handle any API errors (mostly due from the server being offline)
-		if(error != undefined) {
+		if (error != undefined) {
 			logger.child({
 				mode: 'SERVER',
 				metaData: {

@@ -13,10 +13,10 @@ module.exports = {
 			.setColor(colors.pingCommand)
 			.addFields({
 				name: 'Roundtrip Latency',
-				value: Date.now() - interaction.createdTimestamp + ' ms',
+				value: `${Date.now() - interaction.createdTimestamp } ms`,
 			}, {
 				name: 'Websocket Heartbeat',
-				value: Math.round(interaction.client.ws.ping) + ' ms',
+				value: `${Math.round(interaction.client.ws.ping) } ms`,
 			});
 
 		await interaction.editReply({

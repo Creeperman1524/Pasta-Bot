@@ -6,7 +6,7 @@ const { version } = require('../config.json');
  * @returns {MessageEmbed} The standardized embed
  */
 function newEmbed() {
-	if(process.env.NODE_ENV == 'dev') {
+	if (process.env.NODE_ENV == 'dev') {
 		return new MessageEmbed()
 			.setFooter({ text: `Version ${version} - DEV` });
 	} else {
@@ -26,7 +26,7 @@ function truncateText(text, length) {
 		return text;
 	}
 
-	return text.slice(0, length - 3) + '\u2026';
+	return `${text.slice(0, length - 3) }\u2026`;
 }
 
 /**

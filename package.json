@@ -4,7 +4,8 @@
   "description": "A fun bot that I like to use for my servers",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index",
+    "lint": "npx eslint --fix ."
   },
   "author": "Creeperman1524",
   "license": "ISC",
@@ -19,5 +20,8 @@
     "mongoose": "^6.12.0",
     "node-fetch": "^2.6.7",
     "winston": "^3.6.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0"
   }
 }

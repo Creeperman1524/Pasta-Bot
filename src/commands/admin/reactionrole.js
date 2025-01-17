@@ -81,18 +81,18 @@ module.exports = {
 
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
-		case 'create':
-			createReactionMessage(interaction);
-			break;
-		case 'add':
-			addRoletoMessage(interaction);
-			break;
-		case 'remove':
-			removeRolefromMessage(interaction);
-			break;
-		case 'delete':
-			deleteReactionMessage(interaction);
-			break;
+			case 'create':
+				createReactionMessage(interaction);
+				break;
+			case 'add':
+				addRoletoMessage(interaction);
+				break;
+			case 'remove':
+				removeRolefromMessage(interaction);
+				break;
+			case 'delete':
+				deleteReactionMessage(interaction);
+				break;
 		}
 	},
 };
@@ -102,7 +102,7 @@ async function createReactionMessage(interaction) {
 	let data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
 	// Checks to see if the guild has any saved data
-	if(!data) {
+	if (!data) {
 		logger.child({ mode: 'DATABASE', metaData: { guildID: interaction.guildId } }).info('Creating new guild configs file');
 		const guildConfigs = await guildConfigSchema.create({
 			guildID: interaction.guildId,
@@ -116,7 +116,7 @@ async function createReactionMessage(interaction) {
 
 	// Sends the base message
 	const channel = interaction.options.getChannel('channel');
-	if(channel.type == 'GUILD_TEXT') {
+	if (channel.type == 'GUILD_TEXT') {
 		const baseEmbed = newEmbed()
 			.setTitle(interaction.options.getString('title'))
 			.setDescription('React to this message to change your roles!')
@@ -155,7 +155,7 @@ async function createReactionMessage(interaction) {
 async function deleteReactionMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data.reactionMessages || data.reactionMessages == {}) {
+	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -166,7 +166,7 @@ async function deleteReactionMessage(interaction) {
 	const reactionMessages = data.reactionMessages;
 	const message = await findMessage(interaction, reactionMessages);
 
-	if(message) {
+	if (message) {
 		message.delete()
 			.catch(logger.child({
 				mode: 'REACTION ROLE',
@@ -201,7 +201,7 @@ async function deleteReactionMessage(interaction) {
 async function addRoletoMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data.reactionMessages || data.reactionMessages == {}) {
+	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -213,7 +213,7 @@ async function addRoletoMessage(interaction) {
 	const message = await findMessage(interaction, reactionMessages);
 
 	// Checks if the message exists
-	if(!message) {
+	if (!message) {
 		interaction.editReply({
 			content: 'It seems that message isn\'t from this server',
 			ephemeral: true,
@@ -226,7 +226,7 @@ async function addRoletoMessage(interaction) {
 	const emoji = interaction.options.getString('emoji');
 
 	// Checks if the role is valid
-	if(role.name == '@everyone') {
+	if (role.name == '@everyone') {
 		interaction.editReply({
 			content: 'That\'s an invalid role!',
 			ephemeral: true,
@@ -280,7 +280,7 @@ async function addRoletoMessage(interaction) {
 async function removeRolefromMessage(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
-	if(!data.reactionMessages || data.reactionMessages == {}) {
+	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
 			content: 'This server doesn\'t seem to have a reaction role message!',
 			ephemeral: true,
@@ -292,7 +292,7 @@ async function removeRolefromMessage(interaction) {
 	const message = await findMessage(interaction, reactionMessages);
 
 	// Checks if the message exists
-	if(!message) {
+	if (!message) {
 		interaction.editReply({
 			content: 'It seems that message isn\'t from this server',
 			ephemeral: true,
@@ -306,13 +306,13 @@ async function removeRolefromMessage(interaction) {
 	// Checks if the role is in the message
 	let found = false;
 	for (const storageRole of reactionMessages[message.id]) {
-		if(storageRole[0] == role.id) {
+		if (storageRole[0] == role.id) {
 			found = true;
 			break;
 		}
 	}
 
-	if(!found) {
+	if (!found) {
 		interaction.editReply({
 			content: 'That role is not used in that reaction message!',
 			ephemeral: true,
@@ -324,8 +324,8 @@ async function removeRolefromMessage(interaction) {
 	const lastEmbed = message.embeds[0];
 	const fields = lastEmbed.fields;
 
-	for(let i = 0; i < fields.length; i++) {
-		if(fields[i].value == `<@&${role.id}>`) {
+	for (let i = 0; i < fields.length; i++) {
+		if (fields[i].value == `<@&${role.id}>`) {
 			delete fields[i];
 		}
 	}
@@ -336,8 +336,8 @@ async function removeRolefromMessage(interaction) {
 
 	// Removes from database
 	let emoji;
-	for(let i = 0; i < reactionMessages[message.id].length; i++) {
-		if(reactionMessages[message.id][i][0] == role.id) {
+	for (let i = 0; i < reactionMessages[message.id].length; i++) {
+		if (reactionMessages[message.id][i][0] == role.id) {
 			emoji = reactionMessages[message.id][i][1];
 			reactionMessages[message.id].splice(i, 1);
 		}
@@ -366,7 +366,7 @@ async function findMessage(interaction, reactionGuild) {
 	const messageID = messageLink.split('/')[6];
 
 	// If that message isn't a reaction message
-	if(!reactionGuild[messageID]) {
+	if (!reactionGuild[messageID]) {
 		interaction.editReply({
 			content: 'That message link isn\'t a valid reaction message!',
 			ephemeral: true,
@@ -376,8 +376,8 @@ async function findMessage(interaction, reactionGuild) {
 
 	// Loops through all channels to find the message
 	let message = null;
-	for(const channel of interaction.guild.channels.cache) {
-		if(channel[1].type == 'GUILD_TEXT') {
+	for (const channel of interaction.guild.channels.cache) {
+		if (channel[1].type == 'GUILD_TEXT') {
 			try {
 				message = await channel[1].messages.fetch(messageID);
 			} catch (error) {

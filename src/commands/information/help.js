@@ -16,7 +16,7 @@ module.exports = {
 
 	async execute(interaction) {
 		const command = interaction.options.getString('command');
-		if(!command) {
+		if (!command) {
 			generalHelp(interaction);
 		} else {
 			detailedHelp(interaction, command.toLowerCase());
@@ -47,7 +47,7 @@ async function generalHelp(interaction) {
 	const embeds = [];
 
 	// Loops through all categories to find which command corresponds to which
-	for(const category of categories) {
+	for (const category of categories) {
 		const fields = [];
 		const filteredCommands = commands.filter(command => command.category == category);
 		filteredCommands.forEach(command => {
@@ -75,7 +75,7 @@ async function detailedHelp(interaction, commandName) {
 	const { commands } = interaction.client;
 
 	// If the command doesn't exist
-	if(!commands.get(commandName)) {
+	if (!commands.get(commandName)) {
 		const notFoundEmbed = newEmbed()
 			.setTitle('Command Not Found!')
 			.setColor(colors.warn)
@@ -91,9 +91,9 @@ async function detailedHelp(interaction, commandName) {
 	const subCommands = command.data.options;
 	const fields = [];
 
-	for(const subCommand of subCommands) {
+	for (const subCommand of subCommands) {
 		// Checks if it's a subcommand (and not an option)
-		if(!subCommand.toJSON().options) continue;
+		if (!subCommand.toJSON().options) continue;
 
 		fields.push({
 			name: `/${command.data.name} ${subCommand.name}`,
