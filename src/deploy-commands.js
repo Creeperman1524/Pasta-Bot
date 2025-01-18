@@ -1,10 +1,9 @@
 const fs = require('fs');
-const {	REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { REST, Routes } = require('discord.js');
 
 const { logger } = require('./logging.js');
 
-const rest = new REST({ version: '9' }).setToken(process.env.token);
+const rest = new REST().setToken(process.env.token);
 
 const commands = [];
 const guildIDs = [];

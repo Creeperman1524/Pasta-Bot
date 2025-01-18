@@ -1,5 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { ChannelType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -116,7 +115,7 @@ async function createReactionMessage(interaction) {
 
 	// Sends the base message
 	const channel = interaction.options.getChannel('channel');
-	if (channel.type == 'GUILD_TEXT') {
+	if (channel.type == ChannelType.GuildText) {
 		const baseEmbed = newEmbed()
 			.setTitle(interaction.options.getString('title'))
 			.setDescription('React to this message to change your roles!')
@@ -256,8 +255,7 @@ async function addRoletoMessage(interaction) {
 	};
 	fields.push(newField);
 
-	const addRoleEmbed = new MessageEmbed(lastEmbed);
-	addRoleEmbed.fields = fields;
+	const addRoleEmbed = EmbedBuilder.from(lastEmbed).setFields(fields);
 	message.edit({ embeds: [addRoleEmbed] });
 
 	// Edits database
@@ -330,8 +328,7 @@ async function removeRolefromMessage(interaction) {
 		}
 	}
 
-	const addRoleEmbed = new MessageEmbed(lastEmbed);
-	addRoleEmbed.fields = fields;
+	const addRoleEmbed = EmbedBuilder.from(lastEmbed).setFields(fields);
 	message.edit({ embeds: [addRoleEmbed] });
 
 	// Removes from database
@@ -377,7 +374,7 @@ async function findMessage(interaction, reactionGuild) {
 	// Loops through all channels to find the message
 	let message = null;
 	for (const channel of interaction.guild.channels.cache) {
-		if (channel[1].type == 'GUILD_TEXT') {
+		if (channel[1].type == ChannelType.GuildText) {
 			try {
 				message = await channel[1].messages.fetch(messageID);
 			} catch (error) {

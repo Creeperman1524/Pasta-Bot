@@ -1,5 +1,4 @@
-const { MessageEmbed, Collection, MessageActionRow, MessageButton } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, ComponentType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -48,17 +47,17 @@ function createGame(myInteraction) {
 function startGame(game) {
 
 	// Creates the user buttons
-	const row1 = new MessageActionRow()
+	const row1 = new ActionRowBuilder()
 		.addComponents(
-			createButton('flag', '🚩', 'SUCCESS'), // Flag button
-			createButton('up', '⬆️', 'SECONDARY'), // Up button
-			createButton('dig', '⛏️', 'DANGER'), // Dig button
+			createButton('flag', '🚩', ButtonStyle.Success), // Flag button
+			createButton('up', '⬆️', ButtonStyle.Secondary), // Up button
+			createButton('dig', '⛏️', ButtonStyle.Danger), // Dig button
 		);
-	const row2 = new MessageActionRow()
+	const row2 = new ActionRowBuilder()
 		.addComponents(
-			createButton('left', '⬅️', 'SECONDARY'), // Left button
-			createButton('down', '⬇️', 'SECONDARY'), // Down button
-			createButton('right', '➡️', 'SECONDARY'), // Right button
+			createButton('left', '⬅️', ButtonStyle.Secondary), // Left button
+			createButton('down', '⬇️', ButtonStyle.Secondary), // Down button
+			createButton('right', '➡️', ButtonStyle.Secondary), // Right button
 		);
 	game.buttons = [row1, row2];
 
@@ -103,12 +102,12 @@ function startGame(game) {
 
 // Helper function to make the buttons
 function createButton(ID, emoji, style) {
-	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
+	return new ButtonBuilder().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
 // Listens for the user's input
 async function awaitInput(game) {
-	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: 'BUTTON', time: game.timeout });
+	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: game.timeout });
 
 	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
@@ -152,8 +151,8 @@ async function gameLoop(game, move) {
 		const fasterTime = await saveData(game.interaction, true, game.startTime, endTime);
 
 		const lastEmbed = game.embed.embeds[0];
-		const embed = new MessageEmbed(lastEmbed).setDescription(text);
-		embed.fields = [{
+		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
+		embed.data.fields = [{
 			name: 'You Win!',
 			value: 'Thanks for playing! :grin:',
 			inline: false,
@@ -170,8 +169,8 @@ async function gameLoop(game, move) {
 	} else {
 		// Updates the game's stats
 		const lastEmbed = game.embed.embeds[0];
-		const embed = new MessageEmbed(lastEmbed).setDescription(text);
-		embed.fields[0] = {
+		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
+		embed.data.fields[0] = {
 			name: 'Bombs Left',
 			value: `\`${numOfMines - game.flags}\``,
 			inline: true,
@@ -203,12 +202,12 @@ async function lose(game) {
 	const text = generateText(game);
 
 	const lastEmbed = game.embed.embeds[0];
-	const embed = new MessageEmbed(lastEmbed).setDescription(text);
-	embed.fields = {
-		name: 'You Lose!',
-		value: 'Try again next time! :pensive:',
-		inline: false,
-	};
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(text)
+		.setFields({
+			name: 'You Lose!',
+			value: 'Try again next time! :pensive:',
+			inline: false,
+		});
 
 	// In case the channel/interaction was deleted
 	try {

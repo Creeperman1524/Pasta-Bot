@@ -1,5 +1,4 @@
-const { Collection, MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, ComponentType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -69,23 +68,23 @@ function createGame(myInteraction) {
 function startGame(game) {
 
 	// Creates the board of buttons
-	const row1 = new MessageActionRow()
+	const row1 = new ActionRowBuilder()
 		.addComponents(
-			createButton('0', emojis.blank, 'SECONDARY'), // XXX
-			createButton('1', emojis.blank, 'SECONDARY'), // ---
-			createButton('2', emojis.blank, 'SECONDARY'), // ---
+			createButton('0', emojis.blank, ButtonStyle.Secondary), // XXX
+			createButton('1', emojis.blank, ButtonStyle.Secondary), // ---
+			createButton('2', emojis.blank, ButtonStyle.Secondary), // ---
 		);
-	const row2 = new MessageActionRow()
+	const row2 = new ActionRowBuilder()
 		.addComponents(
-			createButton('3', emojis.blank, 'SECONDARY'), // ---
-			createButton('4', emojis.blank, 'SECONDARY'), // XXX
-			createButton('5', emojis.blank, 'SECONDARY'), // ---
+			createButton('3', emojis.blank, ButtonStyle.Secondary), // ---
+			createButton('4', emojis.blank, ButtonStyle.Secondary), // XXX
+			createButton('5', emojis.blank, ButtonStyle.Secondary), // ---
 		);
-	const row3 = new MessageActionRow()
+	const row3 = new ActionRowBuilder()
 		.addComponents(
-			createButton('6', emojis.blank, 'SECONDARY'), // ---
-			createButton('7', emojis.blank, 'SECONDARY'), // ---
-			createButton('8', emojis.blank, 'SECONDARY'), // XXX
+			createButton('6', emojis.blank, ButtonStyle.Secondary), // ---
+			createButton('7', emojis.blank, ButtonStyle.Secondary), // ---
+			createButton('8', emojis.blank, ButtonStyle.Secondary), // XXX
 		);
 	game.buttons = [row1, row2, row3];
 	game.player1 = game.interaction.user;
@@ -101,7 +100,7 @@ function startGame(game) {
 
 // A helper function to add buttons
 function createButton(ID, emoji, style) {
-	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
+	return new ButtonBuilder().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
 // Gets the bot winrate of the player
@@ -168,10 +167,10 @@ function startGameUser(game) {
 		return;
 	}
 
-	const confirmationRow = new MessageActionRow()
+	const confirmationRow = new ActionRowBuilder()
 		.addComponents(
-			createButton('yes', emojis.confirm, 'SUCCESS'),
-			createButton('no', emojis.deny, 'DANGER'),
+			createButton('yes', emojis.confirm, ButtonStyle.Success),
+			createButton('no', emojis.deny, ButtonStyle.Danger),
 		);
 
 	// Embed to ask player2
@@ -189,7 +188,7 @@ function startGameUser(game) {
 	game.interaction.editReply({ content: `<@${game.player2.id}>`, embeds: [requestEmbed], components:[confirmationRow] }).then(async embed => {
 
 		// Waits to accept request
-		const confirmationCollector = embed.createMessageComponentCollector({ componentType: 'BUTTON', time: 1 * 60000 });
+		const confirmationCollector = embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: 1 * 60000 });
 		confirmationCollector.on('collect', (button) => {
 			button.deferUpdate();
 			if (button.user.id !== game.player2.id) return;
@@ -242,7 +241,7 @@ function deniedRequest(game, timeout) {
 }
 
 function awaitInput(game) {
-	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: 'BUTTON', time: game.timeout });
+	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: game.timeout });
 
 	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
@@ -293,7 +292,7 @@ async function gameLoop(game, move) {
 
 		// Resend message
 		const lastEmbed = game.embed.embeds[0];
-		const embed = new MessageEmbed(lastEmbed).setDescription(description);
+		const embed = EmbedBuilder.from(lastEmbed).setDescription(description);
 
 		game.interaction.editReply({ embeds: [embed], components: game.buttons });
 
@@ -439,7 +438,7 @@ function updateDisplay(game, board) {
 
 			// Sets the buttons
 			game.buttons[y].components[x].setStyle(
-				pos == 0 ? 'SECONDARY' : 'PRIMARY',
+				pos == 0 ? ButtonStyle.Secondary : ButtonStyle.Primary,
 			).setEmoji(
 				pos == 0 ? emojis.blank : pos == -1 ? emojis.O : emojis.X,
 			).setDisabled(pos != 0);
@@ -483,33 +482,33 @@ function displayWinningPositions(game, board) {
 	// Rows
 	for (let y = 0; y < 3; y++) {
 		if (board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0) {
-			game.buttons[y].components[0].setStyle('SUCCESS');
-			game.buttons[y].components[1].setStyle('SUCCESS');
-			game.buttons[y].components[2].setStyle('SUCCESS');
+			game.buttons[y].components[0].setStyle(ButtonStyle.Success);
+			game.buttons[y].components[1].setStyle(ButtonStyle.Success);
+			game.buttons[y].components[2].setStyle(ButtonStyle.Success);
 		}
 	}
 
 	// Columns
 	for (let x = 0; x < 3; x++) {
 		if (board[0][x] == board[1][x] && board[0][x] == board[2][x] && board[0][x] != 0) {
-			game.buttons[0].components[x].setStyle('SUCCESS');
-			game.buttons[1].components[x].setStyle('SUCCESS');
-			game.buttons[2].components[x].setStyle('SUCCESS');
+			game.buttons[0].components[x].setStyle(ButtonStyle.Success);
+			game.buttons[1].components[x].setStyle(ButtonStyle.Success);
+			game.buttons[2].components[x].setStyle(ButtonStyle.Success);
 		}
 	}
 
 	// Positive diagonal
 	if (board[2][0] == board[1][1] && board[2][0] == board[0][2]) {
-		game.buttons[2].components[0].setStyle('SUCCESS');
-		game.buttons[1].components[1].setStyle('SUCCESS');
-		game.buttons[0].components[2].setStyle('SUCCESS');
+		game.buttons[2].components[0].setStyle(ButtonStyle.Success);
+		game.buttons[1].components[1].setStyle(ButtonStyle.Success);
+		game.buttons[0].components[2].setStyle(ButtonStyle.Success);
 	}
 
 	// Negative diagonal
 	if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) {
-		game.buttons[0].components[0].setStyle('SUCCESS');
-		game.buttons[1].components[1].setStyle('SUCCESS');
-		game.buttons[2].components[2].setStyle('SUCCESS');
+		game.buttons[0].components[0].setStyle(ButtonStyle.Success);
+		game.buttons[1].components[1].setStyle(ButtonStyle.Success);
+		game.buttons[2].components[2].setStyle(ButtonStyle.Success);
 	}
 
 }
@@ -538,8 +537,7 @@ function gameEnded(game) {
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
-	const embed = new MessageEmbed(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`);
-	embed.fields = [];
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields();
 
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });
@@ -567,8 +565,7 @@ function ranOutOfTime(game) {
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
-	const embed = new MessageEmbed(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`);
-	embed.fields = [];
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields();
 
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });

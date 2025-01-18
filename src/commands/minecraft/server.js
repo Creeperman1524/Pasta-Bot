@@ -1,5 +1,5 @@
 const mcping = require('mcping-js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { mcServerPort, mcServerVersion } = require('../../config.json');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
@@ -133,7 +133,7 @@ function pingServer(server, interaction, ip) {
 					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
 					.setThumbnail('attachment://icon.png')
-					.addField('Server version:', res.version.name);
+					.addFields({ name: 'Server version:', value: res.version.name });
 				interaction.editReply({
 					embeds: [serverEmbedicon],
 					files: [{
@@ -147,7 +147,7 @@ function pingServer(server, interaction, ip) {
 					.setTitle(`Status for ${ ip }:`)
 					.setColor(colors.serverPingCommand)
 					.setDescription(serverStatus)
-					.addField('Server version:', res.version.name);
+					.addFields({ name: 'Server version:', value: res.version.name });
 				interaction.editReply({
 					embeds: [serverEmbedNoIcon],
 				});

@@ -1,6 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
-const { Client, Intents, Collection } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
@@ -10,10 +10,8 @@ const guildConfigSchema = require('./schemas/guildConfigs.js');
 
 // Creates the bot client
 const client = new Client({
-	intents: [
-		[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES],
-	],
-	partials: ['MESSAGE', 'USER', 'REACTION'],
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+	partials: [Partials.Message, Partials.User, Partials.Reaction],
 });
 
 
@@ -91,7 +89,7 @@ async function autocompleteCommand(interaction) {
 	const command = client.commands.get(interaction.commandName);
 
 	try {
-		// command.autocomplete(interaction);  // TODO: wait for discord.js fix
+		 command.autocomplete(interaction);
 	} catch (error) {
 		logger.child({
 			mode: 'AUTOCOMPLETE',
