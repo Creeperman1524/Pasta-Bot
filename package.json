@@ -12,11 +12,11 @@
   "dependencies": {
     "discord.js": "^14.17.3",
     "discord.js-pagination": "^1.0.3",
-    "dotenv": "^16.0.1",
+    "dotenv": "^16.4.7",
     "mcping-js": "^1.5.0",
-    "mongoose": "^6.12.0",
-    "node-fetch": "^2.6.7",
-    "winston": "^3.6.0"
+    "mongoose": "^8.9.5",
+    "node-fetch": "^3.3.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0"

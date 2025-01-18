@@ -8,10 +8,8 @@ module.exports = {
 	async execute() {
 		// Connects to the database
 		mongoose.Promise = global.Promise;
-		await mongoose.connect(process.env.mongoDB, {
-			useUnifiedTopology: true,
-			useNewUrlParser: true,
-		});
+		mongoose.set('strictQuery', true);
+		await mongoose.connect(process.env.mongoDB, {});
 	},
 };
 
