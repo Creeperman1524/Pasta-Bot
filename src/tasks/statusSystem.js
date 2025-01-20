@@ -56,6 +56,6 @@ module.exports = {
 			}],
 			status: botPresence[1],
 		});
-		logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
+		// logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
 	},
 };

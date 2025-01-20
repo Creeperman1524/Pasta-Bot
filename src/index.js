@@ -1,6 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, Partials } = require('discord.js');
 
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
@@ -28,14 +28,14 @@ for (const folder of commandFolders) {
 }
 
 // Runs when the bot is online
-client.once('ready', async () => {
+client.once(Events.ClientReady, async () => {
 	logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
 	await runTasks(client);
 	logger.child({ mode: 'STARTUP' }).info('Bot is active');
 });
 
 // Interaction handling
-client.on('interactionCreate', async interaction => {
+client.on(Events.InteractionCreate, async interaction => {
 	if (interaction.isCommand()) interactionCommand(interaction);
 	if (interaction.isAutocomplete()) autocompleteCommand(interaction);
 });
@@ -107,11 +107,11 @@ async function autocompleteCommand(interaction) {
 }
 
 // Listens for reaction changes for the reaction roles
-client.on('messageReactionAdd', async (reaction, user) => {
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
 	reactionRoleHandler(reaction, user, 'add');
 });
 
-client.on('messageReactionRemove', async (reaction, user) => {
+client.on(Events.MessageReactionRemove, async (reaction, user) => {
 	reactionRoleHandler(reaction, user, 'remove');
 });
 
