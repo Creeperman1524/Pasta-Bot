@@ -22,9 +22,7 @@ function newEmbed() {
  * @returns {String} the truncated text (if applicable)
  */
 function truncateText(text, length) {
-	if (text.length <= length - 3) {
-		return text;
-	}
+	if (text.length <= length - 3) return text;
 
 	return `${text.slice(0, length - 3) }\u2026`;
 }
@@ -36,8 +34,6 @@ const colors = {
 	helpCommand: 0x1cff2b,
 	infoCommand: 0x0088ff,
 	pingCommand: 0xff00ff,
-	paperCommand: 0x03fcfc,
-	serverBackupCommand: 0xd303fc,
 	serverPingCommand: 0x854f2b,
 	serverIPCommand: 0xf99703,
 	serverSeedCommand: 0xff006a,
@@ -46,7 +42,7 @@ const colors = {
 	reactionRolesCommand: 0x3274ba,
 	tictactoeCommand: 0xdecc00,
 	valorantCommand: 0xbd3944,
-	configCommand: 0xa9cc9f,
+	configCommand: 0x646464,
 
 	success: 0x009f00,
 	warn: 0xfdff63,
