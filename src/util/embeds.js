@@ -8,10 +8,10 @@ const { version } = require('../config.json');
 function newEmbed() {
 	if (process.env.NODE_ENV == 'dev') {
 		return new EmbedBuilder()
-			.setFooter({ text: `Version ${version} - DEV` });
+			.setFooter({ text: `v${version} - DEV` });
 	} else {
 		return new EmbedBuilder()
-			.setFooter({ text: `Version ${version}` });
+			.setFooter({ text: `v${version}` });
 	}
 }
 
