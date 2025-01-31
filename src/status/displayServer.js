@@ -1,4 +1,5 @@
 const mcping = require('mcping-js');
+const { PresenceUpdateStatus } = require('discord.js');
 
 const { mcServerPort } = require('../config.json');
 
@@ -16,19 +17,19 @@ module.exports = {
 				// Server offline/errored
 				if (!(typeof err === 'undefined' || err === null)) {
 					// console.log(err);
-					resolve(['an offline server :(', 'dnd']);
+					resolve(['an offline server :(', PresenceUpdateStatus.DoNotDisturb]);
 					return;
 				}
 
 				// Server online with no players
 				if (typeof res.players.sample === 'undefined') {
-					resolve([`${res.players.online }/${ res.players.max } players`, 'idle']);
+					resolve([`${res.players.online }/${ res.players.max } players`, PresenceUpdateStatus.Idle]);
 					return;
 				}
 
 				// Server is in sleep mode
 				if (res.players.sample.length == 0) {
-					resolve(['a sleepy server', 'idle']);
+					resolve(['a sleepy server', PresenceUpdateStatus.Idle]);
 					return;
 				}
 
@@ -41,7 +42,7 @@ module.exports = {
 					for (const player of res.players.sample) onlinePlayers.push(player.name);
 					onlinePlayers = onlinePlayers.sort().join(', ');
 
-					resolve([`${res.players.online }/${ res.players.max } players -\n ${ onlinePlayers}`, 'online']);
+					resolve([`${res.players.online }/${ res.players.max } players -\n ${ onlinePlayers}`, PresenceUpdateStatus.Online]);
 					return;
 				}
 			});

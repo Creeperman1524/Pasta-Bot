@@ -1,6 +1,6 @@
-const { logger } = require('../logging');
 const fs = require('fs');
 const { statusInterval } = require('../config.json');
+const { ActivityType, PresenceUpdateStatus } = require('discord.js');
 
 const functions = [];
 const statusFiles = fs.readdirSync('./src/status');
@@ -31,7 +31,7 @@ module.exports = {
 
 	async execute(client) {
 		// The presence that will be displayed
-		const botPresence = ['', 'dnd'];
+		const botPresence = ['', PresenceUpdateStatus.DoNotDisturb];
 
 		// Stores what all of the functions want to be displayed
 		const presences = {};
@@ -50,10 +50,7 @@ module.exports = {
 
 		// Set's the bot's presence
 		client.user.setPresence({
-			activities: [{
-				name: botPresence[0],
-				type: 'WATCHING',
-			}],
+			activities: [{ name: botPresence[0], type: ActivityType.Watching }],
 			status: botPresence[1],
 		});
 		// logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
