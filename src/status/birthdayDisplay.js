@@ -12,12 +12,12 @@ module.exports = {
 
 		loop:
 		while (!found) {
-			for(const b in birthdays) {
+			for (const b in birthdays) {
 				birthday = b;
 				// Finds the first birthday that's after today
 				// or currently today to display before 7pm
 				const bdate = convertDate(birthdays[b], now, checkNextYear);
-				if(bdate.getTime() > now || (bdate.getMonth() == now.getMonth() && bdate.getDate() == now.getDate() && now.getHours() < 19)) {
+				if (bdate.getTime() > now || (bdate.getMonth() == now.getMonth() && bdate.getDate() == now.getDate() && now.getHours() < 19)) {
 					found = true;
 					break loop;
 				}
@@ -31,7 +31,7 @@ module.exports = {
 		const hours = Math.floor(seconds % (60 * 60 * 24) / (60 * 60));
 		const minutes = Math.floor(seconds % (60 * 60) / 60);
 
-		if(days >= 1) { // Further than 1 day away
+		if (days >= 1) { // Further than 1 day away
 			return [`${days}d ${hours}h 🎂 ${birthday}`, ''];
 		} else if (days < 1 && hours >= 0) { // 0-24h
 			return [`${hours}h ${minutes}m 🎂 ${birthday}`, ''];

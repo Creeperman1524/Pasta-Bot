@@ -22,12 +22,12 @@ module.exports = {
 
 				// Server online with no players
 				if (typeof res.players.sample === 'undefined') {
-					resolve([res.players.online + '/' + res.players.max + ' players', 'idle']);
+					resolve([`${res.players.online }/${ res.players.max } players`, 'idle']);
 					return;
 				}
 
 				// Server is in sleep mode
-				if(res.players.sample.length == 0) {
+				if (res.players.sample.length == 0) {
 					resolve(['a sleepy server', 'idle']);
 					return;
 				}
@@ -38,10 +38,10 @@ module.exports = {
 				// Server online with players
 				if (!(typeof res.players.sample === 'undefined')) {
 
-					for(const player of res.players.sample) onlinePlayers.push(player.name);
+					for (const player of res.players.sample) onlinePlayers.push(player.name);
 					onlinePlayers = onlinePlayers.sort().join(', ');
 
-					resolve([res.players.online + '/' + res.players.max + ' players -\n ' + onlinePlayers, 'online']);
+					resolve([`${res.players.online }/${ res.players.max } players -\n ${ onlinePlayers}`, 'online']);
 					return;
 				}
 			});

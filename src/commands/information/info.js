@@ -1,5 +1,4 @@
-const { MessageActionRow, MessageButton } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 
 const buildDate = new Date();
@@ -11,12 +10,12 @@ module.exports = {
 	category: 'information',
 
 	async execute(interaction) {
-		const row = new MessageActionRow()
+		const row = new ActionRowBuilder()
 			.addComponents(
-				new MessageButton()
+				new ButtonBuilder()
 					.setLabel('Github')
 					.setURL('https://github.com/Creeperman1524/Pasta-Bot')
-					.setStyle('LINK'),
+					.setStyle(ButtonStyle.Link),
 			);
 
 		// Uptime values
@@ -37,8 +36,9 @@ module.exports = {
 			}, {
 				name: 'Total Servers',
 				value: `\`${interaction.client.guilds.cache.size}\``,
-				inline: true.valueOf,
+				inline: true,
 			}, {
+				// TODO: update into relative timestamp
 				name: 'Uptime',
 				value: `\`${hours}h ${minutes}m ${seconds}s\``,
 				inline: true,

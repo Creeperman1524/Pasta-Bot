@@ -17,11 +17,11 @@ let i = 0;
 function iterateCounter(presences) {
 	i++; // Initially increment the counter
 	// Skip over the server status if there are no players online (as long as there are more statuses to be shown)
-	if(Object.keys(presences)[i] == 'displayServer' && presences['displayServer'][1] !== 'online' && functions.length > 1) {
+	if (Object.keys(presences)[i] == 'displayServer' && presences['displayServer'][1] !== 'online' && functions.length > 1) {
 		i++;
 	}
 	// Overflow check
-	if(i > functions.length - 1) i = 0;
+	if (i > functions.length - 1) i = 0;
 }
 
 module.exports = {
@@ -35,7 +35,7 @@ module.exports = {
 
 		// Stores what all of the functions want to be displayed
 		const presences = {};
-		for(const func of functions) {
+		for (const func of functions) {
 			presences[func.name] = await func.execute(client);
 		}
 
@@ -56,6 +56,6 @@ module.exports = {
 			}],
 			status: botPresence[1],
 		});
-		logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
+		// logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
 	},
 };

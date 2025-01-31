@@ -15,22 +15,22 @@ const runTasks = async (client) => {
 	logger.child({ mode: 'TASKS' }).info('Started running tasks...');
 
 	// Runs all tasks
-	for(const task of tasks) {
+	for (const task of tasks) {
 		logger.child({ mode: 'TASKS' }).debug(`Running '${task.name}' in mode '${task.mode}'`);
 		switch (task.mode) {
-		case 'ONCE':
-			await task.execute(client);
-			break;
+			case 'ONCE':
+				await task.execute(client);
+				break;
 
-		case 'INTERVAL':
+			case 'INTERVAL':
 			// Set the interval in seconds, or defaults to 30 seconds
-			task.execute(client);
-			setInterval(task.execute, task.interval * 1000 || 30000, client);
-			break;
-		case 'TIME':
+				task.execute(client);
+				setInterval(task.execute, task.interval * 1000 || 30000, client);
+				break;
+			case 'TIME':
 			// Runs the task at a specified time, or defaults to midnight
-			runAtSpecificTimeOfDay(task.timeHour || 0, task.timeMinutes || 0, task.execute, client);
-			break;
+				runAtSpecificTimeOfDay(task.timeHour || 0, task.timeMinutes || 0, task.execute, client);
+				break;
 		}
 	}
 

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { configs } = require('../../config.json');
 const { logger } = require('../../logging.js');
@@ -10,7 +10,7 @@ async function setConfig(interaction) {
 	let data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
 	// Checks to see if the guild has any configs set yet
-	if(!data) {
+	if (!data) {
 		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new guild config');
 		const guildConfig = await guildConfigSchema.create({
 			guildID: interaction.guildId,
@@ -28,7 +28,7 @@ async function setConfig(interaction) {
 
 	// Checks if the rule is valid
 	const valid = await validateRule(rule, interaction);
-	if(!valid) return;
+	if (!valid) return;
 
 	const type = configs[rule];
 	let option;
@@ -36,31 +36,31 @@ async function setConfig(interaction) {
 
 	// Checks for valid value type
 	// TODO: also check if the other values are set (or just ignore them)
-	switch(type) {
-	case 'boolean':
-		if(!interaction.options.getBoolean('boolean')) {
-			incorrectType = true;
-		} else {
-			option = interaction.options.getBoolean('boolean');
-		}
-		break;
-	case 'channel':
-		if(!interaction.options.getChannel('channel')) {
-			incorrectType = true;
-		} else {
-			option = interaction.options.getChannel('channel');
-		}
-		break;
-	case 'role':
-		if(!interaction.options.getRole('role')) {
-			incorrectType = true;
-		} else {
-			option = interaction.options.getRole('role');
-		}
-		break;
+	switch (type) {
+		case 'boolean':
+			if (!interaction.options.getBoolean('boolean')) {
+				incorrectType = true;
+			} else {
+				option = interaction.options.getBoolean('boolean');
+			}
+			break;
+		case 'channel':
+			if (!interaction.options.getChannel('channel')) {
+				incorrectType = true;
+			} else {
+				option = interaction.options.getChannel('channel');
+			}
+			break;
+		case 'role':
+			if (!interaction.options.getRole('role')) {
+				incorrectType = true;
+			} else {
+				option = interaction.options.getRole('role');
+			}
+			break;
 	}
 
-	if(incorrectType) {
+	if (incorrectType) {
 		const incorrectTypeEmbed = newEmbed()
 			.setTitle('Invalid Type!')
 			.setColor(colors.error)
@@ -76,13 +76,13 @@ async function setConfig(interaction) {
 
 	// Set the value in the config
 	// TODO: maybe make this better than hard coding all these
-	if(rule.match(/valorant-role-/)) {
+	if (rule.match(/valorant-role-/)) {
 		// Valorant roles
 		newValue = `<@&${option.id}>`;
 
 		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
 		valorantRoles[rankName] = option.id;
-	} else if(rule.match(/enable-/)) {
+	} else if (rule.match(/enable-/)) {
 		// Modules
 		newValue = `\`${option}\``;
 
@@ -117,7 +117,7 @@ async function viewConfig(interaction) {
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
 	// Checks if the server has any data
-	if(!data) {
+	if (!data) {
 		const noDataEmbed = newEmbed()
 			.setTitle('No data!')
 			.setColor(colors.configCommand)
@@ -136,17 +136,17 @@ async function viewConfig(interaction) {
 
 	// Checks if the rule is valid
 	const valid = await validateRule(rule, interaction);
-	if(!valid) return;
+	if (!valid) return;
 
 	let value;
 
 	// TODO:  maybe make this better than hard coding all these
-	if(rule.match(/valorant-role-/)) {
+	if (rule.match(/valorant-role-/)) {
 		// Valorant roles
 
 		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
 		value = valorantRoles[rankName] ? `<@&${valorantRoles[rankName]}>` : '`Unassigned`';
-	} else if(rule.match(/enable-/)) {
+	} else if (rule.match(/enable-/)) {
 		// Modules
 
 		const moduleName = rule.match(/enable-(?<name>(.*))/).groups.name;
@@ -169,7 +169,7 @@ async function viewConfig(interaction) {
 
 // Checks if a rule is valid in the configs
 async function validateRule(rule, interaction) {
-	if(!configs[rule]) {
+	if (!configs[rule]) {
 		const invalidRuleEmbed = newEmbed()
 			.setTitle('Invalid Rule!')
 			.setColor(colors.error)
@@ -237,13 +237,13 @@ module.exports = {
 	category: 'admin',
 
 	async execute(interaction) {
-		switch(interaction.options.getSubcommand()) {
-		case 'set':
-			setConfig(interaction);
-			break;
-		case 'view':
-			viewConfig(interaction);
-			break;
+		switch (interaction.options.getSubcommand()) {
+			case 'set':
+				setConfig(interaction);
+				break;
+			case 'view':
+				viewConfig(interaction);
+				break;
 		}
 	},
 };

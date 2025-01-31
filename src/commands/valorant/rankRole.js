@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -23,7 +23,7 @@ async function linkCommand(interaction) {
 	let data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 
 	// Checks to see if the user is in the databse
-	if(!data) {
+	if (!data) {
 		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new valorant config');
 		const valorantConfig = await valorantConfigSchema.create({
 			userID: interaction.user.id,
@@ -43,20 +43,20 @@ async function linkCommand(interaction) {
 	const accountData = await userResponse.json();
 
 	// Something has gone wrong
-	if(accountData.errors || accountData.status != 200) {
+	if (accountData.errors || accountData.status != 200) {
 		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
 		let description = '';
 
-		switch(accountData.errors[0].code) {
-		case 22:
-			description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
-			break;
-		case 24:
-			description = 'This account does not have enough match data. Play more games and try again later!';
-			break;
-		default:
-			description = 'Someting went horribly wrong! Please contact the owner for more information.';
-			break;
+		switch (accountData.errors[0].code) {
+			case 22:
+				description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
+				break;
+			case 24:
+				description = 'This account does not have enough match data. Play more games and try again later!';
+				break;
+			default:
+				description = 'Someting went horribly wrong! Please contact the owner for more information.';
+				break;
 		}
 
 		const errorEmbed = newEmbed()
@@ -92,7 +92,7 @@ async function updateRole(interaction) {
 	const userData = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 
 	// Checks if the user's account is linked
-	if(!userData) {
+	if (!userData) {
 		const noUserDataEmbed = newEmbed()
 			.setTitle('Account not linked!')
 			.setColor(colors.warn)
@@ -124,21 +124,21 @@ async function updateRole(interaction) {
 	let rankData = await rankResponse.json();
 
 	// Something has gone wrong
-	if(rankData.errors || rankData.status != 200) {
+	if (rankData.errors || rankData.status != 200) {
 		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
 		let description = '';
 
 		// Check for deleted account/no played enough account even after linking
-		switch(rankData.errors[0].code) {
-		case 22:
-			description = 'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
-			break;
-		case 24:
-			description = 'This account does not have enough match data. Play more games and try again later!';
-			break;
-		default:
-			description = 'Someting went horribly wrong! Please contact the owner for more information.';
-			break;
+		switch (rankData.errors[0].code) {
+			case 22:
+				description = 'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
+				break;
+			case 24:
+				description = 'This account does not have enough match data. Play more games and try again later!';
+				break;
+			default:
+				description = 'Someting went horribly wrong! Please contact the owner for more information.';
+				break;
 		}
 
 		const errorEmbed = newEmbed()
@@ -160,7 +160,7 @@ async function updateRole(interaction) {
 	const guildData = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
 	// No guild configs exist for this rank
-	if(!guildData || !guildData.valorantRoles || (!guildData.valorantRoles[rankRoleName] && rank != 'Unrated')) {
+	if (!guildData || !guildData.valorantRoles || (!guildData.valorantRoles[rankRoleName] && rank != 'Unrated')) {
 		const noConfigEmbed = newEmbed()
 			.setTitle('Role not set!')
 			.setColor(colors.warn)
@@ -175,11 +175,11 @@ async function updateRole(interaction) {
 	const guildMember = await interaction.guild.members.fetch(interaction.user.id);
 	const rolesToRemove = [];
 
-	for(const rankRoleId of Object.values(guildData.valorantRoles)) {
+	for (const rankRoleId of Object.values(guildData.valorantRoles)) {
 		const roleToRemove = await interaction.guild.roles.fetch(rankRoleId);
 
 		// The role doesn't exist in the server but exists in the database, meaning it was deleted
-		if(!roleToRemove) {
+		if (!roleToRemove) {
 			// TODO: autofix broken role by removing it from the database
 
 			logger.child({ mode: 'VALORANT ROLE', metaData: { userId: interaction.user.id, guildId: interaction.guildId } }).error(`Rank role '${rankRoleId}' in guild ${interaction.guildId} has desynced`);
@@ -203,7 +203,7 @@ async function updateRole(interaction) {
 	const roleToAdd = await interaction.guild.roles.fetch(guildData.valorantRoles[rankRoleName]);
 
 	// All roles should be checked from above, so if it's missing it's most likely an unrated role
-	if(!roleToAdd) {
+	if (!roleToAdd) {
 		const unratedEmbed = newEmbed()
 			.setTitle('Updated role')
 			.setColor(colors.valorantCommand)
@@ -260,12 +260,12 @@ module.exports = {
 
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
-		case 'link':
-			linkCommand(interaction);
-			break;
-		case 'update-role':
-			updateRole(interaction);
-			break;
+			case 'link':
+				linkCommand(interaction);
+				break;
+			case 'update-role':
+				updateRole(interaction);
+				break;
 		}
 	},
 };

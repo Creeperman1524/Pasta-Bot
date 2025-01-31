@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -89,8 +89,8 @@ async function findFile(commandName) {
 	const commandFolder = './src/commands';
 	const folders = await fs.readdirSync(commandFolder);
 
-	for(const category of folders) {
-		if(await fs.readdirSync(`${commandFolder}/${category}`).includes(`${commandName}.js`)) {
+	for (const category of folders) {
+		if (await fs.readdirSync(`${commandFolder}/${category}`).includes(`${commandName}.js`)) {
 			return `${category}/${commandName}.js`;
 		}
 	}

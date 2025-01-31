@@ -1,5 +1,4 @@
-const { MessageEmbed, Collection, MessageActionRow, MessageButton } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, ComponentType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -48,17 +47,17 @@ function createGame(myInteraction) {
 function startGame(game) {
 
 	// Creates the user buttons
-	const row1 = new MessageActionRow()
+	const row1 = new ActionRowBuilder()
 		.addComponents(
-			createButton('flag', '🚩', 'SUCCESS'), // Flag button
-			createButton('up', '⬆️', 'SECONDARY'), // Up button
-			createButton('dig', '⛏️', 'DANGER'), // Dig button
+			createButton('flag', '🚩', ButtonStyle.Success), // Flag button
+			createButton('up', '⬆️', ButtonStyle.Secondary), // Up button
+			createButton('dig', '⛏️', ButtonStyle.Danger), // Dig button
 		);
-	const row2 = new MessageActionRow()
+	const row2 = new ActionRowBuilder()
 		.addComponents(
-			createButton('left', '⬅️', 'SECONDARY'), // Left button
-			createButton('down', '⬇️', 'SECONDARY'), // Down button
-			createButton('right', '➡️', 'SECONDARY'), // Right button
+			createButton('left', '⬅️', ButtonStyle.Secondary), // Left button
+			createButton('down', '⬇️', ButtonStyle.Secondary), // Down button
+			createButton('right', '➡️', ButtonStyle.Secondary), // Right button
 		);
 	game.buttons = [row1, row2];
 
@@ -103,24 +102,24 @@ function startGame(game) {
 
 // Helper function to make the buttons
 function createButton(ID, emoji, style) {
-	return new MessageButton().setCustomId(ID).setEmoji(emoji).setStyle(style);
+	return new ButtonBuilder().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
 // Listens for the user's input
 async function awaitInput(game) {
-	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: 'BUTTON', time: game.timeout });
+	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: game.timeout });
 
 	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
 		button.deferUpdate();
-		if(button.user.id !== game.interaction.user.id) return;
+		if (button.user.id !== game.interaction.user.id) return;
 		gameLoop(game, button.customId);
 	});
 
 	// When the timer runs out/the interaction or channel is deleted
 	game.componentCollector.on('end', () => {
 		// Checks if the user has already won the game, if not automatically fail it
-		if(!game.player.won) {
+		if (!game.player.won) {
 			lose(game);
 		}
 	});
@@ -130,7 +129,7 @@ async function awaitInput(game) {
 async function gameLoop(game, move) {
 
 	// Starts the timer on the first click
-	if(game.startTime == 0) game.startTime = Date.now();
+	if (game.startTime == 0) game.startTime = Date.now();
 
 	updatePlayer(game, move);
 	updateBoard(game, move);
@@ -152,8 +151,8 @@ async function gameLoop(game, move) {
 		const fasterTime = await saveData(game.interaction, true, game.startTime, endTime);
 
 		const lastEmbed = game.embed.embeds[0];
-		const embed = new MessageEmbed(lastEmbed).setDescription(text);
-		embed.fields = [{
+		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
+		embed.data.fields = [{
 			name: 'You Win!',
 			value: 'Thanks for playing! :grin:',
 			inline: false,
@@ -170,8 +169,8 @@ async function gameLoop(game, move) {
 	} else {
 		// Updates the game's stats
 		const lastEmbed = game.embed.embeds[0];
-		const embed = new MessageEmbed(lastEmbed).setDescription(text);
-		embed.fields[0] = {
+		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
+		embed.data.fields[0] = {
 			name: 'Bombs Left',
 			value: `\`${numOfMines - game.flags}\``,
 			inline: true,
@@ -192,7 +191,7 @@ async function lose(game) {
 
 			// Checks flags and marks incorrect ones with an x
 			if (game.board[x][y].status == 3) {
-				if(!game.board[x][y].mine) {
+				if (!game.board[x][y].mine) {
 					game.board[x][y].status = 6;
 				}
 			}
@@ -203,12 +202,12 @@ async function lose(game) {
 	const text = generateText(game);
 
 	const lastEmbed = game.embed.embeds[0];
-	const embed = new MessageEmbed(lastEmbed).setDescription(text);
-	embed.fields = {
-		name: 'You Lose!',
-		value: 'Try again next time! :pensive:',
-		inline: false,
-	};
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(text)
+		.setFields({
+			name: 'You Lose!',
+			value: 'Try again next time! :pensive:',
+			inline: false,
+		});
 
 	// In case the channel/interaction was deleted
 	try {
@@ -232,10 +231,10 @@ function updatePlayer(game, move) {
 	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
 
 	// Extra bounds checks (even though the buttons can handle it) for sudden API lag spikes
-	if(move == 'up' && !(game.player.x <= 1)) game.player.x--;
-	else if(move == 'down' && !(game.player.x >= game.board.length - 2)) game.player.x++;
-	else if(move == 'left' && !(game.player.y <= 1)) game.player.y--;
-	else if(move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2)) game.player.y++;
+	if (move == 'up' && !(game.player.x <= 1)) game.player.x--;
+	else if (move == 'down' && !(game.player.x >= game.board.length - 2)) game.player.x++;
+	else if (move == 'left' && !(game.player.y <= 1)) game.player.y--;
+	else if (move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2)) game.player.y++;
 }
 
 // Updates the board and controls from the given move
@@ -246,23 +245,23 @@ function updateBoard(game, move) {
 
 	// Digging/Flagging a tile
 	switch (move) {
-	case 'dig':
-		floodFill(game, game.player.x, game.player.y);
-		game.player.tileStatus = 1;
-		break;
-	case 'flag':
-		if (game.player.tileStatus !== 3) {
+		case 'dig':
+			floodFill(game, game.player.x, game.player.y);
+			game.player.tileStatus = 1;
+			break;
+		case 'flag':
+			if (game.player.tileStatus !== 3) {
 			// Not on a flag AND is on a hidden tile
-			game.board[game.player.x][game.player.y].status = 3;
-			game.player.tileStatus = 3;
-			game.flags++;
-		} else {
+				game.board[game.player.x][game.player.y].status = 3;
+				game.player.tileStatus = 3;
+				game.flags++;
+			} else {
 			// On a flag
-			game.board[game.player.x][game.player.y].status = 0;
-			game.player.tileStatus = 0;
-			game.flags--;
-		}
-		break;
+				game.board[game.player.x][game.player.y].status = 0;
+				game.player.tileStatus = 0;
+				game.flags--;
+			}
+			break;
 	}
 
 	// Disables the buttons based on the position of the player
@@ -285,39 +284,39 @@ function generateText(game) {
 
 			// Displays the mines
 			switch (tile.status) {
-			case 0: // Hidden
-				text += '⬜';
-				break;
-			case 1: // Shown
-
-				// Checks for mine
-				switch (tile.mine) {
-				case false: // No mine
-					text += getNumber(tile.num);
+				case 0: // Hidden
+					text += '⬜';
 					break;
-				case true: // Is a mine
-					text += '💣';
-					game.player.lost = true;
-					if (tile.x == game.player.x && tile.y == game.player.y) tile.status = 5; // Changes the player tile to a boom
-					break;
-				}
-				break;
+				case 1: // Shown
 
-			case 2: // Player
-				text += game.player.emoji;
-				break;
-			case 3: // Flag
-				text += '🟥';
-				break;
-			case 4: // Border
-				text += game.player.walls;
-				break;
-			case 5: // Exploded Bomb
-				text += '💥';
-				break;
-			case 6: // Incorrect flag
-				text += '❌';
-				break;
+					// Checks for mine
+					switch (tile.mine) {
+						case false: // No mine
+							text += getNumber(tile.num);
+							break;
+						case true: // Is a mine
+							text += '💣';
+							game.player.lost = true;
+							if (tile.x == game.player.x && tile.y == game.player.y) tile.status = 5; // Changes the player tile to a boom
+							break;
+					}
+					break;
+
+				case 2: // Player
+					text += game.player.emoji;
+					break;
+				case 3: // Flag
+					text += '🟥';
+					break;
+				case 4: // Border
+					text += game.player.walls;
+					break;
+				case 5: // Exploded Bomb
+					text += '💥';
+					break;
+				case 6: // Incorrect flag
+					text += '❌';
+					break;
 			}
 		}
 		text += '\n';
@@ -431,7 +430,7 @@ async function saveData(interaction, won, startTime, endTime) {
 	let data = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
 
 	// Checks to see if the user is in the database
-	if(!data) {
+	if (!data) {
 		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new user stats for minesweeper');
 		const minesweeperStats = await minesweeperStatsSchema.create({
 			userID: interaction.user.id,
@@ -479,7 +478,7 @@ function generateHelpMenu() {
 
 // Sends the different leaderboards to the user depending on the type
 async function leaderboards(interaction) {
-	if(interaction.options.getString('type') == 'fastest') { // Fastest times
+	if (interaction.options.getString('type') == 'fastest') { // Fastest times
 
 		// Gets all users who have a fastest time (with an actual time)
 		const users = await minesweeperStatsSchema.find({ fastestTime : { $lte : 10 * 60 * 1000 } });
@@ -491,7 +490,7 @@ async function leaderboards(interaction) {
 			.setDescription(leaderboard(users, true, 'fastestTime', interaction.user.id));
 		interaction.editReply({ embeds: [fastestTimesEmbed] });
 
-	} else if(interaction.options.getString('type') == 'played') { // Most plays
+	} else if (interaction.options.getString('type') == 'played') { // Most plays
 
 		// Gets all users who have played at least 1 game
 		const users = await minesweeperStatsSchema.find({ totalGames : { $gt : 0 } });
@@ -503,7 +502,7 @@ async function leaderboards(interaction) {
 			.setDescription(leaderboard(users, false, 'totalGames', interaction.user.id));
 		interaction.editReply({ embeds: [mostPlayedEmbed] });
 
-	} else if(interaction.options.getString('type') == 'wins') { // Most wins
+	} else if (interaction.options.getString('type') == 'wins') { // Most wins
 
 		// Gets all users who have won at least 1 game
 		const users = await minesweeperStatsSchema.find({ wins : { $gt : 0 } });
@@ -525,7 +524,7 @@ async function generateStatsEmbed(interaction) {
 	const stats = await minesweeperStatsSchema.findOne({ userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id });
 
 	// If the user inputted a user that's not in the database
-	if(stats == null) {
+	if (stats == null) {
 		const warnEmbed = newEmbed()
 			.setTitle('No Data')
 			.setColor(colors.warn)
@@ -598,18 +597,18 @@ module.exports = {
 
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
-		case 'start':
-			createGame(interaction);
-			break;
-		case 'help':
-			interaction.editReply({ embeds: [generateHelpMenu()] });
-			break;
-		case 'leaderboards':
-			leaderboards(interaction);
-			break;
-		case 'stats':
-			generateStatsEmbed(interaction);
-			break;
+			case 'start':
+				createGame(interaction);
+				break;
+			case 'help':
+				interaction.editReply({ embeds: [generateHelpMenu()] });
+				break;
+			case 'leaderboards':
+				leaderboards(interaction);
+				break;
+			case 'stats':
+				generateStatsEmbed(interaction);
+				break;
 		}
 	},
 };

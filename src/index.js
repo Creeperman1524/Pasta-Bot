@@ -1,6 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
-const { Client, Intents, Collection } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, Partials } = require('discord.js');
 
 const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
@@ -10,10 +10,8 @@ const guildConfigSchema = require('./schemas/guildConfigs.js');
 
 // Creates the bot client
 const client = new Client({
-	intents: [
-		[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES],
-	],
-	partials: ['MESSAGE', 'USER', 'REACTION'],
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+	partials: [Partials.Message, Partials.User, Partials.Reaction],
 });
 
 
@@ -21,7 +19,7 @@ client.commands = new Collection();
 const commandFolders = fs.readdirSync('./src/commands');
 
 // Gather commands from folders
-for(const folder of commandFolders) {
+for (const folder of commandFolders) {
 	const commandFiles = fs.readdirSync(`./src/commands/${folder}`).filter(file => file.endsWith('.js'));
 	for (const file of commandFiles) {
 		const command = require(`./commands/${folder}/${file}`);
@@ -30,14 +28,14 @@ for(const folder of commandFolders) {
 }
 
 // Runs when the bot is online
-client.once('ready', async () => {
+client.once(Events.ClientReady, async () => {
 	logger.child({ mode: 'STARTUP' }).info('Bot is initializing...');
 	await runTasks(client);
 	logger.child({ mode: 'STARTUP' }).info('Bot is active');
 });
 
 // Interaction handling
-client.on('interactionCreate', async interaction => {
+client.on(Events.InteractionCreate, async interaction => {
 	if (interaction.isCommand()) interactionCommand(interaction);
 	if (interaction.isAutocomplete()) autocompleteCommand(interaction);
 });
@@ -81,7 +79,7 @@ async function interactionCommand(interaction) {
 			.setDescription('There was an error trying to execute that command!');
 
 		return interaction.editReply({
-			embeds : [errorEmbed],
+			embeds: [errorEmbed],
 			ephemeral: true,
 		});
 	}
@@ -91,7 +89,7 @@ async function autocompleteCommand(interaction) {
 	const command = client.commands.get(interaction.commandName);
 
 	try {
-		// command.autocomplete(interaction);  // TODO: wait for discord.js fix
+		 command.autocomplete(interaction);
 	} catch (error) {
 		logger.child({
 			mode: 'AUTOCOMPLETE',
@@ -109,71 +107,71 @@ async function autocompleteCommand(interaction) {
 }
 
 // Listens for reaction changes for the reaction roles
-client.on('messageReactionAdd', async (reaction, user) => {
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
 	reactionRoleHandler(reaction, user, 'add');
 });
 
-client.on('messageReactionRemove', async (reaction, user) => {
+client.on(Events.MessageReactionRemove, async (reaction, user) => {
 	reactionRoleHandler(reaction, user, 'remove');
 });
 
 async function reactionRoleHandler(reaction, user, method) {
-	if(user.id == client.user.id) return;
+	if (user.id == client.user.id) return;
 
 	// Reads from the database
 	const data = await guildConfigSchema.findOne({ guildID: reaction.message.guildId });
 
 	// Checks to see if the guild has a reaction role message
-	if(!data) return;
-	if(!data.reactionMessages) return;
+	if (!data) return;
+	if (!data.reactionMessages) return;
 
 	// Reaction partials
-	{if(reaction.message.partial) await reaction.message.fetch();}
-	if(reaction.partial) await reaction.fetch();
+	if (reaction.message.partial) await reaction.message.fetch();
+	if (reaction.partial) await reaction.fetch();
 
 	// User partials
-	if(user.partial) await user.fetch();
+	if (user.partial) await user.fetch();
 
 	// Checks if the reaction was to a reaction message
 	const reactionMessages = data.reactionMessages;
-	if(!reactionMessages[reaction.message.id]) return;
+	if (!reactionMessages[reaction.message.id]) return;
 
 	let role;
 	// Tries to find the role in the server
-	for(const storageRole of reactionMessages[reaction.message.id]) {
-		if(storageRole[1] == reaction.emoji.name) {
+	for (const storageRole of reactionMessages[reaction.message.id]) {
+		if (storageRole[1] == reaction.emoji.name) {
 			role = await reaction.message.guild.roles.fetch(storageRole[0]);
 		}
 	}
 
-	if(role) {
+	if (role) {
 		const member = await reaction.message.guild.members.cache.find((mem) => mem.id === user.id);
 		try {
 			// Gives the user the role
 			switch (method) {
-			case 'add':
-				// NOTE: Does not work when the user has not been cached (no messages sent after restart)
-				await member.roles.add(role);
-				logger.child({
-					mode: 'REACTION ROLES',
-					metaData: {
-						user: user.username, userid: user.id,
-						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-						role: role.name, roleid: role.id,
-					},
-				}).info(`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
-				break;
-			case 'remove':
-				await member.roles.remove(role);
-				logger.child({
-					mode: 'REACTION ROLES',
-					metaData: {
-						user: user.username, userid: user.id,
-						guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-						role: role.name, roleid: role.id,
-					},
-				}).info(`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
-				break;
+				case 'add':
+					// NOTE: Does not work when the user has not been cached (no messages sent after restart)
+					await member.roles.add(role);
+					logger.child({
+						mode: 'REACTION ROLES',
+						metaData: {
+							user: user.username, userid: user.id,
+							guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+							role: role.name, roleid: role.id,
+						},
+					}).info(`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
+					break;
+				case 'remove':
+					await member.roles.remove(role);
+					logger.child({
+						mode: 'REACTION ROLES',
+						metaData: {
+							user: user.username, userid: user.id,
+							guild: reaction.message.guild.name, guildid: reaction.message.guildId,
+							role: role.name, roleid: role.id,
+						},
+					}).info(`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
+					break;
 			}
 
 		} catch (error) {

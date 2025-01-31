@@ -17,7 +17,7 @@ module.exports = {
 		const data = await botConfig.findOne({ botID: process.env.clientID });
 
 		// If the data doesn't exist, create one
-		if(!data) {
+		if (!data) {
 			logger.child({ mode: 'DATABASE' }).warn('Bot configs not saved, creating a new one');
 			const saveTime = await botConfig.create({
 				botID: process.env.clientID,
@@ -28,7 +28,7 @@ module.exports = {
 		}
 
 		// Refreshes commands only if it hasn't within the last 30 minutes
-		if(data.commandsLastUpdated < currentTime) {
+		if (data.commandsLastUpdated < currentTime) {
 			await deployCommands.execute(client);
 
 			// Updates time to the database
@@ -38,7 +38,7 @@ module.exports = {
 			});
 			database.writeToDatabase(updatedTime, 'UPDATED BOT TIME');
 		} else {
-			logger.child({ mode: 'DEPLOY' }).info('Commands will be refreshed on startup in ' + Math.floor((data.commandsLastUpdated - currentTime) / 60000) + ' minutes');
+			logger.child({ mode: 'DEPLOY' }).info(`Commands will be refreshed on startup in ${ Math.floor((data.commandsLastUpdated - currentTime) / 60000) } minutes`);
 		}
 	},
 };

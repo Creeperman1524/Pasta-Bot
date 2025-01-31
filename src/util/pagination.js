@@ -1,36 +1,36 @@
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { logger } = require('../logging');
 
 /**
  * Creates a paginated embed message with button interactions
  * @param {CommandInteraction} interaction The base interaction to respond to
- * @param {MessageEmbed[]} pages The embeds to be scrolled through, in order
+ * @param {EmbedBuilder[]} pages The embeds to be scrolled through, in order
  * @param {number} time The time the buttons should be active for (seconds)
  */
 async function paginate(interaction, pages, time) {
-	if(!interaction || !pages || !(pages?.length > 0) || !(time > 10000)) {
+	if (!interaction || !pages || !(pages?.length > 0) || !(time > 10000)) {
 		logger.child({ mode: 'PAGINATION' }).error('Invalid parameters');
 		interaction.editReply({ content: 'Something has gone wrong, please report this to the bot administrator', ephemeral: true });
 	}
 
 	// Creates the buttons
 	let index = 0;
-	const buttons = new MessageActionRow()
+	const buttons = new ActionRowBuilder()
 		.addComponents(
-			new MessageButton() // Back button
+			new ButtonBuilder() // Back button
 				.setCustomId('1')
 				.setLabel('⬅️')
-				.setStyle('PRIMARY')
+				.setStyle(ButtonStyle.Primary)
 				.setDisabled(index === 0),
-			new MessageButton() // Forward button
+			new ButtonBuilder() // Forward button
 				.setCustomId('2')
 				.setLabel('➡️')
-				.setStyle('PRIMARY')
+				.setStyle(ButtonStyle.Primary)
 				.setDisabled(pages.length < index),
-			new MessageButton() // Cancel button
+			new ButtonBuilder() // Cancel button
 				.setCustomId('3')
 				.setLabel('❌')
-				.setStyle('DANGER'),
+				.setStyle(ButtonStyle.Danger),
 		);
 
 	// The message to send
@@ -51,7 +51,7 @@ async function paginate(interaction, pages, time) {
 	// When a button is pressed
 	col.on('collect', (i) => {
 		if (i.customId == '1') index--;
-		else if(i.customId === '2') index++;
+		else if (i.customId === '2') index++;
 		else return col.stop();
 
 		// Updates buttons
