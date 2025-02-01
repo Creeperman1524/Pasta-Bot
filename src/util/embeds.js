@@ -45,6 +45,8 @@ const colors = {
 	valorantCommand: 0xbd3944,
 	configCommand: 0x646464,
 
+	bankCommand: 0x4caf50,
+
 	success: 0x009f00,
 	warn: 0xfdff63,
 	error: 0xff1414,
