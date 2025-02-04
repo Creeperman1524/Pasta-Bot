@@ -7,6 +7,7 @@ const { runTasks } = require('./tasks');
 const { newEmbed, colors } = require('./util/embeds.js');
 
 const guildConfigSchema = require('./schemas/guildConfigs.js');
+const bankSchema = require('./schemas/bank.js');
 
 // Creates the bot client
 const client = new Client({
@@ -17,6 +18,9 @@ const client = new Client({
 
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./src/commands');
+
+// A collection used for awarding pizza points every minute
+client.pizzaPointsCooldown = new Collection();
 
 // Gather commands from folders
 for (const folder of commandFolders) {
@@ -105,6 +109,30 @@ async function autocompleteCommand(interaction) {
 	}
 
 }
+
+// Awards a random amount of pizza points to the user when they send a message on a 1 minute cooldown
+client.on(Events.MessageCreate, async message => {
+	if (message.author.bot) return;
+
+	const userID = message.author.id;
+
+	// Checks if the user is on cooldown (1 minute timer)
+	 if (client.pizzaPointsCooldown.has(userID) && (client.pizzaPointsCooldown.get(userID) > Date.now())) return;
+
+	const account = await bankSchema.findOne({ userID: userID });
+
+	// Checks to see if the user is in the database
+	if (!account) {
+		logger.child({ mode: 'DATABASE', metaData: { userID: userID } }).info('Creating new user account for the bank from message rewards');
+		const bankBalance = await bankSchema.create({ userID: userID });
+		database.writeToDatabase(bankBalance, 'NEW BANK ACCOUNT');
+	}
+
+	// Awards the user and adds the cooldown
+	const randomAmount = Math.floor(Math.random() * 4) + 2; // 2 - 5
+	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: randomAmount, messagePoints: randomAmount } });
+	client.pizzaPointsCooldown.set(userID, Date.now() + 1 * 60 * 1000);
+});
 
 // Listens for reaction changes for the reaction roles
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
