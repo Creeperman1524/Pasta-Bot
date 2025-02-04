@@ -536,7 +536,7 @@ async function gameEnded(game) {
 		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
 	}
 
-	const pizzaPointsEarned = game.winner == 1 && game.bot ? await calculatePizzaPoints(game.playerWinRate, game.player1.id) : 0;
+	const pizzaPointsEarned = await calculatePizzaPoints(game.playerWinRate, game.winner == 1, game.winner == 2, game.player1.id);
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
@@ -611,8 +611,8 @@ async function saveData(userid, final, bot) {
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
 
-async function calculatePizzaPoints(winRate, userID) {
-	const pointsEarned = Math.floor(400 * winRate * winRate + 100); // floor(400 * winRate ^ 2 + 100)
+async function calculatePizzaPoints(winRate, won, tied, userID) {
+	const pointsEarned = won ? Math.floor(100 + 25 * winRate) : (tied ? 30 : 0);
 
 	// Saves the points to the database
 	const account = await bankSchema.findOne({ userID: userID });
