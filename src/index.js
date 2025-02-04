@@ -6,6 +6,7 @@ const { logger } = require('./logging.js');
 const { runTasks } = require('./tasks');
 const { newEmbed, colors } = require('./util/embeds.js');
 
+const database = require('./util/database.js');
 const guildConfigSchema = require('./schemas/guildConfigs.js');
 const bankSchema = require('./schemas/bank.js');
 
@@ -117,7 +118,7 @@ client.on(Events.MessageCreate, async message => {
 	const userID = message.author.id;
 
 	// Checks if the user is on cooldown (1 minute timer)
-	 if (client.pizzaPointsCooldown.has(userID) && (client.pizzaPointsCooldown.get(userID) > Date.now())) return;
+	if (client.pizzaPointsCooldown.has(userID) && (client.pizzaPointsCooldown.get(userID) > Date.now())) return;
 
 	const account = await bankSchema.findOne({ userID: userID });
 
