@@ -130,7 +130,7 @@ client.on(Events.MessageCreate, async message => {
 
 	// Awards the user and adds the cooldown
 	const randomAmount = Math.floor(Math.random() * 4) + 2; // 2 - 5
-	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: randomAmount, messagePoints: randomAmount } });
+	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: randomAmount, messageEarnings: randomAmount, lifetimeEarnings: randomAmount } });
 	client.pizzaPointsCooldown.set(userID, Date.now() + 1 * 60 * 1000);
 });
 

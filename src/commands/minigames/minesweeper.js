@@ -475,7 +475,7 @@ async function calculatePizzaPoints(timeInMilliseconds, userID) {
 		database.writeToDatabase(bankBalance, 'NEW BANK ACCOUNT');
 	}
 
-	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: pointsEarned, gamePoints: pointsEarned } });
+	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: pointsEarned, gameEarnings: pointsEarned, lifetimeEarnings: pointsEarned } });
 
 	return pointsEarned;
 }

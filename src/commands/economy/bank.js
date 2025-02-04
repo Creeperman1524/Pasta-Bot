@@ -87,14 +87,28 @@ async function transferPizza(interaction) {
 
 // Sends the current balance leadearboard to the user
 async function leaderboards(interaction) {
-	const users = await bankSchema.find();
+	if (interaction.options.getString('type') == 'wealth') { // Wealthiest users
 
-	// Creates the embed
-	const wealthiestEmbed = newEmbed()
-		.setTitle('Leaderboard - Most :pizza:')
-		.setColor(colors.bankCommand)
-		.setDescription(leaderboard(users, false, 'balance', interaction.user.id));
-	interaction.editReply({ embeds: [wealthiestEmbed] });
+		const users = await bankSchema.find();
+
+		// Creates the embed
+		const wealthiestEmbed = newEmbed()
+			.setTitle('Leaderboard - :pizza: in the Bank')
+			.setColor(colors.bankCommand)
+			.setDescription(leaderboard(users, false, 'balance', interaction.user.id));
+		interaction.editReply({ embeds: [wealthiestEmbed] });
+
+	} else if (interaction.options.getString('type') == 'earnings') { // Most earnings
+		const users = await bankSchema.find({ lifetimeEarnings: { $gt: 0 } });
+
+		// Creates the embed
+		const mostEarningsEmbed = newEmbed()
+			.setTitle('Leaderboard - :pizza: Earned')
+			.setColor(colors.bankCommand)
+			.setDescription(leaderboard(users, false, 'lifetimeEarnings', interaction.user.id));
+		interaction.editReply({ embeds: [mostEarningsEmbed] });
+
+	}
 }
 
 module.exports = {
@@ -131,7 +145,17 @@ module.exports = {
 		// leaderboard
 		.addSubcommand(subcommand => subcommand
 			.setName('leaderboard')
-			.setDescription('Check the leaderboard of the most wealthy users'),
+			.setDescription('Check the leaderboard of the most wealthy users')
+			.addStringOption(option => option
+				.setName('type')
+				.setDescription('The type of leaderboard to show')
+				.setRequired(true)
+				.addChoices(
+					{ name: 'wealthiest', value: 'wealth' },
+					{ name: 'most earned', value: 'earnings' },
+					// { name: 'most lost', value: 'debts' },
+				),
+			),
 		),
 	category: 'economy',
 

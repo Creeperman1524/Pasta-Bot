@@ -5,8 +5,9 @@ const bankSchema = new mongoose.Schema({
 	balance: { type: Number, required: true, default: 100 }, // ground truth for the balance
 
 	// Statistics
-	gamePoints: { type: Number, required: true, default: 0 },
-	messagePoints: { type: Number, required: true, default: 0 },
+	gameEarnings: { type: Number, required: true, default: 0 },
+	messageEarnings: { type: Number, required: true, default: 0 },
+	lifetimeEarnings: { type: Number, required: true, default: 0 },
 });
 
 module.exports = mongoose.model('BankAccounts', bankSchema);
