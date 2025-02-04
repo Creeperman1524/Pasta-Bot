@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const bankSchema = new mongoose.Schema({
 	userID: { type: String, required: true, unique: true },
-	balance: { type: Number, required: true, default: 100 }, // should still be grround truth
+	balance: { type: Number, required: true, default: 100 }, // ground truth for the balance
 
-	gamePoints: { type: Number, required: true, default: 0 }, // used for statistics
+	// Statistics
+	gamePoints: { type: Number, required: true, default: 0 },
+	messagePoints: { type: Number, required: true, default: 0 },
 });
 
 module.exports = mongoose.model('BankAccounts', bankSchema);

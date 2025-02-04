@@ -5,6 +5,7 @@ const { logger } = require('../../logging.js');
 const database = require('../../util/database.js');
 const tictactoeStatsSchema = require('../../schemas/tictactoeStats.js');
 const { leaderboardMulti } = require('../../util/leaderboard.js');
+const bankSchema = require('../../schemas/bank.js');
 
 const games = new Collection();
 
@@ -128,7 +129,7 @@ async function startGameBot(game) {
 	game.bot = true;
 
 	game.playerWinRate = await getWinRate(game);
-	game.botMessage = generateRandomMessage(await determineMistakeChance(game.playerWinRate));
+	game.botMessage = generateRandomMessage(determineMistakeChance(game.playerWinRate));
 
 	game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
 
@@ -303,7 +304,7 @@ async function gameLoop(game, move) {
 	if (!game.bot || game.player1Turn) return;
 
 	// Bot's move
-	const mistakeChance = await determineMistakeChance(game.playerWinRate);
+	const mistakeChance = determineMistakeChance(game.playerWinRate);
 	let botMove = -1;
 
 	if (Math.random() > mistakeChance) {
@@ -322,7 +323,7 @@ async function gameLoop(game, move) {
 // 100% winrate, 10% chance of mistake
 // 50% default with no winrate
 // mistake chance = 0.9 * 0.111 ^ winrate
-async function determineMistakeChance(winRate) {
+function determineMistakeChance(winRate) {
 	return 0.9 * Math.pow(0.1111, winRate);
 }
 
@@ -514,7 +515,7 @@ function displayWinningPositions(game, board) {
 }
 
 // Ends the game after someone wins
-function gameEnded(game) {
+async function gameEnded(game) {
 	displayWinningPositions(game, game.board);
 
 	saveData(game.player1.id, game.winner == 2 ? 0 : game.winner, game.bot);	// Saves p1
@@ -535,9 +536,15 @@ function gameEnded(game) {
 		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
 	}
 
+	const pizzaPointsEarned = game.winner == 1 && game.bot ? await calculatePizzaPoints(game.playerWinRate, game.player1.id) : 0;
+
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
-	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields();
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields({
+		name: 'Pizza Points Earned',
+		value: `\`${pizzaPointsEarned}\` :pizza:`,
+		inline: false,
+	});
 
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });
@@ -602,6 +609,24 @@ async function saveData(userid, final, bot) {
 	});
 
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
+}
+
+async function calculatePizzaPoints(winRate, userID) {
+	const pointsEarned = Math.floor(400 * winRate * winRate + 100); // floor(400 * winRate ^ 2 + 100)
+
+	// Saves the points to the database
+	const account = await bankSchema.findOne({ userID: userID });
+
+	// Checks to see if the user is in the database
+	if (!account) {
+		logger.child({ mode: 'DATABASE', metaData: { userID: userID } }).info('Creating new user account for the bank from tictactoe');
+		const bankBalance = await bankSchema.create({ userID: userID });
+		database.writeToDatabase(bankBalance, 'NEW BANK ACCOUNT');
+	}
+
+	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: pointsEarned, gamePoints: pointsEarned } });
+
+	return pointsEarned;
 }
 
 function generateHelpMenu() {

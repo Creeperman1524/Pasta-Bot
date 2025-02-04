@@ -4,6 +4,7 @@ const { logger } = require('../../logging.js');
 
 const database = require('../../util/database.js');
 const minesweeperStatsSchema = require('../../schemas/minesweeperStats.js');
+const bankSchema = require('../../schemas/bank.js');
 const { leaderboard } = require('../../util/leaderboard.js');
 
 const numOfMines = 10;
@@ -150,6 +151,8 @@ async function gameLoop(game, move) {
 		const endTime = Date.now();
 		const fasterTime = await saveData(game.interaction, true, game.startTime, endTime);
 
+		const pizzaPointsEarned = await calculatePizzaPoints(endTime - game.startTime, game.interaction.user.id);
+
 		const lastEmbed = game.embed.embeds[0];
 		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
 		embed.data.fields = [{
@@ -159,6 +162,10 @@ async function gameLoop(game, move) {
 		}, {
 			name: fasterTime ? '[PB] Time Completed' : 'Time Completed',
 			value: `\`${(endTime - game.startTime) / 1000}s\``,
+			inline: false,
+		}, {
+			name: 'Pizza Points Earned',
+			value: `\`${pizzaPointsEarned}\` :pizza:`,
 			inline: false,
 		}];
 
@@ -453,6 +460,24 @@ async function saveData(interaction, won, startTime, endTime) {
 	database.writeToDatabase(newMinesweeperStats, 'UPDATED MINESWEEPER STATS');
 
 	return isFasterTime;
+}
+
+async function calculatePizzaPoints(timeInMilliseconds, userID) {
+	const pointsEarned = Math.floor(500 * Math.pow(0.99998, timeInMilliseconds)); // points awarded = 500 * 0.99998 ^ time
+
+	// Saves the points to the database
+	const account = await bankSchema.findOne({ userID: userID });
+
+	// Checks to see if the user is in the database
+	if (!account) {
+		logger.child({ mode: 'DATABASE', metaData: { userID: userID } }).info('Creating new user account for the bank from minesweeper');
+		const bankBalance = await bankSchema.create({ userID: userID });
+		database.writeToDatabase(bankBalance, 'NEW BANK ACCOUNT');
+	}
+
+	await bankSchema.findOneAndUpdate({ userID: userID }, { $inc: { balance: pointsEarned, gamePoints: pointsEarned } });
+
+	return pointsEarned;
 }
 
 // Generates the help menu to show to the user
