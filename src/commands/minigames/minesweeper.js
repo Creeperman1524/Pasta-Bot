@@ -463,7 +463,7 @@ async function saveData(interaction, won, startTime, endTime) {
 }
 
 async function calculatePizzaPoints(timeInMilliseconds, userID) {
-	const pointsEarned = Math.floor(500 * Math.pow(0.99998, timeInMilliseconds)); // points awarded = 500 * 0.99998 ^ time
+	const pointsEarned = Math.floor(500 - 5 / 6000 * timeInMilliseconds); // points awarded = 500 - 5/6000 * time
 
 	// Saves the points to the database
 	const account = await bankSchema.findOne({ userID: userID });
