@@ -536,7 +536,7 @@ async function gameEnded(game) {
 		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
 	}
 
-	const pizzaPointsEarned = await calculatePizzaPoints(game.playerWinRate, game.winner == 1, game.winner == 2, game.player1.id);
+	const pizzaPointsEarned = game.bot ? await calculatePizzaPoints(game.playerWinRate, game.winner == 1, game.winner == 2, game.player1.id) : 0;
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
