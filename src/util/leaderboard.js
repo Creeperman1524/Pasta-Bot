@@ -17,14 +17,14 @@ function leaderboard(users, ascending, variable, userID) {
 
 	// Adds the surrounding text to be displayed on the leaderboard
 	let description = topLeaderboard.map((user, index) => {
-		return `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
+		return `**${index + 1}** - \`${user[variable]}\` : <@${user.userID}>`;
 	}).join('\n');
 
 	// Adds the user's stats at the bottom if they are not on the list
 	sortedUsers.map((user, index) => {
 		if (user.userID == userID && index + 1 > amountToShow) {
-			description += '\n`⋮`\n';
-			description += `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
+			description += '\n⋮\n';
+			description += `**${index + 1}** - \`${user[variable]}\` : <@${user.userID}>`;
 		}
 	});
 
@@ -40,7 +40,7 @@ function leaderboard(users, ascending, variable, userID) {
  * @returns {Map<String>} 		Returns a map of the text to be displayed for the leaderboard
  */
 function leaderboardMulti(users, ascending, variables, display, userID) {
-	const amountToShow = 10;
+	const amountToShow = 1;
 
 	// Sorts the users in ascending or descending order
 	const sortedUsers = users.sort((a, b) => {
@@ -60,21 +60,23 @@ function leaderboardMulti(users, ascending, variables, display, userID) {
 
 	// Adds the surrounding text to be displayed on the leaderboard
 	description += topLeaderboard.map((user, index) => {
-		let desc = `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
+		let desc = `**${index + 1}** - \`${user[variables[0]]}\``;
 		for (let i = 1; i < variables.length; i++) {
 			desc += ` | \`${user[variables[i]]}\``;
 		}
+		desc += ` : <@${user.userID}>`;
 		return desc;
 	}).join('\n');
 
 	// Adds the user's stats at the bottom if they are not on the list
 	sortedUsers.map((user, index) => {
 		if (user.userID == userID && index + 1 > amountToShow) {
-			description += '\n`⋮`\n';
-			description += `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
+			description += '\n⋮\n';
+			description += `**${index + 1}** - \`${user[variables[0]]}\``;
 			for (let i = 1; i < variables.length; i++) {
 				description += ` | \`${user[variables[i]]}\``;
 			}
+			description += ` : <@${user.userID}>`;
 		}
 	});
 
