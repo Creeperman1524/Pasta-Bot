@@ -10,17 +10,23 @@ const guildConfigSchema = require('./schemas/guildConfigs.js');
 
 // Creates the bot client
 const client = new Client({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
-	partials: [Partials.Message, Partials.User, Partials.Reaction],
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessageReactions,
+		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildMessages
+	],
+	partials: [Partials.Message, Partials.User, Partials.Reaction]
 });
-
 
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./src/commands');
 
 // Gather commands from folders
 for (const folder of commandFolders) {
-	const commandFiles = fs.readdirSync(`./src/commands/${folder}`).filter(file => file.endsWith('.js'));
+	const commandFiles = fs
+		.readdirSync(`./src/commands/${folder}`)
+		.filter((file) => file.endsWith('.js'));
 	for (const file of commandFiles) {
 		const command = require(`./commands/${folder}/${file}`);
 		client.commands.set(command.data.name, command);
@@ -35,7 +41,7 @@ client.once(Events.ClientReady, async () => {
 });
 
 // Interaction handling
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
 	if (interaction.isCommand()) interactionCommand(interaction);
 	if (interaction.isAutocomplete()) autocompleteCommand(interaction);
 });
@@ -50,28 +56,34 @@ async function interactionCommand(interaction) {
 
 	// Tries to run the command
 	try {
-		logger.child({
-			mode: 'COMMAND',
-			metaData: {
-				user: interaction.user.username,
-				userid: interaction.user.id,
-				guild: interaction.guild.name,
-				guildid: interaction.guild.id,
-				subcommand: interaction.options._subcommand,
-			},
-		}).info(`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`);
+		logger
+			.child({
+				mode: 'COMMAND',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+					subcommand: interaction.options._subcommand
+				}
+			})
+			.info(
+				`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`
+			);
 		await command.execute(interaction);
 	} catch (error) {
-		logger.child({
-			mode: 'COMMAND',
-			metaData: {
-				user: interaction.user.username,
-				userid: interaction.user.id,
-				guild: interaction.guild.name,
-				guildid: interaction.guild.id,
-				subcommand: interaction.options._subcommand,
-			},
-		}).error(error);
+		logger
+			.child({
+				mode: 'COMMAND',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+					subcommand: interaction.options._subcommand
+				}
+			})
+			.error(error);
 
 		const errorEmbed = newEmbed()
 			.setTitle('Error')
@@ -80,7 +92,7 @@ async function interactionCommand(interaction) {
 
 		return interaction.editReply({
 			embeds: [errorEmbed],
-			ephemeral: true,
+			ephemeral: true
 		});
 	}
 }
@@ -89,21 +101,22 @@ async function autocompleteCommand(interaction) {
 	const command = client.commands.get(interaction.commandName);
 
 	try {
-		 command.autocomplete(interaction);
+		command.autocomplete(interaction);
 	} catch (error) {
-		logger.child({
-			mode: 'AUTOCOMPLETE',
-			metaData: {
-				user: interaction.user.username,
-				userid: interaction.user.id,
-				guild: interaction.guild.name,
-				guildid: interaction.guild.id,
-				command: interaction.commandName,
-				commandid: interaction.commandId,
-			},
-		}).error(error);
+		logger
+			.child({
+				mode: 'AUTOCOMPLETE',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild.name,
+					guildid: interaction.guild.id,
+					command: interaction.commandName,
+					commandid: interaction.commandId
+				}
+			})
+			.error(error);
 	}
-
 }
 
 // Listens for reaction changes for the reaction roles
@@ -152,47 +165,69 @@ async function reactionRoleHandler(reaction, user, method) {
 				case 'add':
 					// NOTE: Does not work when the user has not been cached (no messages sent after restart)
 					await member.roles.add(role);
-					logger.child({
-						mode: 'REACTION ROLES',
-						metaData: {
-							user: user.username, userid: user.id,
-							guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-							role: role.name, roleid: role.id,
-						},
-					}).info(`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
+					logger
+						.child({
+							mode: 'REACTION ROLES',
+							metaData: {
+								user: user.username,
+								userid: user.id,
+								guild: reaction.message.guild.name,
+								guildid: reaction.message.guildId,
+								role: role.name,
+								roleid: role.id
+							}
+						})
+						.info(
+							`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`
+						);
 					break;
 				case 'remove':
 					await member.roles.remove(role);
-					logger.child({
-						mode: 'REACTION ROLES',
-						metaData: {
-							user: user.username, userid: user.id,
-							guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-							role: role.name, roleid: role.id,
-						},
-					}).info(`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`);
+					logger
+						.child({
+							mode: 'REACTION ROLES',
+							metaData: {
+								user: user.username,
+								userid: user.id,
+								guild: reaction.message.guild.name,
+								guildid: reaction.message.guildId,
+								role: role.name,
+								roleid: role.id
+							}
+						})
+						.info(
+							`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`
+						);
 					break;
 			}
-
 		} catch (error) {
-			logger.child({
-				mode: 'REACTION ROLES',
-				metaData: {
-					user: user.username, userid: user.id,
-					guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-					role: role.name, roleid: role.id,
-				},
-			}).error(error);
+			logger
+				.child({
+					mode: 'REACTION ROLES',
+					metaData: {
+						user: user.username,
+						userid: user.id,
+						guild: reaction.message.guild.name,
+						guildid: reaction.message.guildId,
+						role: role.name,
+						roleid: role.id
+					}
+				})
+				.error(error);
 		}
 	} else {
 		// Role doesn't exist
-		logger.child({
-			mode: 'REACTION ROLES',
-			metaData: {
-				user: user.username, userid: user.id,
-				guild: reaction.message.guild.name, guildid: reaction.message.guildId,
-			},
-		}).warn(`Role for reaction ${reaction.emoji.name} does not exist!`);
+		logger
+			.child({
+				mode: 'REACTION ROLES',
+				metaData: {
+					user: user.username,
+					userid: user.id,
+					guild: reaction.message.guild.name,
+					guildid: reaction.message.guildId
+				}
+			})
+			.warn(`Role for reaction ${reaction.emoji.name} does not exist!`);
 	}
 }
 

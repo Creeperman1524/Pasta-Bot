@@ -10,10 +10,8 @@ module.exports = {
 	async execute() {
 		const server = new mcping.MinecraftServer(process.env.mcServerIP, mcServerPort);
 		return new Promise((resolve) => {
-
 			// Pings the server for information
 			server.ping(1000, 765, (err, res) => {
-
 				// Server offline/errored
 				if (!(typeof err === 'undefined' || err === null)) {
 					// console.log(err);
@@ -23,7 +21,10 @@ module.exports = {
 
 				// Server online with no players
 				if (typeof res.players.sample === 'undefined') {
-					resolve([`${res.players.online }/${ res.players.max } players`, PresenceUpdateStatus.Idle]);
+					resolve([
+						`${res.players.online}/${res.players.max} players`,
+						PresenceUpdateStatus.Idle
+					]);
 					return;
 				}
 
@@ -38,14 +39,16 @@ module.exports = {
 
 				// Server online with players
 				if (!(typeof res.players.sample === 'undefined')) {
-
 					for (const player of res.players.sample) onlinePlayers.push(player.name);
 					onlinePlayers = onlinePlayers.sort().join(', ');
 
-					resolve([`${res.players.online }/${ res.players.max } players -\n ${ onlinePlayers}`, PresenceUpdateStatus.Online]);
+					resolve([
+						`${res.players.online}/${res.players.max} players -\n ${onlinePlayers}`,
+						PresenceUpdateStatus.Online
+					]);
 					return;
 				}
 			});
 		});
-	},
+	}
 };

@@ -1,4 +1,12 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, ComponentType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	Collection,
+	ComponentType,
+	EmbedBuilder,
+	SlashCommandBuilder
+} = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -30,12 +38,12 @@ function createGame(myInteraction) {
 			y: 1,
 			tileStatus: 0,
 			lost: false,
-			won: false,
+			won: false
 		},
 		componentCollector: null,
 		interaction: myInteraction, // The user command
 		embed: null, // The game/embeds sent
-		timeout: 10 * 60000, // The expiration timer for the game
+		timeout: 10 * 60000 // The expiration timer for the game
 	};
 
 	// Adds it to the games object
@@ -45,20 +53,17 @@ function createGame(myInteraction) {
 
 // Starts a new game
 function startGame(game) {
-
 	// Creates the user buttons
-	const row1 = new ActionRowBuilder()
-		.addComponents(
-			createButton('flag', '🚩', ButtonStyle.Success), // Flag button
-			createButton('up', '⬆️', ButtonStyle.Secondary), // Up button
-			createButton('dig', '⛏️', ButtonStyle.Danger), // Dig button
-		);
-	const row2 = new ActionRowBuilder()
-		.addComponents(
-			createButton('left', '⬅️', ButtonStyle.Secondary), // Left button
-			createButton('down', '⬇️', ButtonStyle.Secondary), // Down button
-			createButton('right', '➡️', ButtonStyle.Secondary), // Right button
-		);
+	const row1 = new ActionRowBuilder().addComponents(
+		createButton('flag', '🚩', ButtonStyle.Success), // Flag button
+		createButton('up', '⬆️', ButtonStyle.Secondary), // Up button
+		createButton('dig', '⛏️', ButtonStyle.Danger) // Dig button
+	);
+	const row2 = new ActionRowBuilder().addComponents(
+		createButton('left', '⬅️', ButtonStyle.Secondary), // Left button
+		createButton('down', '⬇️', ButtonStyle.Secondary), // Down button
+		createButton('right', '➡️', ButtonStyle.Secondary) // Right button
+	);
 	game.buttons = [row1, row2];
 
 	// Selects a random player emoji and wall color
@@ -74,28 +79,34 @@ function startGame(game) {
 	const minesweeperEmbed = newEmbed()
 		.setTitle('Minesweeper 💣')
 		.setColor(colors.minesweeperCommand)
-		.addFields({
-			name: 'Bombs Left',
-			value: `\`${numOfMines}\``,
-			inline: true,
-		}, {
-			name: 'Current Player',
-			value: game.interaction.user.toString(),
-			inline: true,
-		}, {
-			name: 'Game Expires',
-			value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
-			inline: false,
-		})
+		.addFields(
+			{
+				name: 'Bombs Left',
+				value: `\`${numOfMines}\``,
+				inline: true
+			},
+			{
+				name: 'Current Player',
+				value: game.interaction.user.toString(),
+				inline: true
+			},
+			{
+				name: 'Game Expires',
+				value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
+				inline: false
+			}
+		)
 		.setDescription(text);
 
 	// Sends the game to the user and waits for any input
-	game.interaction.editReply({ embeds: [minesweeperEmbed], components: [row1, row2] }).then(async embed => {
-		game.embed = embed;
+	game.interaction
+		.editReply({ embeds: [minesweeperEmbed], components: [row1, row2] })
+		.then(async (embed) => {
+			game.embed = embed;
 
-		// Waits for user input
-		awaitInput(game);
-	});
+			// Waits for user input
+			awaitInput(game);
+		});
 
 	return;
 }
@@ -107,7 +118,10 @@ function createButton(ID, emoji, style) {
 
 // Listens for the user's input
 async function awaitInput(game) {
-	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: game.timeout });
+	game.componentCollector = game.embed.createMessageComponentCollector({
+		componentType: ComponentType.Button,
+		time: game.timeout
+	});
 
 	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
@@ -127,7 +141,6 @@ async function awaitInput(game) {
 
 // The main game loop to update everything
 async function gameLoop(game, move) {
-
 	// Starts the timer on the first click
 	if (game.startTime == 0) game.startTime = Date.now();
 
@@ -152,15 +165,18 @@ async function gameLoop(game, move) {
 
 		const lastEmbed = game.embed.embeds[0];
 		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
-		embed.data.fields = [{
-			name: 'You Win!',
-			value: 'Thanks for playing! :grin:',
-			inline: false,
-		}, {
-			name: fasterTime ? '[PB] Time Completed' : 'Time Completed',
-			value: `\`${(endTime - game.startTime) / 1000}s\``,
-			inline: false,
-		}];
+		embed.data.fields = [
+			{
+				name: 'You Win!',
+				value: 'Thanks for playing! :grin:',
+				inline: false
+			},
+			{
+				name: fasterTime ? '[PB] Time Completed' : 'Time Completed',
+				value: `\`${(endTime - game.startTime) / 1000}s\``,
+				inline: false
+			}
+		];
 
 		game.player.won = true;
 
@@ -173,10 +189,13 @@ async function gameLoop(game, move) {
 		embed.data.fields[0] = {
 			name: 'Bombs Left',
 			value: `\`${numOfMines - game.flags}\``,
-			inline: true,
+			inline: true
 		};
 
-		game.interaction.editReply({ embeds: [embed], components: [game.buttons[0], game.buttons[1]] });
+		game.interaction.editReply({
+			embeds: [embed],
+			components: [game.buttons[0], game.buttons[1]]
+		});
 	}
 }
 
@@ -195,32 +214,46 @@ async function lose(game) {
 					game.board[x][y].status = 6;
 				}
 			}
-
 		}
 	}
 
 	const text = generateText(game);
 
 	const lastEmbed = game.embed.embeds[0];
-	const embed = EmbedBuilder.from(lastEmbed).setDescription(text)
-		.setFields({
-			name: 'You Lose!',
-			value: 'Try again next time! :pensive:',
-			inline: false,
-		});
+	const embed = EmbedBuilder.from(lastEmbed).setDescription(text).setFields({
+		name: 'You Lose!',
+		value: 'Try again next time! :pensive:',
+		inline: false
+	});
 
 	// In case the channel/interaction was deleted
 	try {
 		await game.interaction.editReply({ embeds: [embed], components: [] });
 	} catch (error) {
-		logger.child({
-			mode: 'MINESWEEPER',
-			metaData: { user: game.interaction.user.username, userid: game.interaction.user.id, guild: game.interaction.guild.name, guildid: game.interaction.guild.id },
-		}).warn(`Minesweeper game by '${game.interaction.user.username}' could not be changed in '${game.interaction.guild.name}'`);
-		logger.child({
-			mode: 'MINESWEEPER',
-			metaData: { user: game.interaction.user.username, userid: game.interaction.user.id, guild: game.interaction.guild.name, guildid: game.interaction.guild.id },
-		}).error(error);
+		logger
+			.child({
+				mode: 'MINESWEEPER',
+				metaData: {
+					user: game.interaction.user.username,
+					userid: game.interaction.user.id,
+					guild: game.interaction.guild.name,
+					guildid: game.interaction.guild.id
+				}
+			})
+			.warn(
+				`Minesweeper game by '${game.interaction.user.username}' could not be changed in '${game.interaction.guild.name}'`
+			);
+		logger
+			.child({
+				mode: 'MINESWEEPER',
+				metaData: {
+					user: game.interaction.user.username,
+					userid: game.interaction.user.id,
+					guild: game.interaction.guild.name,
+					guildid: game.interaction.guild.id
+				}
+			})
+			.error(error);
 	}
 
 	games.delete(game.interaction.id);
@@ -234,7 +267,8 @@ function updatePlayer(game, move) {
 	if (move == 'up' && !(game.player.x <= 1)) game.player.x--;
 	else if (move == 'down' && !(game.player.x >= game.board.length - 2)) game.player.x++;
 	else if (move == 'left' && !(game.player.y <= 1)) game.player.y--;
-	else if (move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2)) game.player.y++;
+	else if (move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2))
+		game.player.y++;
 }
 
 // Updates the board and controls from the given move
@@ -251,12 +285,12 @@ function updateBoard(game, move) {
 			break;
 		case 'flag':
 			if (game.player.tileStatus !== 3) {
-			// Not on a flag AND is on a hidden tile
+				// Not on a flag AND is on a hidden tile
 				game.board[game.player.x][game.player.y].status = 3;
 				game.player.tileStatus = 3;
 				game.flags++;
 			} else {
-			// On a flag
+				// On a flag
 				game.board[game.player.x][game.player.y].status = 0;
 				game.player.tileStatus = 0;
 				game.flags--;
@@ -265,13 +299,17 @@ function updateBoard(game, move) {
 	}
 
 	// Disables the buttons based on the position of the player
-	game.buttons[0].components[1].setDisabled(game.player.x <= 1);											// up button
-	game.buttons[1].components[1].setDisabled(game.player.x >= game.board.length - 2); 						// down button
-	game.buttons[1].components[0].setDisabled(game.player.y <= 1); 											// left button
-	game.buttons[1].components[2].setDisabled(game.player.y >= game.board[game.player.x].length - 2); 		// right button
+	game.buttons[0].components[1].setDisabled(game.player.x <= 1); // up button
+	game.buttons[1].components[1].setDisabled(game.player.x >= game.board.length - 2); // down button
+	game.buttons[1].components[0].setDisabled(game.player.y <= 1); // left button
+	game.buttons[1].components[2].setDisabled(
+		game.player.y >= game.board[game.player.x].length - 2
+	); // right button
 
-	game.buttons[0].components[0].setDisabled(game.player.tileStatus == 1);									// flag
-	game.buttons[0].components[2].setDisabled(game.player.tileStatus == 1 || game.player.tileStatus == 3);	// dig
+	game.buttons[0].components[0].setDisabled(game.player.tileStatus == 1); // flag
+	game.buttons[0].components[2].setDisabled(
+		game.player.tileStatus == 1 || game.player.tileStatus == 3
+	); // dig
 }
 
 // Converts the board array into discord emojis
@@ -288,7 +326,6 @@ function generateText(game) {
 					text += '⬜';
 					break;
 				case 1: // Shown
-
 					// Checks for mine
 					switch (tile.mine) {
 						case false: // No mine
@@ -332,10 +369,18 @@ function getNumber(number) {
 
 // "Clicks" on a tile changing its status to 1, recursively clicking if the tile is 0
 function floodFill(game, x, y) {
-	if (x < 1 || y < 1 || x >= game.board.length - 1 || y >= game.board[x].length - 1 || game.board[x][y].status == 1) return; // Boarder or already shown
+	if (
+		x < 1 ||
+		y < 1 ||
+		x >= game.board.length - 1 ||
+		y >= game.board[x].length - 1 ||
+		game.board[x][y].status == 1
+	)
+		return; // Boarder or already shown
 	game.board[x][y].status = 1;
 	game.tilesLeft--;
-	if (game.board[x][y].num == 0) { // Clicks surrounding tiles
+	if (game.board[x][y].num == 0) {
+		// Clicks surrounding tiles
 		floodFill(game, x - 1, y - 1);
 		floodFill(game, x, y - 1);
 		floodFill(game, x + 1, y - 1);
@@ -361,7 +406,13 @@ function generateBoard() {
 				row.push(tile);
 			} else {
 				// status: 0 = hidden; 1 = shown; 2 = player, 3 = flag, 4 = border, 5 = explode, 6 = x (wrong flag)
-				const tile = { status: 0, x, y, mine: minePositions.some(positionMatch.bind(null, { x, y })), num: 0 };
+				const tile = {
+					status: 0,
+					x,
+					y,
+					mine: minePositions.some(positionMatch.bind(null, { x, y })),
+					num: 0
+				};
 				row.push(tile);
 			}
 		}
@@ -431,9 +482,11 @@ async function saveData(interaction, won, startTime, endTime) {
 
 	// Checks to see if the user is in the database
 	if (!data) {
-		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new user stats for minesweeper');
+		logger
+			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
+			.info('Creating new user stats for minesweeper');
 		const minesweeperStats = await minesweeperStatsSchema.create({
-			userID: interaction.user.id,
+			userID: interaction.user.id
 		});
 		database.writeToDatabase(minesweeperStats, 'NEW MINESWEEPER STATS');
 
@@ -441,15 +494,18 @@ async function saveData(interaction, won, startTime, endTime) {
 	}
 
 	// Checks if there was a faster time (and that you won that game)
-	const isFasterTime = data.fastestTime > ((endTime - startTime) / 1000);
-	const fasterTime = isFasterTime && won ? ((endTime - startTime) / 1000) : data.fastestTime;
+	const isFasterTime = data.fastestTime > (endTime - startTime) / 1000;
+	const fasterTime = isFasterTime && won ? (endTime - startTime) / 1000 : data.fastestTime;
 
 	// Updates the stats of the user
-	const newMinesweeperStats = await minesweeperStatsSchema.findOneAndUpdate({ userID: interaction.user.id }, {
-		wins: (data.wins + (won ? 1 : 0)),
-		totalGames: (data.totalGames + 1),
-		fastestTime: fasterTime,
-	});
+	const newMinesweeperStats = await minesweeperStatsSchema.findOneAndUpdate(
+		{ userID: interaction.user.id },
+		{
+			wins: data.wins + (won ? 1 : 0),
+			totalGames: data.totalGames + 1,
+			fastestTime: fasterTime
+		}
+	);
 	database.writeToDatabase(newMinesweeperStats, 'UPDATED MINESWEEPER STATS');
 
 	return isFasterTime;
@@ -460,28 +516,36 @@ function generateHelpMenu() {
 	return newEmbed()
 		.setTitle('How to Play Minesweeper 💣')
 		.setColor(colors.minesweeperCommand)
-		.setDescription('__Minesweeper__ is a game about avoiding mines and clicking tiles. You begin with a board that is full of *hidden tiles*. Under these tiles are randomly generated mines and it is your job to find them. Here are a few actions to help you in your minesweeper career! ')
-		.addFields({
-			name: 'Movement 🎮',
-			value: 'Movement is as simple as it gets, using the movement buttons below you can guide your character around the board to wherever you see fit. The buttons automatically grey out when an illegal move could be performed.',
-		}, {
-			name: 'Digging ⛏️',
-			value: 'Digging is one of the core features of minesweeper. Clicking the button will dig the tile beneath your character. It may reveal a tile (meaning you\'re safe) or a bomb (losing the game). **The number on the tile revealed indicates how many mines are within a 3x3 area centered on that tile.** If the tile is 0, a regular cleared tile will be placed there instead.\n\n*P.S. the top left tile will never be a mine ;)*',
-		}, {
-			name: 'Flagging 🚩',
-			value: 'Flags are a useful (but not necessary) feature of the game. You can flag spots that you *know for sure* are mines to help aid in completing the game. It also helps not accidentally blowing yourself up as you cannot dig flagged tiles.',
-		}, {
-			name: 'Winning/Losing 💥',
-			value: 'If you are skillful enough, you can clear every single tile except the mines on the entire board. Congratulations! You won!! If you were the unlucky fellow who dug up that mine, you lost :(',
-		});
+		.setDescription(
+			'__Minesweeper__ is a game about avoiding mines and clicking tiles. You begin with a board that is full of *hidden tiles*. Under these tiles are randomly generated mines and it is your job to find them. Here are a few actions to help you in your minesweeper career! '
+		)
+		.addFields(
+			{
+				name: 'Movement 🎮',
+				value: 'Movement is as simple as it gets, using the movement buttons below you can guide your character around the board to wherever you see fit. The buttons automatically grey out when an illegal move could be performed.'
+			},
+			{
+				name: 'Digging ⛏️',
+				value: "Digging is one of the core features of minesweeper. Clicking the button will dig the tile beneath your character. It may reveal a tile (meaning you're safe) or a bomb (losing the game). **The number on the tile revealed indicates how many mines are within a 3x3 area centered on that tile.** If the tile is 0, a regular cleared tile will be placed there instead.\n\n*P.S. the top left tile will never be a mine ;)*"
+			},
+			{
+				name: 'Flagging 🚩',
+				value: 'Flags are a useful (but not necessary) feature of the game. You can flag spots that you *know for sure* are mines to help aid in completing the game. It also helps not accidentally blowing yourself up as you cannot dig flagged tiles.'
+			},
+			{
+				name: 'Winning/Losing 💥',
+				value: 'If you are skillful enough, you can clear every single tile except the mines on the entire board. Congratulations! You won!! If you were the unlucky fellow who dug up that mine, you lost :('
+			}
+		);
 }
 
 // Sends the different leaderboards to the user depending on the type
 async function leaderboards(interaction) {
-	if (interaction.options.getString('type') == 'fastest') { // Fastest times
+	if (interaction.options.getString('type') == 'fastest') {
+		// Fastest times
 
 		// Gets all users who have a fastest time (with an actual time)
-		const users = await minesweeperStatsSchema.find({ fastestTime : { $lte : 10 * 60 * 1000 } });
+		const users = await minesweeperStatsSchema.find({ fastestTime: { $lte: 10 * 60 * 1000 } });
 
 		// Creates the embed
 		const fastestTimesEmbed = newEmbed()
@@ -489,11 +553,11 @@ async function leaderboards(interaction) {
 			.setColor(colors.minesweeperCommand)
 			.setDescription(leaderboard(users, true, 'fastestTime', interaction.user.id));
 		interaction.editReply({ embeds: [fastestTimesEmbed] });
-
-	} else if (interaction.options.getString('type') == 'played') { // Most plays
+	} else if (interaction.options.getString('type') == 'played') {
+		// Most plays
 
 		// Gets all users who have played at least 1 game
-		const users = await minesweeperStatsSchema.find({ totalGames : { $gt : 0 } });
+		const users = await minesweeperStatsSchema.find({ totalGames: { $gt: 0 } });
 
 		// Creates the embed
 		const mostPlayedEmbed = newEmbed()
@@ -501,11 +565,11 @@ async function leaderboards(interaction) {
 			.setColor(colors.minesweeperCommand)
 			.setDescription(leaderboard(users, false, 'totalGames', interaction.user.id));
 		interaction.editReply({ embeds: [mostPlayedEmbed] });
-
-	} else if (interaction.options.getString('type') == 'wins') { // Most wins
+	} else if (interaction.options.getString('type') == 'wins') {
+		// Most wins
 
 		// Gets all users who have won at least 1 game
-		const users = await minesweeperStatsSchema.find({ wins : { $gt : 0 } });
+		const users = await minesweeperStatsSchema.find({ wins: { $gt: 0 } });
 
 		// Creates the embed
 		const mostWinsEmbed = newEmbed()
@@ -513,7 +577,6 @@ async function leaderboards(interaction) {
 			.setColor(colors.minesweeperCommand)
 			.setDescription(leaderboard(users, false, 'wins', interaction.user.id));
 		interaction.editReply({ embeds: [mostWinsEmbed] });
-
 	}
 }
 
@@ -521,7 +584,9 @@ async function leaderboards(interaction) {
 async function generateStatsEmbed(interaction) {
 	// Boolean whether the user is searching for another user
 	const otherUser = interaction.options.getUser('user') != null;
-	const stats = await minesweeperStatsSchema.findOne({ userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id });
+	const stats = await minesweeperStatsSchema.findOne({
+		userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id
+	});
 
 	// If the user inputted a user that's not in the database
 	if (stats == null) {
@@ -544,7 +609,7 @@ async function generateStatsEmbed(interaction) {
 **Losses**: \`${stats.totalGames - stats.wins}\` 
 **Total Games**: \`${stats.totalGames}\`\n
 **Win Ratio**: \`${Math.round((stats.wins / stats.totalGames) * 1000) / 10}%\`
-**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}\``,
+**Fastest Time**: \`${stats.wins > 0 ? stats.fastestTime : 'This player has not won a game!'}\``
 		);
 
 	interaction.editReply({ embeds: [statsEmbed] });
@@ -557,41 +622,41 @@ module.exports = {
 		.setDescription('A minesweeper minigame')
 
 		// start game
-		.addSubcommand(subcommand => subcommand
-			.setName('start')
-			.setDescription('Start a game of minesweeper'),
+		.addSubcommand((subcommand) =>
+			subcommand.setName('start').setDescription('Start a game of minesweeper')
 		)
 
 		// help
-		.addSubcommand(subcommand => subcommand
-			.setName('help')
-			.setDescription('Open a help menu on minesweeper'),
+		.addSubcommand((subcommand) =>
+			subcommand.setName('help').setDescription('Open a help menu on minesweeper')
 		)
 
 		// leaderboards
-		.addSubcommand(subcommand => subcommand
-			.setName('leaderboards')
-			.setDescription('Showcases the global leaderboards for minesweeper')
-			.addStringOption(option => option
-				.setName('type')
-				.setDescription('The type of leaderboard to show')
-				.setRequired(true)
-				.addChoices(
-					{ name: 'fastest', value: 'fastest' },
-					{ name: 'most played', value: 'played' },
-					{ name: 'most wins', value: 'wins' },
-				),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('leaderboards')
+				.setDescription('Showcases the global leaderboards for minesweeper')
+				.addStringOption((option) =>
+					option
+						.setName('type')
+						.setDescription('The type of leaderboard to show')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'fastest', value: 'fastest' },
+							{ name: 'most played', value: 'played' },
+							{ name: 'most wins', value: 'wins' }
+						)
+				)
 		)
 
 		// user stats
-		.addSubcommand(subcommand => subcommand
-			.setName('stats')
-			.setDescription('Gets the stats of a user')
-			.addUserOption(option => option
-				.setName('user')
-				.setDescription('The user to view the stats of'),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('stats')
+				.setDescription('Gets the stats of a user')
+				.addUserOption((option) =>
+					option.setName('user').setDescription('The user to view the stats of')
+				)
 		),
 	category: 'minigames',
 
@@ -610,5 +675,5 @@ module.exports = {
 				generateStatsEmbed(interaction);
 				break;
 		}
-	},
+	}
 };

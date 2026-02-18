@@ -16,9 +16,11 @@ function leaderboard(users, ascending, variable, userID) {
 	const topLeaderboard = sortedUsers.slice(0, amountToShow);
 
 	// Adds the surrounding text to be displayed on the leaderboard
-	let description = topLeaderboard.map((user, index) => {
-		return `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
-	}).join('\n');
+	let description = topLeaderboard
+		.map((user, index) => {
+			return `**${index + 1}** - **<@${user.userID}>** : \`${user[variable]}\``;
+		})
+		.join('\n');
 
 	// Adds the user's stats at the bottom if they are not on the list
 	sortedUsers.map((user, index) => {
@@ -50,22 +52,24 @@ function leaderboardMulti(users, ascending, variables, display, userID) {
 	const topLeaderboard = sortedUsers.slice(0, amountToShow);
 
 	// Adds the header to the leaderboard
-	let description = `*(${ display[0]}`;
+	let description = `*(${display[0]}`;
 
 	for (let i = 1; i < display.length; i++) {
-		description += ` | ${ display[i]}`;
+		description += ` | ${display[i]}`;
 	}
 
 	description += '*)\n';
 
 	// Adds the surrounding text to be displayed on the leaderboard
-	description += topLeaderboard.map((user, index) => {
-		let desc = `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
-		for (let i = 1; i < variables.length; i++) {
-			desc += ` | \`${user[variables[i]]}\``;
-		}
-		return desc;
-	}).join('\n');
+	description += topLeaderboard
+		.map((user, index) => {
+			let desc = `**${index + 1}** - **<@${user.userID}>** : \`${user[variables[0]]}\``;
+			for (let i = 1; i < variables.length; i++) {
+				desc += ` | \`${user[variables[i]]}\``;
+			}
+			return desc;
+		})
+		.join('\n');
 
 	// Adds the user's stats at the bottom if they are not on the list
 	sortedUsers.map((user, index) => {
@@ -81,7 +85,7 @@ function leaderboardMulti(users, ascending, variables, display, userID) {
 	return description;
 }
 
-
 module.exports = {
-	leaderboard, leaderboardMulti,
+	leaderboard,
+	leaderboardMulti
 };

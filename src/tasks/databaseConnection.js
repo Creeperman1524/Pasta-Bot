@@ -10,7 +10,7 @@ module.exports = {
 		mongoose.Promise = global.Promise;
 		mongoose.set('strictQuery', true);
 		await mongoose.connect(process.env.mongoDB, {});
-	},
+	}
 };
 
 // Alerts about connection, outages, and errors

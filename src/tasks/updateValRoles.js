@@ -6,7 +6,7 @@ const guildConfigSchema = require('../schemas/guildConfigs.js');
 const { apiRetries } = require('../config.json');
 
 const header = {
-	'Authorization': process.env.valorantToken,
+	Authorization: process.env.valorantToken
 };
 
 module.exports = {
@@ -20,7 +20,12 @@ module.exports = {
 
 		for (const guildData of await guildConfigSchema.find()) {
 			// The server does not have valorant roles enabled/no roles set
-			if (!guildData.modules || !guildData.modules['valorant-roles'] || !guildData.valorantRoles) continue;
+			if (
+				!guildData.modules ||
+				!guildData.modules['valorant-roles'] ||
+				!guildData.valorantRoles
+			)
+				continue;
 
 			const guild = await client.guilds.fetch(guildData.guildID);
 			const members = await guild.members.fetch();
@@ -30,9 +35,7 @@ module.exports = {
 				updateUser(guildMember[1], guildData);
 			}
 		}
-
-	},
-
+	}
 };
 
 async function updateUser(guildMember, guildData) {
@@ -71,7 +74,12 @@ async function updateUser(guildMember, guildData) {
 	if (!roleToAdd) return;
 
 	await guildMember.roles.add(roleToAdd);
-	logger.child({ mode: 'AUTO VALORANT ROLE', metaData: { userID: guildMember.user.id, guildID: guildMember.guild.id } }).debug(`Updated '${guildMember.user.username}' in '${guildMember.guild.name}'`);
+	logger
+		.child({
+			mode: 'AUTO VALORANT ROLE',
+			metaData: { userID: guildMember.user.id, guildID: guildMember.guild.id }
+		})
+		.debug(`Updated '${guildMember.user.username}' in '${guildMember.guild.name}'`);
 }
 
 // Finds the current rank of the account
@@ -81,15 +89,21 @@ async function getRankData(PUUID) {
 
 	// Tries to get the rank
 	while (retries < apiRetries) {
-		const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
-			{ method: 'GET', headers: header },
+		const rankResponse = await fetch(
+			`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
+			{ method: 'GET', headers: header }
 		);
 
 		rankData = rankResponse ? await rankResponse.json() : null;
 
 		// Check for rate limit or other errors
-		if (!rankData || (rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].status == 429)) {
-			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Rate limited/errored, trying again in 1 minute...');
+		if (
+			!rankData ||
+			(rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].status == 429)
+		) {
+			logger
+				.child({ mode: 'AUTO VALORANT ROLE' })
+				.warn('Rate limited/errored, trying again in 1 minute...');
 			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
 
 			// Waits for a minute before trying again
@@ -101,11 +115,13 @@ async function getRankData(PUUID) {
 		return rankData;
 	}
 
-	logger.child({ mode: 'AUTO VALORANT ROLE' }).warn('Exceeded rate limit/errored too many times, aborting...');
+	logger
+		.child({ mode: 'AUTO VALORANT ROLE' })
+		.warn('Exceeded rate limit/errored too many times, aborting...');
 	return null;
 }
 
 // A function to pause for a certain amount of time
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }

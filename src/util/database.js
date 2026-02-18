@@ -5,19 +5,23 @@ const { logger } = require('../logging.js');
  * @param {mongoose.model} schema The schema which to save to the database
  */
 function writeToDatabase(schema, type) {
-	logger.child({ mode: 'DATABASE', metaData: {
-		id: schema.id,
-		type: {
-			botID: schema.botID,
-			guildID: schema.guildID,
-			userID: schema.userID,
-			type: this.type,
-		},
-	},
-	}).info(`Saving information of type '${type}'`);
+	logger
+		.child({
+			mode: 'DATABASE',
+			metaData: {
+				id: schema.id,
+				type: {
+					botID: schema.botID,
+					guildID: schema.guildID,
+					userID: schema.userID,
+					type: this.type
+				}
+			}
+		})
+		.info(`Saving information of type '${type}'`);
 	schema.save();
 }
 
 module.exports = {
-	writeToDatabase,
+	writeToDatabase
 };

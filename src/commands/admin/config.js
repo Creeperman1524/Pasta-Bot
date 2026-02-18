@@ -11,9 +11,11 @@ async function setConfig(interaction) {
 
 	// Checks to see if the guild has any configs set yet
 	if (!data) {
-		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new guild config');
+		logger
+			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
+			.info('Creating new guild config');
 		const guildConfig = await guildConfigSchema.create({
-			guildID: interaction.guildId,
+			guildID: interaction.guildId
 		});
 		database.writeToDatabase(guildConfig, 'NEW GUILD CONFIG');
 
@@ -64,10 +66,12 @@ async function setConfig(interaction) {
 		const incorrectTypeEmbed = newEmbed()
 			.setTitle('Invalid Type!')
 			.setColor(colors.error)
-			.setDescription(`The provided value for \`${rule}\` is in an incorrect format. Please provide a \`${type}\``);
+			.setDescription(
+				`The provided value for \`${rule}\` is in an incorrect format. Please provide a \`${type}\``
+			);
 
 		await interaction.editReply({
-			embeds: [incorrectTypeEmbed],
+			embeds: [incorrectTypeEmbed]
 		});
 		return;
 	}
@@ -91,15 +95,23 @@ async function setConfig(interaction) {
 	} else {
 		// Did not make custom save path for rule!!
 		newValue = '`nil`';
-		logger.child({ mode: 'CONFIG', metaData: { userID: interaction.user.id, guildID: interaction.guildId } }).warn(`A custom save path is not made for rule '${rule}'`);
+		logger
+			.child({
+				mode: 'CONFIG',
+				metaData: { userID: interaction.user.id, guildID: interaction.guildId }
+			})
+			.warn(`A custom save path is not made for rule '${rule}'`);
 	}
 
 	// Save the config
-	const newGuildConfig = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
-		modules: modules,
-		valorantRoles: valorantRoles,
-		loggingChannelId: loggingChannelID,
-	});
+	const newGuildConfig = await guildConfigSchema.findOneAndUpdate(
+		{ guildID: interaction.guildId },
+		{
+			modules: modules,
+			valorantRoles: valorantRoles,
+			loggingChannelId: loggingChannelID
+		}
+	);
 	database.writeToDatabase(newGuildConfig, 'UPDATED GUILD CONFIG');
 
 	const confirmationEmbed = newEmbed()
@@ -108,7 +120,7 @@ async function setConfig(interaction) {
 		.setDescription(`\`${rule}\` was successfully set to ${newValue}`);
 
 	await interaction.editReply({
-		embeds: [confirmationEmbed],
+		embeds: [confirmationEmbed]
 	});
 }
 
@@ -124,7 +136,7 @@ async function viewConfig(interaction) {
 			.setDescription('This server does not seem to have any configs set!');
 
 		await interaction.editReply({
-			embeds: [noDataEmbed],
+			embeds: [noDataEmbed]
 		});
 	}
 
@@ -154,7 +166,12 @@ async function viewConfig(interaction) {
 	} else {
 		// No custom save path for this rule!!
 		value = '`nil`';
-		logger.child({ mode: 'CONFIG', metaData: { userID: interaction.user.id, guildID: interaction.guildId } }).warn(`A custom save path is not made for rule '${rule}'`);
+		logger
+			.child({
+				mode: 'CONFIG',
+				metaData: { userID: interaction.user.id, guildID: interaction.guildId }
+			})
+			.warn(`A custom save path is not made for rule '${rule}'`);
 	}
 
 	const valueEmbed = newEmbed()
@@ -163,7 +180,7 @@ async function viewConfig(interaction) {
 		.setDescription(`\`${rule}\` is currently set to ${value}`);
 
 	await interaction.editReply({
-		embeds: [valueEmbed],
+		embeds: [valueEmbed]
 	});
 }
 
@@ -176,7 +193,7 @@ async function validateRule(rule, interaction) {
 			.setDescription(`The provided rule \`${rule}\` is not a valid rule!`);
 
 		await interaction.editReply({
-			embeds: [invalidRuleEmbed],
+			embeds: [invalidRuleEmbed]
 		});
 
 		return false;
@@ -190,49 +207,52 @@ module.exports = {
 		.setName('config')
 		.setDescription('Edit specific server features')
 
-		.addSubcommand(subcommand => subcommand
-			.setName('set')
-			.setDescription('Set a value of a config')
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('set')
+				.setDescription('Set a value of a config')
 
-			// <rule>
-			.addStringOption(option => option
-				.setName('rule')
-				.setDescription('The rule to make modifications to')
-				.setRequired(true),
-				// .setAutocomplete(true),
-			)
+				// <rule>
+				.addStringOption(
+					(option) =>
+						option
+							.setName('rule')
+							.setDescription('The rule to make modifications to')
+							.setRequired(true)
+					// .setAutocomplete(true),
+				)
 
-			// <values>
-			.addStringOption(option => option
-				.setName('string')
-				.setDescription('The string value to set the config to'),
-			)
+				// <values>
+				.addStringOption((option) =>
+					option.setName('string').setDescription('The string value to set the config to')
+				)
 
-			.addBooleanOption(option => option
-				.setName('boolean')
-				.setDescription('The boolean value to set the config to'),
-			)
+				.addBooleanOption((option) =>
+					option
+						.setName('boolean')
+						.setDescription('The boolean value to set the config to')
+				)
 
-			.addRoleOption(option => option
-				.setName('role')
-				.setDescription('The role to set the config to'),
-			)
+				.addRoleOption((option) =>
+					option.setName('role').setDescription('The role to set the config to')
+				)
 
-			.addChannelOption(option => option
-				.setName('channel')
-				.setDescription('The channel to set the config to'),
-			),
+				.addChannelOption((option) =>
+					option.setName('channel').setDescription('The channel to set the config to')
+				)
 		)
 
 		// view command
-		.addSubcommand(subcommand => subcommand
-			.setName('view')
-			.setDescription('View the value of a config')
-			.addStringOption(option => option
-				.setName('rule')
-				.setDescription('The rule to view the value of')
-				.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('view')
+				.setDescription('View the value of a config')
+				.addStringOption((option) =>
+					option
+						.setName('rule')
+						.setDescription('The rule to view the value of')
+						.setRequired(true)
+				)
 		),
 	category: 'admin',
 
@@ -245,5 +265,5 @@ module.exports = {
 				viewConfig(interaction);
 				break;
 		}
-	},
+	}
 };

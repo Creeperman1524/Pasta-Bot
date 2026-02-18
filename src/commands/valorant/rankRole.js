@@ -7,7 +7,7 @@ const valorantConfigSchema = require('../../schemas/valorantConfig.js');
 const guildConfigSchema = require('../../schemas/guildConfigs.js');
 
 const header = {
-	'Authorization': process.env.valorantToken,
+	Authorization: process.env.valorantToken
 };
 
 async function linkCommand(interaction) {
@@ -17,16 +17,18 @@ async function linkCommand(interaction) {
 		.setDescription('Fetching valorant data...');
 
 	await interaction.editReply({
-		embeds: [fetchingEmbed],
+		embeds: [fetchingEmbed]
 	});
 
 	let data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 
 	// Checks to see if the user is in the databse
 	if (!data) {
-		logger.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } }).info('Creating new valorant config');
+		logger
+			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
+			.info('Creating new valorant config');
 		const valorantConfig = await valorantConfigSchema.create({
-			userID: interaction.user.id,
+			userID: interaction.user.id
 		});
 		database.writeToDatabase(valorantConfig, 'NEW VALORANT CONFIG');
 
@@ -37,14 +39,17 @@ async function linkCommand(interaction) {
 	const tagline = interaction.options.getString('tagline');
 
 	// Searches the account for the PUUID
-	const userResponse = await fetch(`https://api.henrikdev.xyz/valorant/v2/account/${name}/${tagline}`,
-		{ method: 'GET', headers: header },
+	const userResponse = await fetch(
+		`https://api.henrikdev.xyz/valorant/v2/account/${name}/${tagline}`,
+		{ method: 'GET', headers: header }
 	);
 	const accountData = await userResponse.json();
 
 	// Something has gone wrong
 	if (accountData.errors || accountData.status != 200) {
-		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
+		logger
+			.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } })
+			.error(accountData);
 		let description = '';
 
 		switch (accountData.errors[0].code) {
@@ -52,10 +57,12 @@ async function linkCommand(interaction) {
 				description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
 				break;
 			case 24:
-				description = 'This account does not have enough match data. Play more games and try again later!';
+				description =
+					'This account does not have enough match data. Play more games and try again later!';
 				break;
 			default:
-				description = 'Someting went horribly wrong! Please contact the owner for more information.';
+				description =
+					'Someting went horribly wrong! Please contact the owner for more information.';
 				break;
 		}
 
@@ -65,7 +72,7 @@ async function linkCommand(interaction) {
 			.setDescription(description);
 
 		await interaction.editReply({
-			embeds: [errorEmbed],
+			embeds: [errorEmbed]
 		});
 		return;
 	}
@@ -73,18 +80,23 @@ async function linkCommand(interaction) {
 	const PUUID = accountData.data.puuid;
 
 	// Saves the account information to the valorant config
-	const newValorantConfig = await valorantConfigSchema.findOneAndUpdate({ userID: interaction.user.id }, {
-		puuid: PUUID,
-	});
+	const newValorantConfig = await valorantConfigSchema.findOneAndUpdate(
+		{ userID: interaction.user.id },
+		{
+			puuid: PUUID
+		}
+	);
 	database.writeToDatabase(newValorantConfig, 'UPDATED VALORANT CONFIG');
 
 	const confirmationEmbed = newEmbed()
 		.setTitle('Account Linked!')
 		.setColor(colors.valorantCommand)
-		.setDescription(`Your discord account is now linked with the account \`${name}#${tagline}\``);
+		.setDescription(
+			`Your discord account is now linked with the account \`${name}#${tagline}\``
+		);
 
 	await interaction.editReply({
-		embeds: [confirmationEmbed],
+		embeds: [confirmationEmbed]
 	});
 }
 
@@ -96,10 +108,12 @@ async function updateRole(interaction) {
 		const noUserDataEmbed = newEmbed()
 			.setTitle('Account not linked!')
 			.setColor(colors.warn)
-			.setDescription('Your account is not linked! Please use `/valorant link` to link your riot games account.');
+			.setDescription(
+				'Your account is not linked! Please use `/valorant link` to link your riot games account.'
+			);
 
 		await interaction.editReply({
-			embeds: [noUserDataEmbed],
+			embeds: [noUserDataEmbed]
 		});
 
 		return;
@@ -111,33 +125,39 @@ async function updateRole(interaction) {
 		.setDescription('Fetching valorant data...');
 
 	await interaction.editReply({
-		embeds: [fetchingEmbed],
+		embeds: [fetchingEmbed]
 	});
 
 	const PUUID = userData.puuid;
 
 	// Finds the current rank of the account
-	const rankResponse = await fetch(`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
-		{ method: 'GET', headers: header },
+	const rankResponse = await fetch(
+		`https://api.henrikdev.xyz/valorant/v3/by-puuid/mmr/na/pc/${PUUID}`,
+		{ method: 'GET', headers: header }
 	);
 
 	let rankData = await rankResponse.json();
 
 	// Something has gone wrong
 	if (rankData.errors || rankData.status != 200) {
-		logger.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } }).error(accountData);
+		logger
+			.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } })
+			.error(accountData);
 		let description = '';
 
 		// Check for deleted account/no played enough account even after linking
 		switch (rankData.errors[0].code) {
 			case 22:
-				description = 'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
+				description =
+					'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
 				break;
 			case 24:
-				description = 'This account does not have enough match data. Play more games and try again later!';
+				description =
+					'This account does not have enough match data. Play more games and try again later!';
 				break;
 			default:
-				description = 'Someting went horribly wrong! Please contact the owner for more information.';
+				description =
+					'Someting went horribly wrong! Please contact the owner for more information.';
 				break;
 		}
 
@@ -147,7 +167,7 @@ async function updateRole(interaction) {
 			.setDescription(description);
 
 		await interaction.editReply({
-			embeds: [errorEmbed],
+			embeds: [errorEmbed]
 		});
 		return;
 	}
@@ -160,14 +180,20 @@ async function updateRole(interaction) {
 	const guildData = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
 	// No guild configs exist for this rank
-	if (!guildData || !guildData.valorantRoles || (!guildData.valorantRoles[rankRoleName] && rank != 'Unrated')) {
+	if (
+		!guildData ||
+		!guildData.valorantRoles ||
+		(!guildData.valorantRoles[rankRoleName] && rank != 'Unrated')
+	) {
 		const noConfigEmbed = newEmbed()
 			.setTitle('Role not set!')
 			.setColor(colors.warn)
-			.setDescription(`Your current rank \`${rank}\` does not have a role set to it! **Please contact your server admin.**`);
+			.setDescription(
+				`Your current rank \`${rank}\` does not have a role set to it! **Please contact your server admin.**`
+			);
 
 		await interaction.editReply({
-			embeds: [noConfigEmbed],
+			embeds: [noConfigEmbed]
 		});
 	}
 
@@ -182,14 +208,21 @@ async function updateRole(interaction) {
 		if (!roleToRemove) {
 			// TODO: autofix broken role by removing it from the database
 
-			logger.child({ mode: 'VALORANT ROLE', metaData: { userId: interaction.user.id, guildId: interaction.guildId } }).error(`Rank role '${rankRoleId}' in guild ${interaction.guildId} has desynced`);
+			logger
+				.child({
+					mode: 'VALORANT ROLE',
+					metaData: { userId: interaction.user.id, guildId: interaction.guildId }
+				})
+				.error(`Rank role '${rankRoleId}' in guild ${interaction.guildId} has desynced`);
 			const desyncedRoleEmbed = newEmbed()
 				.setTitle('Roles misconfigured!')
 				.setColor(colors.error)
-				.setDescription('It seems a role is misconfigured. Please contact your server admin.');
+				.setDescription(
+					'It seems a role is misconfigured. Please contact your server admin.'
+				);
 
 			await interaction.editReply({
-				embeds: [desyncedRoleEmbed],
+				embeds: [desyncedRoleEmbed]
 			});
 
 			return;
@@ -207,10 +240,12 @@ async function updateRole(interaction) {
 		const unratedEmbed = newEmbed()
 			.setTitle('Updated role')
 			.setColor(colors.valorantCommand)
-			.setDescription('Your rank is currently **Unrated**, go grind some more to earn a role!');
+			.setDescription(
+				'Your rank is currently **Unrated**, go grind some more to earn a role!'
+			);
 
 		await interaction.editReply({
-			embeds: [unratedEmbed],
+			embeds: [unratedEmbed]
 		});
 
 		return;
@@ -224,9 +259,8 @@ async function updateRole(interaction) {
 		.setDescription(`Your rank of **${rank}** has earned you the role of <@&${roleToAdd.id}>`);
 
 	await interaction.editReply({
-		embeds: [addedRoleEmbed],
+		embeds: [addedRoleEmbed]
 	});
-
 }
 
 module.exports = {
@@ -235,25 +269,31 @@ module.exports = {
 		.setDescription('Commands dealing with Valorant')
 
 		// link account
-		.addSubcommand(subcommand => subcommand
-			.setName('link')
-			.setDescription('Link your discord account to a riot id')
-			.addStringOption(option => option
-				.setName('name')
-				.setDescription('Your account name (before the #)')
-				.setRequired(true),
-			)
-			.addStringOption(option => option
-				.setName('tagline')
-				.setDescription('Your accouint tagline (after the #)')
-				.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('link')
+				.setDescription('Link your discord account to a riot id')
+				.addStringOption((option) =>
+					option
+						.setName('name')
+						.setDescription('Your account name (before the #)')
+						.setRequired(true)
+				)
+				.addStringOption((option) =>
+					option
+						.setName('tagline')
+						.setDescription('Your accouint tagline (after the #)')
+						.setRequired(true)
+				)
 		)
 
 		// update role
-		.addSubcommand(subcommand => subcommand
-			.setName('update-role')
-			.setDescription('Update your valorant rank for servers which have roles based on rank'),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('update-role')
+				.setDescription(
+					'Update your valorant rank for servers which have roles based on rank'
+				)
 		),
 
 	category: 'valorant',
@@ -267,5 +307,5 @@ module.exports = {
 				updateRole(interaction);
 				break;
 		}
-	},
+	}
 };

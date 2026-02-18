@@ -7,11 +7,12 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('reload')
 		.setDescription('Reloads a specific command script if not working properly')
-		.addStringOption(option =>
-			option.setName('command')
+		.addStringOption((option) =>
+			option
+				.setName('command')
 				.setDescription('The command to reload')
 				.setRequired(true)
-				.setAutocomplete(true),
+				.setAutocomplete(true)
 		)
 		.setDefaultPermission(false),
 	permissions: ['OWNER'],
@@ -29,7 +30,7 @@ module.exports = {
 				.setColor(colors.warn)
 				.setDescription(`There is no command with the name \`${commandName}\``);
 			return await interaction.editReply({
-				embeds: [noCommandEmbed],
+				embeds: [noCommandEmbed]
 			});
 		}
 
@@ -42,22 +43,26 @@ module.exports = {
 			const newCommand = require(fileLocation);
 			interaction.client.commands.set(newCommand.name, newCommand);
 		} catch (error) {
-			logger.child({
-				mode: 'RELOAD',
-				metaData: {
-					user: interaction.user.username,
-					userid: interaction.user.id,
-					guild: interaction.guild.name,
-					guildid: interaction.guild.id,
-				},
-			}).error(error);
+			logger
+				.child({
+					mode: 'RELOAD',
+					metaData: {
+						user: interaction.user.username,
+						userid: interaction.user.id,
+						guild: interaction.guild.name,
+						guildid: interaction.guild.id
+					}
+				})
+				.error(error);
 
 			const errorEmbed = newEmbed()
 				.setTitle('Error')
 				.setColor(colors.error)
-				.setDescription(`There was an error while reloading a command \`${command.data.name}\``);
+				.setDescription(
+					`There was an error while reloading a command \`${command.data.name}\``
+				);
 			return await interaction.editReply({
-				embeds: [errorEmbed],
+				embeds: [errorEmbed]
 			});
 		}
 
@@ -67,7 +72,7 @@ module.exports = {
 			.setDescription(`Command \`/${command.data.name}\` was reloaded!`);
 
 		await interaction.editReply({
-			embeds: [successEmbed],
+			embeds: [successEmbed]
 		});
 	},
 
@@ -75,14 +80,12 @@ module.exports = {
 		const focusedValue = interaction.options.getFocused();
 
 		// Maps the command names to an array
-		const choices = interaction.client.commands.map(command => command.data.name);
-		const filtered = choices.filter(choice => choice.startsWith(focusedValue));
+		const choices = interaction.client.commands.map((command) => command.data.name);
+		const filtered = choices.filter((choice) => choice.startsWith(focusedValue));
 
 		// Responds with the command names that match what's currently typed
-		await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
-
-	},
-
+		await interaction.respond(filtered.map((choice) => ({ name: choice, value: choice })));
+	}
 };
 
 async function findFile(commandName) {

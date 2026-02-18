@@ -7,11 +7,9 @@ const { version } = require('../config.json');
  */
 function newEmbed() {
 	if (process.env.NODE_ENV == 'dev') {
-		return new EmbedBuilder()
-			.setFooter({ text: `v${version} - DEV` });
+		return new EmbedBuilder().setFooter({ text: `v${version} - DEV` });
 	} else {
-		return new EmbedBuilder()
-			.setFooter({ text: `v${version}` });
+		return new EmbedBuilder().setFooter({ text: `v${version}` });
 	}
 }
 
@@ -24,7 +22,7 @@ function newEmbed() {
 function truncateText(text, length) {
 	if (text.length <= length - 3) return text;
 
-	return `${text.slice(0, length - 3) }\u2026`;
+	return `${text.slice(0, length - 3)}\u2026`;
 }
 
 /**
@@ -47,9 +45,11 @@ const colors = {
 
 	success: 0x009f00,
 	warn: 0xfdff63,
-	error: 0xff1414,
+	error: 0xff1414
 };
 
 module.exports = {
-	newEmbed, colors, truncateText,
+	newEmbed,
+	colors,
+	truncateText
 };

@@ -11,67 +11,79 @@ module.exports = {
 		.setDescription('Customizes a reaction role message')
 
 		// Add reaction message
-		.addSubcommand(subcommand => subcommand
-			.setName('create')
-			.setDescription('Creates a new message for role reactions')
-			.addChannelOption(option =>
-				option.setName('channel')
-					.setDescription('The channel to host the reaction message')
-					.setRequired(true),
-			)
-			.addStringOption(option =>
-				option.setName('title')
-					.setDescription('The title of the reaction message')
-					.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('create')
+				.setDescription('Creates a new message for role reactions')
+				.addChannelOption((option) =>
+					option
+						.setName('channel')
+						.setDescription('The channel to host the reaction message')
+						.setRequired(true)
+				)
+				.addStringOption((option) =>
+					option
+						.setName('title')
+						.setDescription('The title of the reaction message')
+						.setRequired(true)
+				)
 		)
 
 		// Add role
-		.addSubcommand(subcommand => subcommand
-			.setName('add')
-			.setDescription('Adds a role to the message')
-			.addStringOption(option =>
-				option.setName('messagelink')
-					.setDescription('The reaction message to edit')
-					.setRequired(true),
-			)
-			.addRoleOption(option =>
-				option.setName('role')
-					.setDescription('The role the user will recieve')
-					.setRequired(true),
-			)
-			.addStringOption(option =>
-				option.setName('emoji')
-					.setDescription('The emoji for this role')
-					.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('add')
+				.setDescription('Adds a role to the message')
+				.addStringOption((option) =>
+					option
+						.setName('messagelink')
+						.setDescription('The reaction message to edit')
+						.setRequired(true)
+				)
+				.addRoleOption((option) =>
+					option
+						.setName('role')
+						.setDescription('The role the user will recieve')
+						.setRequired(true)
+				)
+				.addStringOption((option) =>
+					option
+						.setName('emoji')
+						.setDescription('The emoji for this role')
+						.setRequired(true)
+				)
 		)
 
 		// Remove role
-		.addSubcommand(subcommand => subcommand
-			.setName('remove')
-			.setDescription('Removes a role from the message')
-			.addStringOption(option =>
-				option.setName('messagelink')
-					.setDescription('The reaction message to edit')
-					.setRequired(true),
-			)
-			.addRoleOption(option =>
-				option.setName('role')
-					.setDescription('The role to remove from the message')
-					.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('remove')
+				.setDescription('Removes a role from the message')
+				.addStringOption((option) =>
+					option
+						.setName('messagelink')
+						.setDescription('The reaction message to edit')
+						.setRequired(true)
+				)
+				.addRoleOption((option) =>
+					option
+						.setName('role')
+						.setDescription('The role to remove from the message')
+						.setRequired(true)
+				)
 		)
 
 		// Delete reaction message
-		.addSubcommand(subcommand => subcommand
-			.setName('delete')
-			.setDescription('Deletes a role reaction message')
-			.addStringOption(option =>
-				option.setName('messagelink')
-					.setDescription('The reaction message to remove')
-					.setRequired(true),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('delete')
+				.setDescription('Deletes a role reaction message')
+				.addStringOption((option) =>
+					option
+						.setName('messagelink')
+						.setDescription('The reaction message to remove')
+						.setRequired(true)
+				)
 		)
 
 		.setDefaultPermission(false),
@@ -93,7 +105,7 @@ module.exports = {
 				deleteReactionMessage(interaction);
 				break;
 		}
-	},
+	}
 };
 
 async function createReactionMessage(interaction) {
@@ -102,9 +114,11 @@ async function createReactionMessage(interaction) {
 
 	// Checks to see if the guild has any saved data
 	if (!data) {
-		logger.child({ mode: 'DATABASE', metaData: { guildID: interaction.guildId } }).info('Creating new guild configs file');
+		logger
+			.child({ mode: 'DATABASE', metaData: { guildID: interaction.guildId } })
+			.info('Creating new guild configs file');
 		const guildConfigs = await guildConfigSchema.create({
-			guildID: interaction.guildId,
+			guildID: interaction.guildId
 		});
 		database.writeToDatabase(guildConfigs, 'NEW GUILD CONFIG');
 
@@ -124,29 +138,33 @@ async function createReactionMessage(interaction) {
 		await channel.send({ embeds: [baseEmbed] }).then(async (msg) => {
 			// Creates an empty object of reactionMessages
 			reactionMessages[msg.id] = [];
-			const newReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
-				reactionMessages: reactionMessages,
-			});
+			const newReactionMessage = await guildConfigSchema.findOneAndUpdate(
+				{ guildID: interaction.guildId },
+				{
+					reactionMessages: reactionMessages
+				}
+			);
 			database.writeToDatabase(newReactionMessage, 'NEW REACTION ROLE MESSAGE');
 
 			const replyEmbed = newEmbed()
 				.setTitle('Success!')
 				.setColor(colors.success)
-				.setDescription('Your reaction message was successfully created :D\nRun `/reactionrole add` to add roles to your message!')
+				.setDescription(
+					'Your reaction message was successfully created :D\nRun `/reactionrole add` to add roles to your message!'
+				)
 				.addFields({
 					name: 'Jump to that message',
-					value: `[Click here](${msg.url})`,
+					value: `[Click here](${msg.url})`
 				});
 
 			interaction.editReply({
-				embeds: [replyEmbed],
+				embeds: [replyEmbed]
 			});
-
 		});
 	} else {
 		interaction.editReply({
 			content: 'Please select a valid channel!',
-			ephemeral: true,
+			ephemeral: true
 		});
 	}
 }
@@ -156,8 +174,8 @@ async function deleteReactionMessage(interaction) {
 
 	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
-			content: 'This server doesn\'t seem to have a reaction role message!',
-			ephemeral: true,
+			content: "This server doesn't seem to have a reaction role message!",
+			ephemeral: true
 		});
 		return;
 	}
@@ -166,20 +184,24 @@ async function deleteReactionMessage(interaction) {
 	const message = await findMessage(interaction, reactionMessages);
 
 	if (message) {
-		message.delete()
-			.catch(logger.child({
+		message.delete().catch(
+			logger.child({
 				mode: 'REACTION ROLE',
 				metaData: {
 					user: interaction.user.username,
 					userid: interaction.user.id,
 					guild: interaction.guild.name,
-					guildid: interaction.guild.id,
-				},
-			}).error);
+					guildid: interaction.guild.id
+				}
+			}).error
+		);
 		delete reactionMessages[message.id];
-		const deletedReactionMessage = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
-			reactionMessages: reactionMessages,
-		});
+		const deletedReactionMessage = await guildConfigSchema.findOneAndUpdate(
+			{ guildID: interaction.guildId },
+			{
+				reactionMessages: reactionMessages
+			}
+		);
 		database.writeToDatabase(deletedReactionMessage, 'DELETED REACTION ROLE MESSAGE');
 
 		const replyEmbed = newEmbed()
@@ -188,11 +210,10 @@ async function deleteReactionMessage(interaction) {
 			.setDescription('Your reaction message was safely removed');
 
 		interaction.editReply({ embeds: [replyEmbed] });
-
 	} else {
 		interaction.editReply({
-			content: 'It seems that message isn\'t from this server',
-			ephemeral: true,
+			content: "It seems that message isn't from this server",
+			ephemeral: true
 		});
 	}
 }
@@ -202,8 +223,8 @@ async function addRoletoMessage(interaction) {
 
 	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
-			content: 'This server doesn\'t seem to have a reaction role message!',
-			ephemeral: true,
+			content: "This server doesn't seem to have a reaction role message!",
+			ephemeral: true
 		});
 		return;
 	}
@@ -214,8 +235,8 @@ async function addRoletoMessage(interaction) {
 	// Checks if the message exists
 	if (!message) {
 		interaction.editReply({
-			content: 'It seems that message isn\'t from this server',
-			ephemeral: true,
+			content: "It seems that message isn't from this server",
+			ephemeral: true
 		});
 		return;
 	}
@@ -227,8 +248,8 @@ async function addRoletoMessage(interaction) {
 	// Checks if the role is valid
 	if (role.name == '@everyone') {
 		interaction.editReply({
-			content: 'That\'s an invalid role!',
-			ephemeral: true,
+			content: "That's an invalid role!",
+			ephemeral: true
 		});
 		return;
 	}
@@ -238,8 +259,8 @@ async function addRoletoMessage(interaction) {
 		await message.react(emoji);
 	} catch (error) {
 		interaction.editReply({
-			content: 'That\'s an invalid emoji!',
-			ephemeral: true,
+			content: "That's an invalid emoji!",
+			ephemeral: true
 		});
 		return;
 	}
@@ -251,7 +272,7 @@ async function addRoletoMessage(interaction) {
 	const newField = {
 		name: `React with ${emoji}`,
 		value: `<@&${role.id}>`,
-		inline: true,
+		inline: true
 	};
 	fields.push(newField);
 
@@ -261,16 +282,21 @@ async function addRoletoMessage(interaction) {
 	// Edits database
 	reactionMessages[message.id].push([role.id, emoji]);
 
-	const newRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
-		reactionMessages: reactionMessages,
-	});
+	const newRole = await guildConfigSchema.findOneAndUpdate(
+		{ guildID: interaction.guildId },
+		{
+			reactionMessages: reactionMessages
+		}
+	);
 	database.writeToDatabase(newRole, 'ADDED REACTION ROLE');
 
 	// Responds to the user
 	const replyEmbed = newEmbed()
 		.setTitle('Success!')
 		.setColor(colors.success)
-		.setDescription(`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`);
+		.setDescription(
+			`<@&${role.id}> was successfully added and binded with the emoji ${emoji}!`
+		);
 
 	interaction.editReply({ embeds: [replyEmbed] });
 }
@@ -280,8 +306,8 @@ async function removeRolefromMessage(interaction) {
 
 	if (!data.reactionMessages || data.reactionMessages == {}) {
 		interaction.editReply({
-			content: 'This server doesn\'t seem to have a reaction role message!',
-			ephemeral: true,
+			content: "This server doesn't seem to have a reaction role message!",
+			ephemeral: true
 		});
 		return;
 	}
@@ -292,8 +318,8 @@ async function removeRolefromMessage(interaction) {
 	// Checks if the message exists
 	if (!message) {
 		interaction.editReply({
-			content: 'It seems that message isn\'t from this server',
-			ephemeral: true,
+			content: "It seems that message isn't from this server",
+			ephemeral: true
 		});
 		return;
 	}
@@ -313,7 +339,7 @@ async function removeRolefromMessage(interaction) {
 	if (!found) {
 		interaction.editReply({
 			content: 'That role is not used in that reaction message!',
-			ephemeral: true,
+			ephemeral: true
 		});
 		return;
 	}
@@ -340,9 +366,12 @@ async function removeRolefromMessage(interaction) {
 		}
 	}
 
-	const deleteRole = await guildConfigSchema.findOneAndUpdate({ guildID: interaction.guildId }, {
-		reactionMessages: reactionMessages,
-	});
+	const deleteRole = await guildConfigSchema.findOneAndUpdate(
+		{ guildID: interaction.guildId },
+		{
+			reactionMessages: reactionMessages
+		}
+	);
 	database.writeToDatabase(deleteRole, 'REMOVED REACTION ROLE');
 
 	// Removes the reactions
@@ -365,8 +394,8 @@ async function findMessage(interaction, reactionGuild) {
 	// If that message isn't a reaction message
 	if (!reactionGuild[messageID]) {
 		interaction.editReply({
-			content: 'That message link isn\'t a valid reaction message!',
-			ephemeral: true,
+			content: "That message link isn't a valid reaction message!",
+			ephemeral: true
 		});
 		return;
 	}

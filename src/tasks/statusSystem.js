@@ -17,7 +17,11 @@ let i = 0;
 function iterateCounter(presences) {
 	i++; // Initially increment the counter
 	// Skip over the server status if there are no players online (as long as there are more statuses to be shown)
-	if (Object.keys(presences)[i] == 'displayServer' && presences['displayServer'][1] !== 'online' && functions.length > 1) {
+	if (
+		Object.keys(presences)[i] == 'displayServer' &&
+		presences['displayServer'][1] !== 'online' &&
+		functions.length > 1
+	) {
 		i++;
 	}
 	// Overflow check
@@ -51,8 +55,8 @@ module.exports = {
 		// Set's the bot's presence
 		client.user.setPresence({
 			activities: [{ name: botPresence[0], type: ActivityType.Watching }],
-			status: botPresence[1],
+			status: botPresence[1]
 		});
 		// logger.child({ mode: 'STATUS' }).debug(`Status has been updated with status '${botPresence[1]}' and activity '${botPresence[0]}'`);
-	},
+	}
 };

@@ -1,4 +1,12 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, ComponentType, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	Collection,
+	ComponentType,
+	EmbedBuilder,
+	SlashCommandBuilder
+} = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging.js');
 
@@ -9,54 +17,57 @@ const { leaderboardMulti } = require('../../util/leaderboard.js');
 const games = new Collection();
 
 const emojis = {
-	'blank' : '➖',
-	'X': '❌',
-	'O': '⭕',
-	'confirm': '✔️',
-	'deny': '✖️',
+	blank: '➖',
+	X: '❌',
+	O: '⭕',
+	confirm: '✔️',
+	deny: '✖️',
 
-	'currentPlayer': '😎',
-	'waitingPlayer': '👤',
-	'currentBot': '🍝',
-	'waitingBot': '👤',
+	currentPlayer: '😎',
+	waitingPlayer: '👤',
+	currentBot: '🍝',
+	waitingBot: '👤'
 };
 
 const botMessages = {
-	'easy': [ // 90-50%
-		'I\'ll go easy on you this time 😄',
-		'I\'ll let you have this one… 😏',
+	easy: [
+		// 90-50%
+		"I'll go easy on you this time 😄",
+		"I'll let you have this one… 😏"
 	],
-	'medium': [ // 50-25%
-		'I see you\'ve been improving… 👀',
-		'You\'re still no match for me! 😤',
-		'Too hard for you? 🤣',
+	medium: [
+		// 50-25%
+		"I see you've been improving… 👀",
+		"You're still no match for me! 😤",
+		'Too hard for you? 🤣'
 	],
-	'hard': [ // 25-10%
+	hard: [
+		// 25-10%
 		'Get ready to be destroyed! 😈',
-		'I\'ve been practicing for you 😉',
+		"I've been practicing for you 😉",
 		'You wish you could defeat me! 😆',
-		'I. SEE. EVERYTHING 👁️',
-	],
+		'I. SEE. EVERYTHING 👁️'
+	]
 };
 
 // Creates a new game for the user
 function createGame(myInteraction) {
 	const game = {
-		board: [], 					// The internal array of the board
-		buttons: [],				// The button representation of the board
-		confirmation: [], 			// The buttons to accept or deny the play request
-		player1Turn: true,	 		// Whether or not it's player1's turn
-		player1: null,				// The user object of player1
-		player2: null, 				// The user object of player2
-		bot: false,					// Whether the game is against the bot
-		botMessage: '',				// The difficulty message the bot says
-		playerWinRate: 0.5,			// The winrate of the player
-		player2Accepted: false, 	// Whether or not player2 accepted the game
-		winner: 0,					// The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
-		componentCollector: null,	// The main component collect for the game
-		interaction: myInteraction,	// The user command
-		embed: null, 				// The game/embed sent
-		timeout: 10 * 60000, 		// The expiration timer for the game
+		board: [], // The internal array of the board
+		buttons: [], // The button representation of the board
+		confirmation: [], // The buttons to accept or deny the play request
+		player1Turn: true, // Whether or not it's player1's turn
+		player1: null, // The user object of player1
+		player2: null, // The user object of player2
+		bot: false, // Whether the game is against the bot
+		botMessage: '', // The difficulty message the bot says
+		playerWinRate: 0.5, // The winrate of the player
+		player2Accepted: false, // Whether or not player2 accepted the game
+		winner: 0, // The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
+		componentCollector: null, // The main component collect for the game
+		interaction: myInteraction, // The user command
+		embed: null, // The game/embed sent
+		timeout: 10 * 60000 // The expiration timer for the game
 	};
 
 	// Adds it to the game object
@@ -66,30 +77,29 @@ function createGame(myInteraction) {
 
 // Starts a new game
 function startGame(game) {
-
 	// Creates the board of buttons
-	const row1 = new ActionRowBuilder()
-		.addComponents(
-			createButton('0', emojis.blank, ButtonStyle.Secondary), // XXX
-			createButton('1', emojis.blank, ButtonStyle.Secondary), // ---
-			createButton('2', emojis.blank, ButtonStyle.Secondary), // ---
-		);
-	const row2 = new ActionRowBuilder()
-		.addComponents(
-			createButton('3', emojis.blank, ButtonStyle.Secondary), // ---
-			createButton('4', emojis.blank, ButtonStyle.Secondary), // XXX
-			createButton('5', emojis.blank, ButtonStyle.Secondary), // ---
-		);
-	const row3 = new ActionRowBuilder()
-		.addComponents(
-			createButton('6', emojis.blank, ButtonStyle.Secondary), // ---
-			createButton('7', emojis.blank, ButtonStyle.Secondary), // ---
-			createButton('8', emojis.blank, ButtonStyle.Secondary), // XXX
-		);
+	const row1 = new ActionRowBuilder().addComponents(
+		createButton('0', emojis.blank, ButtonStyle.Secondary), // XXX
+		createButton('1', emojis.blank, ButtonStyle.Secondary), // ---
+		createButton('2', emojis.blank, ButtonStyle.Secondary) // ---
+	);
+	const row2 = new ActionRowBuilder().addComponents(
+		createButton('3', emojis.blank, ButtonStyle.Secondary), // ---
+		createButton('4', emojis.blank, ButtonStyle.Secondary), // XXX
+		createButton('5', emojis.blank, ButtonStyle.Secondary) // ---
+	);
+	const row3 = new ActionRowBuilder().addComponents(
+		createButton('6', emojis.blank, ButtonStyle.Secondary), // ---
+		createButton('7', emojis.blank, ButtonStyle.Secondary), // ---
+		createButton('8', emojis.blank, ButtonStyle.Secondary) // XXX
+	);
 	game.buttons = [row1, row2, row3];
 	game.player1 = game.interaction.user;
 
-	if (!game.interaction.options.getUser('user') || game.interaction.options.getUser('user').id == game.interaction.client.user) {
+	if (
+		!game.interaction.options.getUser('user') ||
+		game.interaction.options.getUser('user').id == game.interaction.client.user
+	) {
 		// Playing against the bot
 		startGameBot(game);
 	} else {
@@ -130,25 +140,33 @@ async function startGameBot(game) {
 	game.playerWinRate = await getWinRate(game);
 	game.botMessage = generateRandomMessage(await determineMistakeChance(game.playerWinRate));
 
-	game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+	game.board = [
+		[0, 0, 0],
+		[0, 0, 0],
+		[0, 0, 0]
+	];
 
 	const tictactoeEmbed = newEmbed()
 		.setTitle('Tic-Tac-Toe')
 		.setColor(colors.tictactoeCommand)
-		.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingBot}\n${game.botMessage}`)
+		.setDescription(
+			`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingBot}\n${game.botMessage}`
+		)
 		.addFields({
 			name: 'Time Left',
 			value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
-			inline: true,
+			inline: true
 		});
 
 	// Sends the game
-	game.interaction.editReply({ embeds : [tictactoeEmbed], components: game.buttons }).then(async e => {
-		game.embed = e;
+	game.interaction
+		.editReply({ embeds: [tictactoeEmbed], components: game.buttons })
+		.then(async (e) => {
+			game.embed = e;
 
-		// Waits for the user's input
-		awaitInput(game);
-	});
+			// Waits for the user's input
+			awaitInput(game);
+		});
 }
 
 // Initializes the game to play against another user
@@ -167,65 +185,81 @@ function startGameUser(game) {
 		return;
 	}
 
-	const confirmationRow = new ActionRowBuilder()
-		.addComponents(
-			createButton('yes', emojis.confirm, ButtonStyle.Success),
-			createButton('no', emojis.deny, ButtonStyle.Danger),
-		);
+	const confirmationRow = new ActionRowBuilder().addComponents(
+		createButton('yes', emojis.confirm, ButtonStyle.Success),
+		createButton('no', emojis.deny, ButtonStyle.Danger)
+	);
 
 	// Embed to ask player2
 	const requestEmbed = newEmbed()
 		.setTitle('Tic-Tac-Toe Duel Request')
 		.setColor(colors.tictactoeCommand)
-		.setDescription(`<@${game.player1.id}> is challenging you to a game!\nClick below if you wish to accept!`)
+		.setDescription(
+			`<@${game.player1.id}> is challenging you to a game!\nClick below if you wish to accept!`
+		)
 		.addFields({
 			name: 'Time to Accept',
 			value: `<t:${Math.round((new Date().getTime() + 60000) / 1000)}:R>`,
-			inline: true,
+			inline: true
 		});
 
 	// Sends the game to the channel and waits for confirmation
-	game.interaction.editReply({ content: `<@${game.player2.id}>`, embeds: [requestEmbed], components:[confirmationRow] }).then(async embed => {
+	game.interaction
+		.editReply({
+			content: `<@${game.player2.id}>`,
+			embeds: [requestEmbed],
+			components: [confirmationRow]
+		})
+		.then(async (embed) => {
+			// Waits to accept request
+			const confirmationCollector = embed.createMessageComponentCollector({
+				componentType: ComponentType.Button,
+				time: 1 * 60000
+			});
+			confirmationCollector.on('collect', (button) => {
+				button.deferUpdate();
+				if (button.user.id !== game.player2.id) return;
 
-		// Waits to accept request
-		const confirmationCollector = embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: 1 * 60000 });
-		confirmationCollector.on('collect', (button) => {
-			button.deferUpdate();
-			if (button.user.id !== game.player2.id) return;
+				if (button.customId == 'no' && !game.player2Accepted) deniedRequest(game, false);
 
-			if (button.customId == 'no' && !game.player2Accepted) deniedRequest(game, false);
+				// Player2 accepted request
+				game.player2Accepted = true;
+				confirmationCollector.stop(); // Disposes of the collector
 
-			// Player2 accepted request
-			game.player2Accepted = true;
-			confirmationCollector.stop(); // Disposes of the collector
+				game.board = [
+					[0, 0, 0],
+					[0, 0, 0],
+					[0, 0, 0]
+				];
 
-			game.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+				const tictactoeEmbed = newEmbed()
+					.setTitle('Tic-Tac-Toe')
+					.setColor(colors.tictactoeCommand)
+					.setDescription(
+						`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingPlayer}`
+					)
+					.addFields({
+						name: 'Time Left',
+						value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
+						inline: true
+					});
 
-			const tictactoeEmbed = newEmbed()
-				.setTitle('Tic-Tac-Toe')
-				.setColor(colors.tictactoeCommand)
-				.setDescription(`${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${emojis.waitingPlayer}`)
-				.addFields({
-					name: 'Time Left',
-					value: `<t:${Math.round((new Date().getTime() + game.timeout) / 1000)}:R>`,
-					inline: true,
-				});
+				// Sends the game
+				game.interaction
+					.editReply({ embeds: [tictactoeEmbed], components: game.buttons })
+					.then(async (e) => {
+						game.embed = e;
 
-			// Sends the game
-			game.interaction.editReply({ embeds : [tictactoeEmbed], components: game.buttons }).then(async e => {
-				game.embed = e;
-
-				// Waits for the user's input
-				awaitInput(game);
+						// Waits for the user's input
+						awaitInput(game);
+					});
 			});
 
+			// Ran out of time
+			confirmationCollector.on('end', () => {
+				if (!game.player2Accepted) deniedRequest(game, true);
+			});
 		});
-
-		// Ran out of time
-		confirmationCollector.on('end', () => {
-			if (!game.player2Accepted) deniedRequest(game, true);
-		});
-	});
 }
 
 // If the user denies the request, delete the game from memory
@@ -241,12 +275,19 @@ function deniedRequest(game, timeout) {
 }
 
 function awaitInput(game) {
-	game.componentCollector = game.embed.createMessageComponentCollector({ componentType: ComponentType.Button, time: game.timeout });
+	game.componentCollector = game.embed.createMessageComponentCollector({
+		componentType: ComponentType.Button,
+		time: game.timeout
+	});
 
 	// Detects and sends the move the player wants
 	game.componentCollector.on('collect', (button) => {
 		button.deferUpdate();
-		if ((game.player1Turn && button.user.id !== game.player1.id) || (!game.player1Turn && button.user.id !== game.player2.id)) return; // Used linear algebra solver to invert this
+		if (
+			(game.player1Turn && button.user.id !== game.player1.id) ||
+			(!game.player1Turn && button.user.id !== game.player2.id)
+		)
+			return; // Used linear algebra solver to invert this
 		gameLoop(game, button.customId);
 	});
 
@@ -288,7 +329,7 @@ async function gameLoop(game, move) {
 			description = `${emojis.currentPlayer} <@${game.player1.id}> vs. <@${game.player2.id}> ${game.bot ? emojis.waitingBot : emojis.waitingPlayer}`;
 		}
 
-		if (game.botMessage != '') description += `\n${ game.botMessage}`;
+		if (game.botMessage != '') description += `\n${game.botMessage}`;
 
 		// Resend message
 		const lastEmbed = game.embed.embeds[0];
@@ -314,7 +355,6 @@ async function gameLoop(game, move) {
 
 	await sleep(Math.random() * 1000);
 	gameLoop(game, botMove);
-
 }
 
 // Determines the bot's chance of making a mistake based on the player's win rate
@@ -333,7 +373,7 @@ function findRandomMove(game) {
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
 			if (game.board[y][x] != 0) continue; // Already a move there
-			validMoves.push((y * 3) + (x % 3));
+			validMoves.push(y * 3 + (x % 3));
 		}
 	}
 
@@ -342,7 +382,7 @@ function findRandomMove(game) {
 
 // Sleep function for a small pause
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Finds the best move for the bot to make (minimizer)
@@ -358,9 +398,10 @@ function findBestMove(game) {
 			game.board[y][x] = -1; // Makes the move
 			const moveEval = MinimaxAlphaBeta(game.board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
 
-			if (moveEval < bestEval) { // Minimizing
+			if (moveEval < bestEval) {
+				// Minimizing
 				bestEval = moveEval;
-				bestMove = (y * 3) + (x % 3);
+				bestMove = y * 3 + (x % 3);
 			}
 
 			game.board[y][x] = 0; // Unmake the move
@@ -375,8 +416,8 @@ function findBestMove(game) {
 function MinimaxAlphaBeta(board, depth, alpha, beta, isMaximizingPlayer) {
 	const score = checkWinner(board);
 
-	if (score == 1) return (score * 10) - depth; // Player won
-	if (score == -1) return (score * 10) + depth; // Bot won
+	if (score == 1) return score * 10 - depth; // Player won
+	if (score == -1) return score * 10 + depth; // Bot won
 	if (score == 2) return 0; // Tie
 
 	if (isMaximizingPlayer) {
@@ -437,11 +478,10 @@ function updateDisplay(game, board) {
 			const pos = board[y][x];
 
 			// Sets the buttons
-			game.buttons[y].components[x].setStyle(
-				pos == 0 ? ButtonStyle.Secondary : ButtonStyle.Primary,
-			).setEmoji(
-				pos == 0 ? emojis.blank : pos == -1 ? emojis.O : emojis.X,
-			).setDisabled(pos != 0);
+			game.buttons[y].components[x]
+				.setStyle(pos == 0 ? ButtonStyle.Secondary : ButtonStyle.Primary)
+				.setEmoji(pos == 0 ? emojis.blank : pos == -1 ? emojis.O : emojis.X)
+				.setDisabled(pos != 0);
 		}
 	}
 }
@@ -453,12 +493,14 @@ function checkWinner(board) {
 
 	// Rows
 	for (let y = 0; y < 3; y++) {
-		if (board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0) winner = board[y][0];
+		if (board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0)
+			winner = board[y][0];
 	}
 
 	// Columns
 	for (let x = 0; x < 3; x++) {
-		if (board[0][x] == board[1][x] && board[0][x] == board[2][x] && board[0][x] != 0) winner = board[0][x];
+		if (board[0][x] == board[1][x] && board[0][x] == board[2][x] && board[0][x] != 0)
+			winner = board[0][x];
 	}
 
 	// Positive diagonal
@@ -510,15 +552,14 @@ function displayWinningPositions(game, board) {
 		game.buttons[1].components[1].setStyle(ButtonStyle.Success);
 		game.buttons[2].components[2].setStyle(ButtonStyle.Success);
 	}
-
 }
 
 // Ends the game after someone wins
 function gameEnded(game) {
 	displayWinningPositions(game, game.board);
 
-	saveData(game.player1.id, game.winner == 2 ? 0 : game.winner, game.bot);	// Saves p1
-	saveData(game.player2.id, game.winner == 2 ? 0 : -game.winner, false); 		// Saves p2 (works for PastaBot too!)
+	saveData(game.player1.id, game.winner == 2 ? 0 : game.winner, game.bot); // Saves p1
+	saveData(game.player2.id, game.winner == 2 ? 0 : -game.winner, false); // Saves p2 (works for PastaBot too!)
 
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
@@ -532,12 +573,17 @@ function gameEnded(game) {
 	if (game.winner == 2) {
 		description = 'Tie!';
 	} else {
-		description = game.winner == 1 ? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!` : `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
+		description =
+			game.winner == 1
+				? `<@${game.player1.id}> wins! Sorry <@${game.player2.id}>!`
+				: `<@${game.player2.id}> wins! Sorry <@${game.player1.id}>!`;
 	}
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
-	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields();
+	const embed = EmbedBuilder.from(lastEmbed)
+		.setDescription(`${description}\nThanks for playing! :grin:`)
+		.setFields();
 
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });
@@ -546,9 +592,8 @@ function gameEnded(game) {
 
 // Ends the game if someone takes too long
 function ranOutOfTime(game) {
-
-	saveData(game.player1.id, game.player1Turn ? -1 : 1, game.bot);	// Saves p1
-	saveData(game.player2.id, game.player1Turn ? 1 : -1, false);	// Saves p2 (works for PastaBot too!)
+	saveData(game.player1.id, game.player1Turn ? -1 : 1, game.bot); // Saves p1
+	saveData(game.player2.id, game.player1Turn ? 1 : -1, false); // Saves p2 (works for PastaBot too!)
 
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
@@ -565,7 +610,9 @@ function ranOutOfTime(game) {
 
 	// Updates the message
 	const lastEmbed = game.embed.embeds[0];
-	const embed = EmbedBuilder.from(lastEmbed).setDescription(`${description}\nThanks for playing! :grin:`).setFields();
+	const embed = EmbedBuilder.from(lastEmbed)
+		.setDescription(`${description}\nThanks for playing! :grin:`)
+		.setFields();
 
 	// Removes the game from memory
 	game.interaction.editReply({ embeds: [embed], components: game.buttons });
@@ -580,9 +627,11 @@ async function saveData(userid, final, bot) {
 
 	// Checks to see if the user is in the database
 	if (!data) {
-		logger.child({ mode: 'DATABASE', metaData: { userID: userid } }).info('Creating new user stats for tictactoe');
+		logger
+			.child({ mode: 'DATABASE', metaData: { userID: userid } })
+			.info('Creating new user stats for tictactoe');
 		const tictactoeStats = await tictactoeStatsSchema.create({
-			userID: userid,
+			userID: userid
 		});
 		database.writeToDatabase(tictactoeStats, 'NEW TICTACTOE STATS');
 
@@ -590,16 +639,19 @@ async function saveData(userid, final, bot) {
 	}
 
 	// Updates the stats of the user
-	const newTictactoeStats = await tictactoeStatsSchema.findOneAndUpdate({ userID: userid }, {
-		winsHuman: data.winsHuman + (!bot && final == 1 ? 1 : 0),
-		winsBot: data.winsBot + (bot && final == 1 ? 1 : 0),
-		wins: data.wins + (final == 1 ? 1 : 0),
-		lossesHuman: data.lossesHuman + (!bot && final == -1 ? 1 : 0),
-		lossesBot: data.lossesBot + (bot && final == -1 ? 1 : 0),
-		totalHuman: data.totalHuman + (!bot ? 1 : 0),
-		totalBot: data.totalBot + (bot ? 1 : 0),
-		totalGames: data.totalGames + 1,
-	});
+	const newTictactoeStats = await tictactoeStatsSchema.findOneAndUpdate(
+		{ userID: userid },
+		{
+			winsHuman: data.winsHuman + (!bot && final == 1 ? 1 : 0),
+			winsBot: data.winsBot + (bot && final == 1 ? 1 : 0),
+			wins: data.wins + (final == 1 ? 1 : 0),
+			lossesHuman: data.lossesHuman + (!bot && final == -1 ? 1 : 0),
+			lossesBot: data.lossesBot + (bot && final == -1 ? 1 : 0),
+			totalHuman: data.totalHuman + (!bot ? 1 : 0),
+			totalBot: data.totalBot + (bot ? 1 : 0),
+			totalGames: data.totalGames + 1
+		}
+	);
 
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
@@ -608,42 +660,63 @@ function generateHelpMenu() {
 	return newEmbed()
 		.setTitle('How to Play Tic-Tac-Toe ❌⭕')
 		.setColor(colors.tictactoeCommand)
-		.setDescription('__Tic-Tac-Toe__ is a two-player game of Xs and Os. Each player takes turns placing their respective piece on the 3x3 game board. You can challenge your friend to a duel or test your skills against PastaBot himself!')
-		.addFields({
-			name: 'Winning 😏',
-			value: 'The game is won when you get all of your pieces in a row or diaganol of 3. Try to sneakily setup a position where you can get 2 rows at a same time! Your opponent can only block one >:)',
-		}, {
-			name: 'Bot 🍝',
-			value: 'PastaBot has been practicing his skills just for you, adapting his play depending on how good you are. Be warned, he might get a bit cocky sometimes...',
-		});
+		.setDescription(
+			'__Tic-Tac-Toe__ is a two-player game of Xs and Os. Each player takes turns placing their respective piece on the 3x3 game board. You can challenge your friend to a duel or test your skills against PastaBot himself!'
+		)
+		.addFields(
+			{
+				name: 'Winning 😏',
+				value: 'The game is won when you get all of your pieces in a row or diaganol of 3. Try to sneakily setup a position where you can get 2 rows at a same time! Your opponent can only block one >:)'
+			},
+			{
+				name: 'Bot 🍝',
+				value: 'PastaBot has been practicing his skills just for you, adapting his play depending on how good you are. Be warned, he might get a bit cocky sometimes...'
+			}
+		);
 }
 
 // Sends the different leaderboards to the user depending on the type
 async function leaderboards(interaction) {
-	if (interaction.options.getString('type') == 'played') { // Most plays
+	if (interaction.options.getString('type') == 'played') {
+		// Most plays
 
 		// Gets all users who have played at least 1 game
-		const users = await tictactoeStatsSchema.find({ totalGames : { $gt : 0 } });
+		const users = await tictactoeStatsSchema.find({ totalGames: { $gt: 0 } });
 
 		// Creates the embed
 		const mostPlayedEmbed = newEmbed()
 			.setTitle('Leaderboard - Most Played')
 			.setColor(colors.tictactoeCommand)
-			.setDescription(leaderboardMulti(users, false, ['totalGames', 'totalBot', 'totalHuman'], ['Total Games', 'Total Bot Games', 'Total Human Games'], interaction.user.id));
+			.setDescription(
+				leaderboardMulti(
+					users,
+					false,
+					['totalGames', 'totalBot', 'totalHuman'],
+					['Total Games', 'Total Bot Games', 'Total Human Games'],
+					interaction.user.id
+				)
+			);
 		interaction.editReply({ embeds: [mostPlayedEmbed] });
-
-	} else if (interaction.options.getString('type') == 'wins') { // Most wins
+	} else if (interaction.options.getString('type') == 'wins') {
+		// Most wins
 
 		// Gets all users who have won at least 1 game
-		const users = await tictactoeStatsSchema.find({ wins : { $gt : 0 } });
+		const users = await tictactoeStatsSchema.find({ wins: { $gt: 0 } });
 
 		// Creates the embed
 		const mostWinsEmbed = newEmbed()
 			.setTitle('Leaderboard - Most Wins')
 			.setColor(colors.tictactoeCommand)
-			.setDescription(leaderboardMulti(users, false, ['wins', 'winsBot', 'winsHuman'], ['Total Wins', 'Bot Wins', 'Human Wins'], interaction.user.id));
+			.setDescription(
+				leaderboardMulti(
+					users,
+					false,
+					['wins', 'winsBot', 'winsHuman'],
+					['Total Wins', 'Bot Wins', 'Human Wins'],
+					interaction.user.id
+				)
+			);
 		interaction.editReply({ embeds: [mostWinsEmbed] });
-
 	}
 }
 
@@ -651,13 +724,15 @@ async function leaderboards(interaction) {
 async function generateStatsEmbed(interaction) {
 	// Boolean whether the user is searching for another user
 	const otherUser = interaction.options.getUser('user') != null;
-	const stats = await tictactoeStatsSchema.findOne({ userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id });
+	const stats = await tictactoeStatsSchema.findOne({
+		userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id
+	});
 
 	if (stats == null) {
 		const warnEmbed = newEmbed()
 			.setTitle('No Data')
 			.setColor(colors.warn)
-			.setDescription('You haven\'t played any games!');
+			.setDescription("You haven't played any games!");
 		interaction.editReply({ embeds: [warnEmbed] });
 		return;
 	}
@@ -676,7 +751,7 @@ Draws: \`${stats.totalGames - stats.wins - stats.lossesBot - stats.lossesHuman}\
 Losses: \`${stats.lossesBot + stats.lossesHuman}\` | \`${stats.lossesBot}\` | \`${stats.lossesHuman}\`\n
 **Win Ratio**: \`${stats.totalGames != 0 ? Math.round((stats.wins / stats.totalGames) * 1000) / 10 : 0}%\`
 Bot: \`${stats.totalBot != 0 ? Math.round((stats.winsBot / stats.totalBot) * 1000) / 10 : 0}%\`
-Human: \`${stats.totalHuman != 0 ? Math.round((stats.winsHuman / stats.totalHuman) * 1000) / 10 : 0}%\``,
+Human: \`${stats.totalHuman != 0 ? Math.round((stats.winsHuman / stats.totalHuman) * 1000) / 10 : 0}%\``
 		);
 
 	interaction.editReply({ embeds: [statsEmbed] });
@@ -689,44 +764,45 @@ module.exports = {
 		.setDescription('A tic-tac-toe minigame')
 
 		// start game
-		.addSubcommand(subcommand => subcommand
-			.setName('start')
-			.setDescription('Start a game of tictactoe')
-			.addUserOption(option => option
-				.setName('user')
-				.setDescription('The user you wish to play against'),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('start')
+				.setDescription('Start a game of tictactoe')
+				.addUserOption((option) =>
+					option.setName('user').setDescription('The user you wish to play against')
+				)
 		)
 
 		// help
-		.addSubcommand(subcommand => subcommand
-			.setName('help')
-			.setDescription('Open a help menu on tic-tac-toe'),
+		.addSubcommand((subcommand) =>
+			subcommand.setName('help').setDescription('Open a help menu on tic-tac-toe')
 		)
 
 		// leaderboards
-		.addSubcommand(subcommand => subcommand
-			.setName('leaderboards')
-			.setDescription('Showcases the global leaderboards for tic-tac-toe')
-			.addStringOption(option => option
-				.setName('type')
-				.setDescription('The type of leaderboard to show')
-				.setRequired(true)
-				.addChoices(
-					{ name: 'most played', value: 'played' },
-					{ name: 'most wins', value: 'wins' },
-				),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('leaderboards')
+				.setDescription('Showcases the global leaderboards for tic-tac-toe')
+				.addStringOption((option) =>
+					option
+						.setName('type')
+						.setDescription('The type of leaderboard to show')
+						.setRequired(true)
+						.addChoices(
+							{ name: 'most played', value: 'played' },
+							{ name: 'most wins', value: 'wins' }
+						)
+				)
 		)
 
 		// user stats
-		.addSubcommand(subcommand => subcommand
-			.setName('stats')
-			.setDescription('Gets the stats of a user')
-			.addUserOption(option => option
-				.setName('user')
-				.setDescription('The user to view the stats of'),
-			),
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('stats')
+				.setDescription('Gets the stats of a user')
+				.addUserOption((option) =>
+					option.setName('user').setDescription('The user to view the stats of')
+				)
 		),
 
 	category: 'minigames',
@@ -746,6 +822,5 @@ module.exports = {
 				generateStatsEmbed(interaction);
 				break;
 		}
-
-	},
+	}
 };

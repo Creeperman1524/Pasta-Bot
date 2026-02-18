@@ -23,30 +23,36 @@ const runTasks = async (client) => {
 				break;
 
 			case 'INTERVAL':
-			// Set the interval in seconds, or defaults to 30 seconds
+				// Set the interval in seconds, or defaults to 30 seconds
 				task.execute(client);
 				setInterval(task.execute, task.interval * 1000 || 30000, client);
 				break;
 			case 'TIME':
-			// Runs the task at a specified time, or defaults to midnight
-				runAtSpecificTimeOfDay(task.timeHour || 0, task.timeMinutes || 0, task.execute, client);
+				// Runs the task at a specified time, or defaults to midnight
+				runAtSpecificTimeOfDay(
+					task.timeHour || 0,
+					task.timeMinutes || 0,
+					task.execute,
+					client
+				);
 				break;
 		}
 	}
 
 	logger.child({ mode: 'TASKS' }).info('Tasks have been initialized');
-
 };
 
 // Thanks to Farhad Taran at https://gist.github.com/farhad-taran/f487a07c16fd53ee08a12a90cdaea082
 function runAtSpecificTimeOfDay(hour, minutes, func, client) {
 	const twentyFourHours = 86400000;
 	const now = new Date();
-	let eta_ms = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minutes, 0, 0).getTime() - now;
+	let eta_ms =
+		new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minutes, 0, 0).getTime() -
+		now;
 	if (eta_ms < 0) {
 		eta_ms += twentyFourHours;
 	}
-	setTimeout(function() {
+	setTimeout(function () {
 		// Run once on bot startup at the next time
 		func(client);
 
