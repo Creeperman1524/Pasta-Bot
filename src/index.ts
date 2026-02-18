@@ -1,12 +1,29 @@
-require('dotenv').config();
-const fs = require('fs');
-const { Client, Collection, Events, GatewayIntentBits, Partials } = require('discord.js');
+import dotenv from 'dotenv';
+dotenv.config();
 
-const { logger } = require('./logging.js');
-const { runTasks } = require('./tasks');
-const { newEmbed, colors } = require('./util/embeds.js');
+import fs from 'fs';
+import {
+	AutocompleteInteraction,
+	CacheType,
+	ChatInputCommandInteraction,
+	Client,
+	Collection,
+	Events,
+	GatewayIntentBits,
+	MessageReaction,
+	PartialMessageReaction,
+	Partials,
+	PartialUser,
+	Role,
+	User
+} from 'discord.js';
+import { Bot } from './util/types/bot.js';
 
-const guildConfigSchema = require('./schemas/guildConfigs.js');
+import { logger } from './logging.js';
+import { runTasks } from './tasks.js';
+import { newEmbed, colors } from './util/embeds.js';
+
+import guildConfigSchema from './schemas/guildConfigs.js';
 
 // Creates the bot client
 const client = new Client({
@@ -17,21 +34,23 @@ const client = new Client({
 		GatewayIntentBits.GuildMessages
 	],
 	partials: [Partials.Message, Partials.User, Partials.Reaction]
-});
+}) as Bot;
 
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./src/commands');
 
 // Gather commands from folders
-for (const folder of commandFolders) {
-	const commandFiles = fs
-		.readdirSync(`./src/commands/${folder}`)
-		.filter((file) => file.endsWith('.js'));
-	for (const file of commandFiles) {
-		const command = require(`./commands/${folder}/${file}`);
-		client.commands.set(command.data.name, command);
+(async () => {
+	for (const folder of commandFolders) {
+		const commandFiles = fs
+			.readdirSync(`./src/commands/${folder}`)
+			.filter((file) => file.endsWith('.js'));
+		for (const file of commandFiles) {
+			const command = await import(`./commands/${folder}/${file}`);
+			client.commands.set(command.data.name, command);
+		}
 	}
-}
+})();
 
 // Runs when the bot is online
 client.once(Events.ClientReady, async () => {
@@ -42,12 +61,13 @@ client.once(Events.ClientReady, async () => {
 
 // Interaction handling
 client.on(Events.InteractionCreate, async (interaction) => {
-	if (interaction.isCommand()) interactionCommand(interaction);
+	if (interaction.isCommand())
+		interactionCommand(interaction as ChatInputCommandInteraction<CacheType>);
 	if (interaction.isAutocomplete()) autocompleteCommand(interaction);
 });
 
 // Command handling
-async function interactionCommand(interaction) {
+async function interactionCommand(interaction: ChatInputCommandInteraction<CacheType>) {
 	const command = client.commands.get(interaction.commandName); // Gets the corresponding command
 
 	if (!command) return; // If the command doesn't exist, return
@@ -62,13 +82,13 @@ async function interactionCommand(interaction) {
 				metaData: {
 					user: interaction.user.username,
 					userid: interaction.user.id,
-					guild: interaction.guild.name,
-					guildid: interaction.guild.id,
-					subcommand: interaction.options._subcommand
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id,
+					subcommand: interaction.options.getSubcommand()
 				}
 			})
 			.info(
-				`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild.name}'`
+				`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild?.name}'`
 			);
 		await command.execute(interaction);
 	} catch (error) {
@@ -78,9 +98,9 @@ async function interactionCommand(interaction) {
 				metaData: {
 					user: interaction.user.username,
 					userid: interaction.user.id,
-					guild: interaction.guild.name,
-					guildid: interaction.guild.id,
-					subcommand: interaction.options._subcommand
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id,
+					subcommand: interaction.options.getSubcommand()
 				}
 			})
 			.error(error);
@@ -91,13 +111,12 @@ async function interactionCommand(interaction) {
 			.setDescription('There was an error trying to execute that command!');
 
 		return interaction.editReply({
-			embeds: [errorEmbed],
-			ephemeral: true
+			embeds: [errorEmbed]
 		});
 	}
 }
 
-async function autocompleteCommand(interaction) {
+async function autocompleteCommand(interaction: AutocompleteInteraction<CacheType>) {
 	const command = client.commands.get(interaction.commandName);
 
 	try {
@@ -109,8 +128,8 @@ async function autocompleteCommand(interaction) {
 				metaData: {
 					user: interaction.user.username,
 					userid: interaction.user.id,
-					guild: interaction.guild.name,
-					guildid: interaction.guild.id,
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id,
 					command: interaction.commandName,
 					commandid: interaction.commandId
 				}
@@ -128,8 +147,12 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 	reactionRoleHandler(reaction, user, 'remove');
 });
 
-async function reactionRoleHandler(reaction, user, method) {
-	if (user.id == client.user.id) return;
+async function reactionRoleHandler(
+	reaction: MessageReaction | PartialMessageReaction,
+	user: User | PartialUser,
+	method: 'add' | 'remove'
+) {
+	if (user.id == client.user?.id) return;
 
 	// Reads from the database
 	const data = await guildConfigSchema.findOne({ guildID: reaction.message.guildId });
@@ -149,54 +172,54 @@ async function reactionRoleHandler(reaction, user, method) {
 	const reactionMessages = data.reactionMessages;
 	if (!reactionMessages[reaction.message.id]) return;
 
-	let role;
+	let role: Role | undefined | null;
 	// Tries to find the role in the server
 	for (const storageRole of reactionMessages[reaction.message.id]) {
 		if (storageRole[1] == reaction.emoji.name) {
-			role = await reaction.message.guild.roles.fetch(storageRole[0]);
+			role = await reaction.message.guild?.roles.fetch(storageRole[0]);
 		}
 	}
 
 	if (role) {
-		const member = await reaction.message.guild.members.cache.find((mem) => mem.id === user.id);
+		const member = reaction.message.guild?.members.cache.find((mem) => mem.id === user.id);
 		try {
 			// Gives the user the role
 			switch (method) {
 				case 'add':
 					// NOTE: Does not work when the user has not been cached (no messages sent after restart)
-					await member.roles.add(role);
+					await member?.roles.add(role);
 					logger
 						.child({
 							mode: 'REACTION ROLES',
 							metaData: {
 								user: user.username,
 								userid: user.id,
-								guild: reaction.message.guild.name,
+								guild: reaction.message.guild?.name,
 								guildid: reaction.message.guildId,
 								role: role.name,
 								roleid: role.id
 							}
 						})
 						.info(
-							`Added '${role.name}' to user '${member.user.username}' in guild '${reaction.message.guild.name}'`
+							`Added '${role.name}' to user '${member?.user.username}' in guild '${reaction.message.guild?.name}'`
 						);
 					break;
 				case 'remove':
-					await member.roles.remove(role);
+					await member?.roles.remove(role);
 					logger
 						.child({
 							mode: 'REACTION ROLES',
 							metaData: {
 								user: user.username,
 								userid: user.id,
-								guild: reaction.message.guild.name,
+								guild: reaction.message.guild?.name,
 								guildid: reaction.message.guildId,
 								role: role.name,
 								roleid: role.id
 							}
 						})
 						.info(
-							`Removed '${role.name}'to user '${member.user.username}' in guild '${reaction.message.guild.name}'`
+							`Removed '${role.name}'to user '${member?.user.username}' in guild '${reaction.message.guild?.name}'`
 						);
 					break;
 			}
@@ -207,7 +230,7 @@ async function reactionRoleHandler(reaction, user, method) {
 					metaData: {
 						user: user.username,
 						userid: user.id,
-						guild: reaction.message.guild.name,
+						guild: reaction.message.guild?.name,
 						guildid: reaction.message.guildId,
 						role: role.name,
 						roleid: role.id
@@ -223,7 +246,7 @@ async function reactionRoleHandler(reaction, user, method) {
 				metaData: {
 					user: user.username,
 					userid: user.id,
-					guild: reaction.message.guild.name,
+					guild: reaction.message.guild?.name,
 					guildid: reaction.message.guildId
 				}
 			})
