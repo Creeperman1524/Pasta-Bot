@@ -1,9 +1,10 @@
-const { logger } = require('../logging.js');
-const deployCommands = require('../deploy-commands.js');
-const { commandRefreshInterval } = require('../config.json');
+import { logger } from '../logging';
+import deployCommands from '../deploy-commands.js';
+import { commandRefreshInterval } from '../config.json';
+import { TaskOnce } from '../util/types/task.js';
 
-const database = require('../util/database.js');
-const botConfig = require('../schemas/botConfigs.js');
+import database from '../util/database.js';
+import botConfig from '../schemas/botConfigs.js';
 
 module.exports = {
 	name: 'updateCommands',
@@ -28,21 +29,21 @@ module.exports = {
 		}
 
 		// Refreshes commands only if it hasn't within the last 30 minutes
-		if (data.commandsLastUpdated < currentTime) {
+		if (parseInt(data.commandsLastUpdated) < currentTime) {
 			await deployCommands.execute(client);
 
 			// Updates time to the database
 			const updatedTime = await botConfig.findOneAndUpdate({
 				botID: process.env.clientID,
-				commandsLastUpdated: currentTime + commandRefreshInterval * 60000
+				commandsLastUpdated: currentTime + parseInt(commandRefreshInterval) * 60000
 			});
 			database.writeToDatabase(updatedTime, 'UPDATED BOT TIME');
 		} else {
 			logger
 				.child({ mode: 'DEPLOY' })
 				.info(
-					`Commands will be refreshed on startup in ${Math.floor((data.commandsLastUpdated - currentTime) / 60000)} minutes`
+					`Commands will be refreshed on startup in ${Math.floor((parseInt(data.commandsLastUpdated) - currentTime) / 60000)} minutes`
 				);
 		}
 	}
-};
+} as TaskOnce;

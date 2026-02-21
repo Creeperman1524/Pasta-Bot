@@ -1,4 +1,4 @@
-const { createLogger, transports, format } = require('winston');
+import { createLogger, transports, format } from 'winston';
 
 // Logging
 const logLevels = {
@@ -13,7 +13,7 @@ const consoleFormat = format.printf(({ level, message, mode }) => {
 	return `[${mode}] ${level}: ${message}`;
 });
 
-exports.logger = createLogger({
+const logger = createLogger({
 	levels: logLevels,
 	defaultMeta: { loggingVersion: 1 },
 	format: format.combine(format.timestamp(), format.json()),
@@ -22,7 +22,9 @@ exports.logger = createLogger({
 			level: 'debug',
 			format: format.combine(format.colorize(), consoleFormat)
 		}),
-		new transports.File({ level: 'info', filename: './logs/log.log', timestamp: true }),
-		new transports.File({ level: 'error', filename: './logs/error.log', timestamp: true })
+		new transports.File({ level: 'info', filename: './logs/log.log' }),
+		new transports.File({ level: 'error', filename: './logs/error.log' })
 	]
 });
+
+export { logger };

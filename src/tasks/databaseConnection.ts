@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const { logger } = require('../logging.js');
+import mongoose from 'mongoose';
+import { logger } from '../logging';
+import { TaskOnce } from '../util/types/task.js';
 
 module.exports = {
 	name: 'databaseConnection',
@@ -7,11 +8,17 @@ module.exports = {
 
 	async execute() {
 		// Connects to the database
+		const connectionString = process.env.mongoDB;
+		if (!connectionString) {
+			logger.child({ mode: 'DATABASE' }).error('Missing connection string for MongoDB');
+			return;
+		}
+
 		mongoose.Promise = global.Promise;
 		mongoose.set('strictQuery', true);
-		await mongoose.connect(process.env.mongoDB, {});
+		await mongoose.connect(connectionString, {});
 	}
-};
+} as TaskOnce;
 
 // Alerts about connection, outages, and errors
 mongoose.connection.once('connected', () => {

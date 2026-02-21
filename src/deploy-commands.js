@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { REST, Routes } = require('discord.js');
 
-const { logger } = require('./logging.js');
+const { logger } = require('./logging');
 
 const rest = new REST().setToken(process.env.token);
 

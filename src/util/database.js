@@ -1,4 +1,4 @@
-const { logger } = require('../logging.js');
+const { logger } = require('../logging');
 
 /**
  * Logs some information about the data being saved and saves it to the database

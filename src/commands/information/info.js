@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 const { newEmbed, colors } = require('../../util/embeds.js');
-const { logger } = require('../../logging.js');
+const { logger } = require('../../logging');
 
 const fetch = require('node-fetch');
 const buildDate = new Date();

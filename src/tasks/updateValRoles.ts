@@ -1,9 +1,11 @@
-const { logger } = require('../logging.js');
+import { logger } from '../logging.js';
 
-const valorantConfigSchema = require('../schemas/valorantConfig.js');
-const guildConfigSchema = require('../schemas/guildConfigs.js');
+import valorantConfigSchema from '../schemas/valorantConfig.js';
+import guildConfigSchema from '../schemas/guildConfigs.js';
 
-const { apiRetries } = require('../config.json');
+import { apiRetries } from '../config.json';
+import { TaskTime } from '../util/types/task.js';
+import { GuildMember } from 'discord.js';
 
 const header = {
 	Authorization: process.env.valorantToken
@@ -36,9 +38,9 @@ module.exports = {
 			}
 		}
 	}
-};
+} as TaskTime;
 
-async function updateUser(guildMember, guildData) {
+async function updateUser(guildMember: GuildMember, guildData) {
 	const userData = await valorantConfigSchema.findOne({ userID: guildMember.user.id });
 
 	// No configs set

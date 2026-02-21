@@ -1,25 +1,30 @@
-const { logger } = require('./logging.js');
-const fs = require('fs');
+import { logger } from './logging';
+import fs from 'fs';
+import { Bot } from './util/types/bot.js';
+import { Task } from './util/types/task.js';
 
-const tasks = [];
+const tasks: Task[] = [];
 const taskFiles = fs.readdirSync('./src/tasks');
 
 // Gather tasks from folder
-for (const file of taskFiles) {
-	const task = require(`./tasks/${file}`);
-	tasks.push(task);
-}
+(async () => {
+	for (const file of taskFiles) {
+		const task = await import(`./tasks/${file}`);
+		tasks.push(task);
+	}
+})();
 
 // Runs the tasks
-const runTasks = async (client) => {
+export default async (client: Bot) => {
 	logger.child({ mode: 'TASKS' }).info('Started running tasks...');
 
 	// Runs all tasks
 	for (const task of tasks) {
+		console.log(task);
 		logger.child({ mode: 'TASKS' }).debug(`Running '${task.name}' in mode '${task.mode}'`);
 		switch (task.mode) {
 			case 'ONCE':
-				await task.execute(client);
+				task.execute(client);
 				break;
 
 			case 'INTERVAL':
@@ -43,12 +48,17 @@ const runTasks = async (client) => {
 };
 
 // Thanks to Farhad Taran at https://gist.github.com/farhad-taran/f487a07c16fd53ee08a12a90cdaea082
-function runAtSpecificTimeOfDay(hour, minutes, func, client) {
+function runAtSpecificTimeOfDay(
+	hour: number,
+	minutes: number,
+	func: (client: Bot) => void,
+	client: Bot
+) {
 	const twentyFourHours = 86400000;
 	const now = new Date();
 	let eta_ms =
 		new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minutes, 0, 0).getTime() -
-		now;
+		now.getTime();
 	if (eta_ms < 0) {
 		eta_ms += twentyFourHours;
 	}
@@ -60,5 +70,3 @@ function runAtSpecificTimeOfDay(hour, minutes, func, client) {
 		setInterval(func, twentyFourHours, client);
 	}, eta_ms);
 }
-
-exports.runTasks = runTasks;

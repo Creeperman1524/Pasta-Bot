@@ -19,8 +19,8 @@ import {
 } from 'discord.js';
 import { Bot } from './util/types/bot.js';
 
-import { logger } from './logging.js';
-import { runTasks } from './tasks.js';
+import { logger } from './logging';
+import runTasks from './tasks';
 import { newEmbed, colors } from './util/embeds.js';
 
 import guildConfigSchema from './schemas/guildConfigs.js';
