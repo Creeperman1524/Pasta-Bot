@@ -11,7 +11,7 @@ const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging');
 
 const database = require('../../util/database.js');
-const tictactoeStatsSchema = require('../../schemas/tictactoeStats.js');
+const tictactoeStatsSchema = require('../../schemas/tictactoeStats.schema');
 const { leaderboardMulti } = require('../../util/leaderboard.js');
 
 const games = new Collection();

@@ -3,7 +3,7 @@ const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging');
 
 const database = require('../../util/database.js');
-const guildConfigSchema = require('../../schemas/guildConfigs.js');
+const guildConfigSchema = require('../../schemas/guildConfigs.schema');
 
 module.exports = {
 	data: new SlashCommandBuilder()

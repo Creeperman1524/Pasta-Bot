@@ -3,8 +3,8 @@ const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging');
 
 const database = require('../../util/database.js');
-const valorantConfigSchema = require('../../schemas/valorantConfig.js');
-const guildConfigSchema = require('../../schemas/guildConfigs.js');
+const valorantConfigSchema = require('../../schemas/valorantConfig.schema');
+const guildConfigSchema = require('../../schemas/guildConfigs.schema');
 
 const header = {
 	Authorization: process.env.valorantToken

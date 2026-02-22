@@ -1,14 +1,37 @@
-import { logger } from '../logging.js';
+import { logger } from '../logging';
 
-import valorantConfigSchema from '../schemas/valorantConfig.js';
-import guildConfigSchema from '../schemas/guildConfigs.js';
+import valorantConfigSchema from '../schemas/valorantConfig.schema';
+import guildConfigSchema, { GuildConfigData } from '../schemas/guildConfigs.schema';
 
 import { apiRetries } from '../config.json';
 import { TaskTime } from '../util/types/task.js';
-import { GuildMember } from 'discord.js';
+import { GuildMember, Role } from 'discord.js';
 
-const header = {
-	Authorization: process.env.valorantToken
+const header: HeadersInit = {
+	Authorization: process.env.valorantToken || ''
+};
+
+// From https://docs.henrikdev.xyz/valorant/api-reference/mmr
+type ResponseData = RankData | ErrorResponse;
+
+type RankData = {
+	status: 200;
+	data: {
+		current: {
+			tier: {
+				name: string;
+			};
+		};
+	};
+};
+
+type ErrorResponse = {
+	status: number;
+	errors: {
+		message: string;
+		code: number;
+		details: string;
+	};
 };
 
 module.exports = {
@@ -34,13 +57,13 @@ module.exports = {
 
 			// Loops through each member of the server to update their role
 			for (const guildMember of members) {
-				updateUser(guildMember[1], guildData);
+				await updateUser(guildMember[1], guildData);
 			}
 		}
 	}
 } as TaskTime;
 
-async function updateUser(guildMember: GuildMember, guildData) {
+async function updateUser(guildMember: GuildMember, guildData: GuildConfigData) {
 	const userData = await valorantConfigSchema.findOne({ userID: guildMember.user.id });
 
 	// No configs set
@@ -48,17 +71,17 @@ async function updateUser(guildMember: GuildMember, guildData) {
 
 	const PUUID = userData.puuid;
 
-	let rankData = await getRankData(PUUID);
+	const rankDataResponse = await getRankData(PUUID);
 
 	// Something has gone wrong
-	if (!rankData || rankData.errors || rankData.status != 200) return;
+	if (!rankDataResponse) return;
 
-	rankData = rankData.data;
+	const rankData = rankDataResponse.data;
 	const rank = rankData.current.tier.name;
 	const rankRoleName = rank.split(' ')[0].toLowerCase();
 
 	// Removes all other rank roles
-	const rolesToRemove = [];
+	const rolesToRemove = [] as Role[];
 
 	for (const rankRoleId of Object.values(guildData.valorantRoles)) {
 		const roleToRemove = await guildMember.guild.roles.fetch(rankRoleId);
@@ -85,8 +108,8 @@ async function updateUser(guildMember: GuildMember, guildData) {
 }
 
 // Finds the current rank of the account
-async function getRankData(PUUID) {
-	let rankData;
+async function getRankData(PUUID: string): Promise<RankData | null> {
+	let rankData: ResponseData;
 	let retries = 0;
 
 	// Tries to get the rank
@@ -98,15 +121,21 @@ async function getRankData(PUUID) {
 
 		rankData = rankResponse ? await rankResponse.json() : null;
 
-		// Check for rate limit or other errors
-		if (
-			!rankData ||
-			(rankData.errors && rankData.errors[0].code == 0 && rankData.errors[0].status == 429)
-		) {
-			logger
-				.child({ mode: 'AUTO VALORANT ROLE' })
-				.warn('Rate limited/errored, trying again in 1 minute...');
-			logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
+		// Someting has gone wrong
+		if (rankData.status !== 200) {
+			if (rankData.status == 429) {
+				// Rate limited, try again in a minute
+				logger
+					.child({ mode: 'AUTO VALORANT ROLE' })
+					.warn('Rate limited, trying again in 1 minute...');
+				logger.child({ mode: 'AUTO VALORANT ROLE' }).warn(rankData);
+			} else {
+				// Some other error
+				logger
+					.child({ mode: 'AUTO VALORANT ROLE' })
+					.error('Errored, trying again in 1 minute...');
+				logger.child({ mode: 'AUTO VALORANT ROLE' }).error(rankData);
+			}
 
 			// Waits for a minute before trying again
 			retries++;
@@ -114,16 +143,17 @@ async function getRankData(PUUID) {
 			continue;
 		}
 
-		return rankData;
+		return rankData as RankData;
 	}
 
 	logger
 		.child({ mode: 'AUTO VALORANT ROLE' })
 		.warn('Exceeded rate limit/errored too many times, aborting...');
+
 	return null;
 }
 
 // A function to pause for a certain amount of time
-function sleep(ms) {
+function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

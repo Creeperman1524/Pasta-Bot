@@ -20,7 +20,6 @@ export default async (client: Bot) => {
 
 	// Runs all tasks
 	for (const task of tasks) {
-		console.log(task);
 		logger.child({ mode: 'TASKS' }).debug(`Running '${task.name}' in mode '${task.mode}'`);
 		switch (task.mode) {
 			case 'ONCE':

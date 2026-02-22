@@ -23,7 +23,7 @@ import { logger } from './logging';
 import runTasks from './tasks';
 import { newEmbed, colors } from './util/embeds.js';
 
-import guildConfigSchema from './schemas/guildConfigs.js';
+import guildConfigSchema from './schemas/guildConfigs.schema';
 
 // Creates the bot client
 const client = new Client({

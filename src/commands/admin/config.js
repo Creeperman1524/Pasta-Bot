@@ -4,7 +4,7 @@ const { configs } = require('../../config.json');
 const { logger } = require('../../logging');
 
 const database = require('../../util/database.js');
-const guildConfigSchema = require('../../schemas/guildConfigs.js');
+const guildConfigSchema = require('../../schemas/guildConfigs.schema');
 
 async function setConfig(interaction) {
 	let data = await guildConfigSchema.findOne({ guildID: interaction.guildId });

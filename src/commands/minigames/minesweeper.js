@@ -11,7 +11,7 @@ const { newEmbed, colors } = require('../../util/embeds.js');
 const { logger } = require('../../logging');
 
 const database = require('../../util/database.js');
-const minesweeperStatsSchema = require('../../schemas/minesweeperStats.js');
+const minesweeperStatsSchema = require('../../schemas/minesweeperStats.schema');
 const { leaderboard } = require('../../util/leaderboard.js');
 
 const numOfMines = 10;
