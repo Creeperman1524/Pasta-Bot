@@ -1,5 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 const { logger } = require('../../logging');
 
 const fetch = require('node-fetch');

@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 const { logger } = require('../../logging');
 
-const database = require('../../util/database.js');
+const database = require('../../util/database');
 const valorantConfigSchema = require('../../schemas/valorantConfig.schema');
 const guildConfigSchema = require('../../schemas/guildConfigs.schema');
 

@@ -3,7 +3,7 @@ import deployCommands from '../deploy-commands.js';
 import { commandRefreshInterval } from '../config.json';
 import { TaskOnce } from '../util/types/task.js';
 
-import database from '../util/database.js';
+import database from '../util/database';
 import botConfig from '../schemas/botConfigs.schema';
 
 module.exports = {
@@ -34,13 +34,10 @@ module.exports = {
 
 			// Updates time to the database
 			const updatedTime = await botConfig.findOneAndUpdate(
-				{
-					botID: process.env.clientID
-				},
-				{
-					commandsLastUpdated: currentTime + parseInt(commandRefreshInterval) * 60000
-				}
+				{ botID: process.env.clientID },
+				{ commandsLastUpdated: currentTime + parseInt(commandRefreshInterval) * 60000 }
 			);
+			if (!updatedTime) return;
 			database.writeToDatabase(updatedTime, 'UPDATED BOT TIME');
 		} else {
 			logger

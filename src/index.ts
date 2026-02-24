@@ -21,7 +21,7 @@ import { Bot } from './util/types/bot.js';
 
 import { logger } from './logging';
 import runTasks from './tasks';
-import { newEmbed, colors } from './util/embeds.js';
+import { newEmbed, colors } from './util/embeds';
 
 import guildConfigSchema from './schemas/guildConfigs.schema';
 
@@ -83,8 +83,8 @@ async function interactionCommand(interaction: ChatInputCommandInteraction<Cache
 					user: interaction.user.username,
 					userid: interaction.user.id,
 					guild: interaction.guild?.name,
-					guildid: interaction.guild?.id,
-					subcommand: interaction.options.getSubcommand()
+					guildid: interaction.guild?.id
+					// subcommand: interaction.options.getSubcommand()
 				}
 			})
 			.info(
@@ -99,8 +99,8 @@ async function interactionCommand(interaction: ChatInputCommandInteraction<Cache
 					user: interaction.user.username,
 					userid: interaction.user.id,
 					guild: interaction.guild?.name,
-					guildid: interaction.guild?.id,
-					subcommand: interaction.options.getSubcommand()
+					guildid: interaction.guild?.id
+					// subcommand: interaction.options.getSubcommand()
 				}
 			})
 			.error(error);

@@ -7,12 +7,12 @@ const {
 	EmbedBuilder,
 	SlashCommandBuilder
 } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 const { logger } = require('../../logging');
 
-const database = require('../../util/database.js');
+const database = require('../../util/database');
 const tictactoeStatsSchema = require('../../schemas/tictactoeStats.schema');
-const { leaderboardMulti } = require('../../util/leaderboard.js');
+const { leaderboardMulti } = require('../../util/leaderboard');
 
 const games = new Collection();
 

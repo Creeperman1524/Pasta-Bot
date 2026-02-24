@@ -1,7 +1,7 @@
 const mcping = require('mcping-js');
 const { SlashCommandBuilder } = require('discord.js');
 const { mcServerPort, mcServerVersion } = require('../../config.json');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 
 const fetch = require('node-fetch');
 const { logger } = require('../../logging');

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
-const { paginate } = require('../../util/pagination.js');
+const { newEmbed, colors } = require('../../util/embeds');
+const { paginate } = require('../../util/pagination');
 
 module.exports = {
 	data: new SlashCommandBuilder()

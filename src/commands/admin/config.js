@@ -1,9 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 const { configs } = require('../../config.json');
 const { logger } = require('../../logging');
 
-const database = require('../../util/database.js');
+const database = require('../../util/database');
 const guildConfigSchema = require('../../schemas/guildConfigs.schema');
 
 async function setConfig(interaction) {

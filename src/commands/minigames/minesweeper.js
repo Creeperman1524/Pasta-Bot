@@ -7,12 +7,12 @@ const {
 	EmbedBuilder,
 	SlashCommandBuilder
 } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 const { logger } = require('../../logging');
 
-const database = require('../../util/database.js');
+const database = require('../../util/database');
 const minesweeperStatsSchema = require('../../schemas/minesweeperStats.schema');
-const { leaderboard } = require('../../util/leaderboard.js');
+const { leaderboard } = require('../../util/leaderboard');
 
 const numOfMines = 10;
 const size = 8;

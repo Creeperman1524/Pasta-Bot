@@ -3,7 +3,6 @@ import { statusInterval } from '../config.json';
 import { ActivityType, PresenceStatusData, PresenceUpdateStatus } from 'discord.js';
 import { TaskInterval } from '../util/types/task';
 import { Status, StatusRecord, StatusUpdate } from '../util/types/status';
-import { logger } from '../logging';
 
 const functions = [] as Status[];
 const statusFiles = fs.readdirSync('./src/status');

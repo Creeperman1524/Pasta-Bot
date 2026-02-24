@@ -1,11 +1,11 @@
-const { EmbedBuilder } = require('discord.js');
-const { version } = require('../config.json');
+import { EmbedBuilder } from 'discord.js';
+import { version } from '../config.json';
 
 /**
  * Gives a standardized embed that commands can use
- * @returns {EmbedBuilder} The standardized embed
+ * @returns The standardized embed
  */
-function newEmbed() {
+export function newEmbed(): EmbedBuilder {
 	if (process.env.NODE_ENV == 'dev') {
 		return new EmbedBuilder().setFooter({ text: `v${version} - DEV` });
 	} else {
@@ -15,11 +15,11 @@ function newEmbed() {
 
 /**
  * Truncates and adds ellipses (...) to a string of text if longer than the value provided
- * @param {String} text The text that should be tested
- * @param {number} length The maximum length the text should have
- * @returns {String} the truncated text (if applicable)
+ * @param text The text that should be tested
+ * @param length The maximum length the text should have
+ * @returns the original text if below the minimum, otherwise the truncated text with ellipses
  */
-function truncateText(text, length) {
+export function truncateText(text: string, length: number): string {
 	if (text.length <= length - 3) return text;
 
 	return `${text.slice(0, length - 3)}\u2026`;
@@ -28,7 +28,7 @@ function truncateText(text, length) {
 /**
  * Specific colors that the bot can use and easily be modified
  */
-const colors = {
+export const colors = {
 	helpCommand: 0x1cff2b,
 	infoCommand: 0x0088ff,
 	pingCommand: 0xff00ff,
@@ -46,10 +46,4 @@ const colors = {
 	success: 0x009f00,
 	warn: 0xfdff63,
 	error: 0xff1414
-};
-
-module.exports = {
-	newEmbed,
-	colors,
-	truncateText
 };

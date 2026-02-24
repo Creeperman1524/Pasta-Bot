@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds.js');
+const { newEmbed, colors } = require('../../util/embeds');
 
 module.exports = {
 	data: new SlashCommandBuilder().setName('ping').setDescription('Checks the ping of the bot'),
