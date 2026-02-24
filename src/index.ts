@@ -46,7 +46,7 @@ const commandFolders = fs.readdirSync('./src/commands');
 			.readdirSync(`./src/commands/${folder}`)
 			.filter((file) => file.endsWith('.js'));
 		for (const file of commandFiles) {
-			const command = await import(`./commands/${folder}/${file}`);
+			const command = await import(`./commands/${folder}/${file.slice(0, -3)}`);
 			client.commands.set(command.data.name, command);
 		}
 	}

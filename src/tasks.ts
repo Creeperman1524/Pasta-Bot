@@ -9,7 +9,7 @@ const taskFiles = fs.readdirSync('./src/tasks');
 // Gather tasks from folder
 (async () => {
 	for (const file of taskFiles) {
-		const task = await import(`./tasks/${file}`);
+		const task = await import(`./tasks/${file.slice(0, -3)}`);
 		tasks.push(task);
 	}
 })();
