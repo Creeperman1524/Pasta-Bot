@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 /**
  * Type for the TictactoeStats Schema
@@ -60,11 +60,8 @@ export type TictactoeStatsData = {
 	totalGames: number;
 };
 
-// Document Type
-export interface ITictactoeStats extends TictactoeStatsData, Document<string> {}
-
 // Schema Type
-const TictactoeStatsSchema: Schema = new Schema({
+const TictactoeStatsSchema: Schema = new Schema<TictactoeStatsData>({
 	userID: { type: String, required: true },
 	winsHuman: { type: Number, default: 0 },
 	winsBot: { type: Number, default: 0 },
@@ -76,4 +73,4 @@ const TictactoeStatsSchema: Schema = new Schema({
 	totalGames: { type: Number, default: 0 }
 });
 
-export default mongoose.model<ITictactoeStats>('tictactoestats', TictactoeStatsSchema);
+export default mongoose.model<TictactoeStatsData>('tictactoestats', TictactoeStatsSchema);

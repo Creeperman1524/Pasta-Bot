@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 /**
  * Type for the ValorantConfig Schema
@@ -18,13 +18,10 @@ export type ValorantConfigData = {
 	puuid: string;
 };
 
-// Document type
-export interface IValorantConfig extends ValorantConfigData, Document<string> {}
-
 // Schema type
-const ValorantConfigSchema: Schema = new Schema({
+const ValorantConfigSchema: Schema = new Schema<ValorantConfigData>({
 	userID: { type: String, required: true },
 	puuid: { type: String, required: false }
 });
 
-export default mongoose.model<IValorantConfig>('valorantconfigs', ValorantConfigSchema);
+export default mongoose.model<ValorantConfigData>('valorantconfigs', ValorantConfigSchema);

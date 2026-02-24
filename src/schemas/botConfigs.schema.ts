@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 /**
  * Type for the BotConfig Schema
@@ -19,13 +19,10 @@ export type BotConfigData = {
 	commandsLastUpdated: string;
 };
 
-// Document type
-export interface IBotConfig extends BotConfigData, Document<string> {}
-
 // Schema type
-const BotConfigSchema: Schema = new Schema({
+const BotConfigSchema: Schema = new Schema<BotConfigData>({
 	botID: { type: String, required: true, unique: true },
 	commandsLastUpdated: { type: String, required: true }
 });
 
-export default mongoose.model<IBotConfig>('botconfigs', BotConfigSchema);
+export default mongoose.model<BotConfigData>('botconfigs', BotConfigSchema);

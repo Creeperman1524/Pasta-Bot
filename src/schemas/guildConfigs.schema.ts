@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 // export type ModuleName = 'valorant' | 'logging';
 export type ModuleData = Record<string, boolean>;
@@ -42,11 +42,8 @@ export type GuildConfigData = {
 	loggingChannelID: string;
 };
 
-// Document type
-export interface IGuildConfig extends GuildConfigData, Document<string> {}
-
 // Schema type
-const GuildConfigSchema: Schema = new Schema(
+const GuildConfigSchema: Schema = new Schema<GuildConfigData>(
 	{
 		guildID: { type: String, required: true },
 
@@ -60,4 +57,4 @@ const GuildConfigSchema: Schema = new Schema(
 	{ minimize: false } // Allow storing empty objects
 );
 
-export default mongoose.model<IGuildConfig>('guildconfigs', GuildConfigSchema);
+export default mongoose.model<GuildConfigData>('guildconfigs', GuildConfigSchema);

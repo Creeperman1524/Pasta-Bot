@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 /**
  * Type for the MinesweeperStats Schema
@@ -30,15 +30,12 @@ export type MinesweeperStatsData = {
 	fastestTime: number;
 };
 
-// Document Type
-export interface IMinesweeperStats extends MinesweeperStatsData, Document<string> {}
-
 // Schema Type
-const MinesweeperStatsSchema: Schema = new Schema({
+const MinesweeperStatsSchema: Schema = new Schema<MinesweeperStatsData>({
 	userID: { type: String, required: true },
 	wins: { type: Number, default: 0 },
 	totalGames: { type: Number, default: 0 },
 	fastestTime: { type: Number, default: Number.MAX_SAFE_INTEGER }
 });
 
-export default mongoose.model<IMinesweeperStats>('minesweeperstats', MinesweeperStatsSchema);
+export default mongoose.model<MinesweeperStatsData>('minesweeperstats', MinesweeperStatsSchema);
