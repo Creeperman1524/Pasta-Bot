@@ -1,12 +1,24 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { logger } = require('../../logging');
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { logger } from '../../logging';
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
+import { Command } from '../../util/types/command';
 const buildDate = new Date();
 
 let commitHash = '';
-let commitDate = '';
+let commitDate: number;
+
+type GithubData = {
+	commit: {
+		sha: string;
+		commit: {
+			author: {
+				date: string;
+			};
+		};
+	};
+};
 
 // Gets the currently running commit (assuming the bot is updated)
 async function getCurrentBuildCommit() {
@@ -14,7 +26,7 @@ async function getCurrentBuildCommit() {
 		const response = await fetch(
 			'https://api.github.com/repos/Creeperman1524/Pasta-Bot/branches/main'
 		);
-		data = await response.json();
+		const data = (await response.json()) as GithubData;
 
 		commitHash = data.commit.sha.slice(0, 8);
 		commitDate = Date.parse(data.commit.commit.author.date);
@@ -39,17 +51,17 @@ module.exports = {
 				.setLabel('Github')
 				.setURL('https://github.com/Creeperman1524/Pasta-Bot')
 				.setStyle(ButtonStyle.Link)
-		);
+		) as ActionRowBuilder<ButtonBuilder>;
 
 		// Uptime values
 		const currentDate = new Date();
-		const elapsed = (currentDate - buildDate) / 1000;
+		const elapsed = (currentDate.getTime() - buildDate.getTime()) / 1000;
 		const seconds = Math.floor(elapsed % 60);
 		const minutes = Math.floor((elapsed / 60) % 60);
 		const hours = Math.floor(elapsed / 60 / 60);
 
 		const infoEmbed = newEmbed()
-			.setTitle('Information')
+			.setTitle('Information - changed')
 			.setColor(colors.infoCommand)
 			.setDescription('General information for the bot')
 			.addFields(
@@ -60,7 +72,7 @@ module.exports = {
 				},
 				{
 					name: 'Uptime',
-					value: `\`${hours}h ${minutes}m ${seconds}s\` (<t:${parseInt(buildDate.getTime() / 1000)}:R>)`,
+					value: `\`${hours}h ${minutes}m ${seconds}s\` (<t:${(buildDate.getTime() / 1000) | 0}:R>)`, // | 0 is to do floor division
 					inline: false
 				},
 				{
@@ -77,4 +89,4 @@ module.exports = {
 			components: [row]
 		});
 	}
-};
+} as Command;

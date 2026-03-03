@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
+import { SlashCommandBuilder } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { Command } from '../../util/types/command';
 
 module.exports = {
 	data: new SlashCommandBuilder().setName('ping').setDescription('Checks the ping of the bot'),
@@ -24,4 +25,4 @@ module.exports = {
 			embeds: [pingEmbed]
 		});
 	}
-};
+} as Command;

@@ -16,5 +16,8 @@ module.exports = [
 		rules: {
 			...tseslint.configs.recommended.rules
 		}
+	},
+	{
+		ignores: ['dist/**', 'node_modules/**']
 	}
 ];

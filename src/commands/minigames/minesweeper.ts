@@ -1,33 +1,98 @@
-const {
+import {
 	ActionRowBuilder,
+	APIEmbedField,
 	ButtonBuilder,
+	ButtonInteraction,
 	ButtonStyle,
+	CacheType,
 	Collection,
 	ComponentType,
 	EmbedBuilder,
+	InteractionCollector,
+	Message,
 	SlashCommandBuilder
-} = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { logger } = require('../../logging');
+} from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { logger } from '../../logging';
 
-const database = require('../../util/database');
-const minesweeperStatsSchema = require('../../schemas/minesweeperStats.schema');
-const { leaderboard } = require('../../util/leaderboard');
+import database from '../../util/database';
+import minesweeperStatsSchema from '../../schemas/minesweeperStats.schema';
+import { leaderboard } from '../../util/leaderboard';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
 const numOfMines = 10;
 const size = 8;
 
-const games = new Collection();
+const games = new Collection<string, Game>();
 
 const wallColors = ['🟩', '🟧', '🟪', '🟨', '🟫', '⬛'];
 const playerEmojis = ['😎', '😄', '😊', '🤪', '🥴', '😵‍💫', '😴', '🙃'];
 
+enum Moves {
+	Flag = 'flag',
+	Up = 'up',
+	Dig = 'dig',
+	Left = 'left',
+	Down = 'down',
+	Right = 'right',
+	Null = '' // Used for initializing the board
+}
+
+enum TileStatus {
+	Hidden,
+	Shown,
+	Player,
+	Flag,
+	Border,
+	Exploded,
+	Incorrect
+}
+
+interface Mine {
+	x: number;
+	y: number;
+}
+
+interface Tile {
+	status: TileStatus; // The status of the tile
+	x: number;
+	y: number;
+	mine: boolean;
+	num: number; // Pre-computed number of bombs around the tile
+}
+
+type Board = Tile[][];
+
+interface Game {
+	board: Board;
+	buttons: [ActionRowBuilder<ButtonBuilder>, ActionRowBuilder<ButtonBuilder>];
+	flags: number;
+	tilesLeft: number;
+	startTime: number;
+	player: {
+		emoji: string;
+		walls: string;
+		x: number;
+		y: number;
+		tileStatus: TileStatus;
+		lost: boolean;
+		won: boolean;
+	};
+	componentCollector: InteractionCollector<ButtonInteraction<CacheType>> | null;
+	interaction: ModChatInputCommandInteraction;
+	embed: Message<boolean>;
+	timeout: number;
+}
+
 // Creates a new game for a user
-function createGame(myInteraction) {
+function createGame(myInteraction: ModChatInputCommandInteraction) {
 	// Creates a game object
 	const game = {
 		board: [],
-		buttons: [],
+		buttons: [] as unknown as [
+			ActionRowBuilder<ButtonBuilder>,
+			ActionRowBuilder<ButtonBuilder>
+		],
 		flags: 0,
 		tilesLeft: size * size,
 		startTime: 0,
@@ -42,9 +107,9 @@ function createGame(myInteraction) {
 		},
 		componentCollector: null,
 		interaction: myInteraction, // The user command
-		embed: null, // The game/embeds sent
+		embed: null as unknown as Message, // The game/embeds sent
 		timeout: 10 * 60000 // The expiration timer for the game
-	};
+	} as Game;
 
 	// Adds it to the games object
 	games.set(myInteraction.id, game);
@@ -52,18 +117,18 @@ function createGame(myInteraction) {
 }
 
 // Starts a new game
-function startGame(game) {
+function startGame(game: Game) {
 	// Creates the user buttons
 	const row1 = new ActionRowBuilder().addComponents(
-		createButton('flag', '🚩', ButtonStyle.Success), // Flag button
-		createButton('up', '⬆️', ButtonStyle.Secondary), // Up button
-		createButton('dig', '⛏️', ButtonStyle.Danger) // Dig button
-	);
+		createButton(Moves.Flag, '🚩', ButtonStyle.Success), // Flag button
+		createButton(Moves.Up, '⬆️', ButtonStyle.Secondary), // Up button
+		createButton(Moves.Dig, '⛏️', ButtonStyle.Danger) // Dig button
+	) as ActionRowBuilder<ButtonBuilder>;
 	const row2 = new ActionRowBuilder().addComponents(
-		createButton('left', '⬅️', ButtonStyle.Secondary), // Left button
-		createButton('down', '⬇️', ButtonStyle.Secondary), // Down button
-		createButton('right', '➡️', ButtonStyle.Secondary) // Right button
-	);
+		createButton(Moves.Left, '⬅️', ButtonStyle.Secondary), // Left button
+		createButton(Moves.Down, '⬇️', ButtonStyle.Secondary), // Down button
+		createButton(Moves.Right, '➡️', ButtonStyle.Secondary) // Right button
+	) as ActionRowBuilder<ButtonBuilder>;
 	game.buttons = [row1, row2];
 
 	// Selects a random player emoji and wall color
@@ -72,7 +137,7 @@ function startGame(game) {
 
 	// Generates the board
 	game.board = generateBoard();
-	updateBoard(game); // Adds the player
+	updateBoard(game, Moves.Null); // Adds the player
 	const text = generateText(game);
 
 	// Creates the board
@@ -112,12 +177,12 @@ function startGame(game) {
 }
 
 // Helper function to make the buttons
-function createButton(ID, emoji, style) {
+function createButton(ID: Moves, emoji: string, style: ButtonStyle): ButtonBuilder {
 	return new ButtonBuilder().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
 // Listens for the user's input
-async function awaitInput(game) {
+async function awaitInput(game: Game) {
 	game.componentCollector = game.embed.createMessageComponentCollector({
 		componentType: ComponentType.Button,
 		time: game.timeout
@@ -127,7 +192,7 @@ async function awaitInput(game) {
 	game.componentCollector.on('collect', (button) => {
 		button.deferUpdate();
 		if (button.user.id !== game.interaction.user.id) return;
-		gameLoop(game, button.customId);
+		gameLoop(game, button.customId as Moves);
 	});
 
 	// When the timer runs out/the interaction or channel is deleted
@@ -140,7 +205,7 @@ async function awaitInput(game) {
 }
 
 // The main game loop to update everything
-async function gameLoop(game, move) {
+async function gameLoop(game: Game, move: Moves) {
 	// Starts the timer on the first click
 	if (game.startTime == 0) game.startTime = Date.now();
 
@@ -186,7 +251,7 @@ async function gameLoop(game, move) {
 		// Updates the game's stats
 		const lastEmbed = game.embed.embeds[0];
 		const embed = EmbedBuilder.from(lastEmbed).setDescription(text);
-		embed.data.fields[0] = {
+		(embed.data.fields as APIEmbedField[])[0] = {
 			name: 'Bombs Left',
 			value: `\`${numOfMines - game.flags}\``,
 			inline: true
@@ -200,7 +265,7 @@ async function gameLoop(game, move) {
 }
 
 // Displays the losing screen and removes the game from memory
-async function lose(game) {
+async function lose(game: Game) {
 	for (let x = 0; x < size + 2; x++) {
 		for (let y = 0; y < size + 2; y++) {
 			// Avoids the boom and walls
@@ -236,12 +301,12 @@ async function lose(game) {
 				metaData: {
 					user: game.interaction.user.username,
 					userid: game.interaction.user.id,
-					guild: game.interaction.guild.name,
-					guildid: game.interaction.guild.id
+					guild: game.interaction.guild?.name,
+					guildid: game.interaction.guild?.id
 				}
 			})
 			.warn(
-				`Minesweeper game by '${game.interaction.user.username}' could not be changed in '${game.interaction.guild.name}'`
+				`Minesweeper game by '${game.interaction.user.username}' could not be changed in '${game.interaction.guild?.name}'`
 			);
 		logger
 			.child({
@@ -249,8 +314,8 @@ async function lose(game) {
 				metaData: {
 					user: game.interaction.user.username,
 					userid: game.interaction.user.id,
-					guild: game.interaction.guild.name,
-					guildid: game.interaction.guild.id
+					guild: game.interaction.guild?.name,
+					guildid: game.interaction.guild?.id
 				}
 			})
 			.error(error);
@@ -260,7 +325,7 @@ async function lose(game) {
 }
 
 // Updates the player's position
-function updatePlayer(game, move) {
+function updatePlayer(game: Game, move: Moves) {
 	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
 
 	// Extra bounds checks (even though the buttons can handle it) for sudden API lag spikes
@@ -272,18 +337,18 @@ function updatePlayer(game, move) {
 }
 
 // Updates the board and controls from the given move
-function updateBoard(game, move) {
+function updateBoard(game: Game, move: Moves) {
 	// Moves the player and replaces the tile before
 	game.player.tileStatus = game.board[game.player.x][game.player.y].status;
 	game.board[game.player.x][game.player.y].status = 2;
 
 	// Digging/Flagging a tile
 	switch (move) {
-		case 'dig':
+		case Moves.Dig:
 			floodFill(game, game.player.x, game.player.y);
 			game.player.tileStatus = 1;
 			break;
-		case 'flag':
+		case Moves.Flag:
 			if (game.player.tileStatus !== 3) {
 				// Not on a flag AND is on a hidden tile
 				game.board[game.player.x][game.player.y].status = 3;
@@ -313,7 +378,7 @@ function updateBoard(game, move) {
 }
 
 // Converts the board array into discord emojis
-function generateText(game) {
+function generateText(game: Game) {
 	let text = '';
 
 	for (let x = 0; x < size + 2; x++) {
@@ -362,13 +427,13 @@ function generateText(game) {
 }
 
 // Translates integers to discord emojis
-function getNumber(number) {
+function getNumber(number: number) {
 	const numbers = ['🟦', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣'];
 	return numbers[number];
 }
 
 // "Clicks" on a tile changing its status to 1, recursively clicking if the tile is 0
-function floodFill(game, x, y) {
+function floodFill(game: Game, x: number, y: number) {
 	if (
 		x < 1 ||
 		y < 1 ||
@@ -432,13 +497,13 @@ function generateBoard() {
 }
 
 // Checks if a tile contains a bomb
-function checkTile(board, x, y) {
+function checkTile(board: Board, x: number, y: number) {
 	if (x < 1 || y < 1 || x >= board.length - 1 || y >= board[x].length - 1) return 0; // Outside of the board
 	return board[x][y].mine ? 1 : 0; // Returns 1 for bomb, 0 for not
 }
 
 // Returns the number of bombs surrounding a tile
-function calculateTileNum(board, x, y) {
+function calculateTileNum(board: Board, x: number, y: number) {
 	let number = 0;
 	number += checkTile(board, x - 1, y - 1);
 	number += checkTile(board, x, y - 1);
@@ -454,9 +519,9 @@ function calculateTileNum(board, x, y) {
 
 // Generates an array of mine positions
 function generateMines() {
-	const mines = [];
+	const mines = [] as Mine[];
 	while (mines.length < numOfMines) {
-		const mine = { x: randomNumber() + 1, y: randomNumber() + 1 };
+		const mine = { x: randomNumber() + 1, y: randomNumber() + 1 } as Mine;
 		if (!(mines.some(positionMatch.bind(null, mine)) || (mine.x == 1 && mine.y == 1))) {
 			mines.push(mine);
 		}
@@ -466,32 +531,28 @@ function generateMines() {
 }
 
 // Checks if the positions of two mines matches
-function positionMatch(a, b) {
+function positionMatch(a: Mine, b: Mine): boolean {
 	return a.x === b.x && a.y === b.y;
 }
 
 // Generates a random integer according to the board size
-function randomNumber() {
+function randomNumber(): number {
 	return Math.floor(Math.random() * size);
 }
 
 // Saves the new data to the database and returns if there was a new fastest time
-async function saveData(interaction, won, startTime, endTime) {
-	// Reads from the database
-	let data = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
-
-	// Checks to see if the user is in the database
-	if (!data) {
-		logger
-			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
-			.info('Creating new user stats for minesweeper');
-		const minesweeperStats = await minesweeperStatsSchema.create({
-			userID: interaction.user.id
-		});
-		database.writeToDatabase(minesweeperStats, 'NEW MINESWEEPER STATS');
-
-		data = await minesweeperStatsSchema.findOne({ userID: interaction.user.id });
-	}
+async function saveData(
+	interaction: ModChatInputCommandInteraction,
+	won: boolean,
+	startTime: number,
+	endTime: number
+) {
+	// Finds the user data, creating a new entry if needed
+	const data = await minesweeperStatsSchema.findOneAndUpdate(
+		{ userID: interaction.user.id },
+		{ $setOnInsert: { userID: interaction.user.id } },
+		{ upsert: true, new: true }
+	);
 
 	// Checks if there was a faster time (and that you won that game)
 	const isFasterTime = data.fastestTime > (endTime - startTime) / 1000;
@@ -506,6 +567,24 @@ async function saveData(interaction, won, startTime, endTime) {
 			fastestTime: fasterTime
 		}
 	);
+
+	if (!newMinesweeperStats) {
+		logger
+			.child({
+				mode: 'REACTION ROLE',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id
+				}
+			})
+			.error(
+				`Could not update database for user '${interaction.user.username}' with wins: '${data.wins + (won ? 1 : 0)}', totalGames: ${data.totalGames + 1}, fastestTime: ${fasterTime}`
+			);
+		return;
+	}
+
 	database.writeToDatabase(newMinesweeperStats, 'UPDATED MINESWEEPER STATS');
 
 	return isFasterTime;
@@ -540,7 +619,7 @@ function generateHelpMenu() {
 }
 
 // Sends the different leaderboards to the user depending on the type
-async function leaderboards(interaction) {
+async function leaderboards(interaction: ModChatInputCommandInteraction) {
 	if (interaction.options.getString('type') == 'fastest') {
 		// Fastest times
 
@@ -581,11 +660,11 @@ async function leaderboards(interaction) {
 }
 
 // Sends the user's stats depending on who they want
-async function generateStatsEmbed(interaction) {
+async function generateStatsEmbed(interaction: ModChatInputCommandInteraction) {
 	// Boolean whether the user is searching for another user
 	const otherUser = interaction.options.getUser('user') != null;
 	const stats = await minesweeperStatsSchema.findOne({
-		userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id
+		userID: otherUser ? interaction.options.getUser('user')?.id : interaction.user.id
 	});
 
 	// If the user inputted a user that's not in the database
@@ -603,7 +682,7 @@ async function generateStatsEmbed(interaction) {
 		.setTitle('User Statistics')
 		.setColor(colors.minesweeperCommand)
 		.setDescription(
-			`**User - <@${otherUser ? interaction.options.getUser('user').id : interaction.user.id}>**
+			`**User - <@${otherUser ? interaction.options.getUser('user')?.id : interaction.user.id}>**
 
 **Wins**: \`${stats.wins}\`
 **Losses**: \`${stats.totalGames - stats.wins}\` 
@@ -676,4 +755,4 @@ module.exports = {
 				break;
 		}
 	}
-};
+} as Command;

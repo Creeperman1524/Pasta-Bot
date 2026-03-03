@@ -1,20 +1,26 @@
-const {
+import {
 	ActionRowBuilder,
 	ButtonBuilder,
+	ButtonInteraction,
 	ButtonStyle,
+	CacheType,
 	Collection,
 	ComponentType,
 	EmbedBuilder,
-	SlashCommandBuilder
-} = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { logger } = require('../../logging');
+	InteractionCollector,
+	Message,
+	SlashCommandBuilder,
+	User
+} from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { logger } from '../../logging';
 
-const database = require('../../util/database');
-const tictactoeStatsSchema = require('../../schemas/tictactoeStats.schema');
-const { leaderboardMulti } = require('../../util/leaderboard');
+import database from '../../util/database';
+import tictactoeStatsSchema from '../../schemas/tictactoeStats.schema';
+import { leaderboardMulti } from '../../util/leaderboard';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
-const games = new Collection();
+const games = new Collection<string, Game>();
 
 const emojis = {
 	blank: '➖',
@@ -50,25 +56,113 @@ const botMessages = {
 	]
 };
 
+enum Winner {
+	OnGoing,
+	Player1,
+	Player2,
+	Tie
+}
+
+type Board = [number[], number[], number[]];
+
+interface Game {
+	/**
+	 * The internal array of the board
+	 */
+	board: Board;
+
+	/**
+	 * The button representation of the board
+	 */
+	buttons: [
+		ActionRowBuilder<ButtonBuilder>,
+		ActionRowBuilder<ButtonBuilder>,
+		ActionRowBuilder<ButtonBuilder>
+	];
+
+	/**
+	 * Whether or not it's player1's turn
+	 */
+	player1Turn: boolean;
+
+	/**
+	 * The user object of player1
+	 */
+	player1: User;
+
+	/**
+	 * The user object of player2
+	 */
+	player2: User;
+
+	/**
+	 * Whether the game is against the bot
+	 */
+	bot: boolean;
+
+	/**
+	 * The difficulty message the bot says
+	 */
+	botMessage: string;
+
+	/**
+	 * The winrate of the player (for bot games)
+	 */
+	playerWinRate: number;
+
+	/**
+	 * Whether or not player2 accepted the game
+	 */
+	player2Accepted: boolean;
+
+	/**
+	 * The winner of the game
+	 */
+	winner: Winner;
+
+	/**
+	 * The main component collector for the game
+	 */
+	componentCollector: InteractionCollector<ButtonInteraction<CacheType>> | null;
+
+	/**
+	 * The user command
+	 */
+	interaction: ModChatInputCommandInteraction;
+
+	/**
+	 * The game/embed sent
+	 */
+	embed: Message<boolean>;
+
+	/**
+	 * The expiration timer for the game
+	 */
+	timeout: number;
+}
+
 // Creates a new game for the user
-function createGame(myInteraction) {
+function createGame(myInteraction: ModChatInputCommandInteraction) {
 	const game = {
-		board: [], // The internal array of the board
-		buttons: [], // The button representation of the board
-		confirmation: [], // The buttons to accept or deny the play request
-		player1Turn: true, // Whether or not it's player1's turn
-		player1: null, // The user object of player1
-		player2: null, // The user object of player2
-		bot: false, // Whether the game is against the bot
-		botMessage: '', // The difficulty message the bot says
-		playerWinRate: 0.5, // The winrate of the player
-		player2Accepted: false, // Whether or not player2 accepted the game
-		winner: 0, // The winner of the game (1 for p1, -2 for p2, 0 for none, 2 for tie)
-		componentCollector: null, // The main component collect for the game
-		interaction: myInteraction, // The user command
-		embed: null, // The game/embed sent
-		timeout: 10 * 60000 // The expiration timer for the game
-	};
+		board: [] as unknown as Board,
+		buttons: [] as unknown as [
+			ActionRowBuilder<ButtonBuilder>,
+			ActionRowBuilder<ButtonBuilder>,
+			ActionRowBuilder<ButtonBuilder>
+		],
+		player1Turn: true,
+		player1: null as unknown as User,
+		player2: null as unknown as User,
+		bot: false,
+		botMessage: '',
+		playerWinRate: 0.5,
+		player2Accepted: false,
+		winner: 0,
+		componentCollector: null,
+		interaction: myInteraction,
+		embed: null as unknown as Message,
+		timeout: 10 * 60000
+	} as Game;
 
 	// Adds it to the game object
 	games.set(myInteraction.id, game);
@@ -76,29 +170,29 @@ function createGame(myInteraction) {
 }
 
 // Starts a new game
-function startGame(game) {
+function startGame(game: Game) {
 	// Creates the board of buttons
 	const row1 = new ActionRowBuilder().addComponents(
 		createButton('0', emojis.blank, ButtonStyle.Secondary), // XXX
 		createButton('1', emojis.blank, ButtonStyle.Secondary), // ---
 		createButton('2', emojis.blank, ButtonStyle.Secondary) // ---
-	);
+	) as ActionRowBuilder<ButtonBuilder>;
 	const row2 = new ActionRowBuilder().addComponents(
 		createButton('3', emojis.blank, ButtonStyle.Secondary), // ---
 		createButton('4', emojis.blank, ButtonStyle.Secondary), // XXX
 		createButton('5', emojis.blank, ButtonStyle.Secondary) // ---
-	);
+	) as ActionRowBuilder<ButtonBuilder>;
 	const row3 = new ActionRowBuilder().addComponents(
 		createButton('6', emojis.blank, ButtonStyle.Secondary), // ---
 		createButton('7', emojis.blank, ButtonStyle.Secondary), // ---
 		createButton('8', emojis.blank, ButtonStyle.Secondary) // XXX
-	);
+	) as ActionRowBuilder<ButtonBuilder>;
 	game.buttons = [row1, row2, row3];
 	game.player1 = game.interaction.user;
 
 	if (
 		!game.interaction.options.getUser('user') ||
-		game.interaction.options.getUser('user').id == game.interaction.client.user
+		game.interaction.options.getUser('user')?.id == game.interaction.client.user.id
 	) {
 		// Playing against the bot
 		startGameBot(game);
@@ -109,12 +203,12 @@ function startGame(game) {
 }
 
 // A helper function to add buttons
-function createButton(ID, emoji, style) {
+function createButton(ID: string, emoji: string, style: ButtonStyle) {
 	return new ButtonBuilder().setCustomId(ID).setEmoji(emoji).setStyle(style);
 }
 
 // Gets the bot winrate of the player
-async function getWinRate(game) {
+async function getWinRate(game: Game) {
 	const userData = await tictactoeStatsSchema.findOne({ userID: game.player1.id });
 
 	if (!userData || userData.totalBot == 0) return 0.5;
@@ -122,7 +216,7 @@ async function getWinRate(game) {
 	return userData.winsBot / userData.totalBot;
 }
 
-function generateRandomMessage(mistakeChance) {
+function generateRandomMessage(mistakeChance: number): string {
 	if (mistakeChance < 0.25) {
 		return botMessages['hard'][Math.floor(Math.random() * botMessages['hard'].length)];
 	} else if (mistakeChance < 0.5) {
@@ -133,7 +227,7 @@ function generateRandomMessage(mistakeChance) {
 }
 
 // Initializes the game to play against the bot
-async function startGameBot(game) {
+async function startGameBot(game: Game) {
 	game.player2 = game.interaction.client.user;
 	game.bot = true;
 
@@ -170,11 +264,11 @@ async function startGameBot(game) {
 }
 
 // Initializes the game to play against another user
-function startGameUser(game) {
-	game.player2 = game.interaction.options.getUser('user');
+function startGameUser(game: Game) {
+	const player2 = game.interaction.options.getUser('user');
 
 	// Tries to play against themselves or a bot
-	if (game.player2.id == game.player1.id || game.player2.bot) {
+	if (!player2 || player2.id == game.player1.id || player2.bot) {
 		const invalidUser = newEmbed()
 			.setTitle('Invalid User!')
 			.setColor(colors.error)
@@ -185,10 +279,12 @@ function startGameUser(game) {
 		return;
 	}
 
+	game.player2 = player2;
+
 	const confirmationRow = new ActionRowBuilder().addComponents(
 		createButton('yes', emojis.confirm, ButtonStyle.Success),
 		createButton('no', emojis.deny, ButtonStyle.Danger)
-	);
+	) as ActionRowBuilder<ButtonBuilder>;
 
 	// Embed to ask player2
 	const requestEmbed = newEmbed()
@@ -263,7 +359,7 @@ function startGameUser(game) {
 }
 
 // If the user denies the request, delete the game from memory
-function deniedRequest(game, timeout) {
+function deniedRequest(game: Game, timeout: boolean) {
 	const notAcceptEmbed = newEmbed()
 		.setTitle(timeout ? 'Request not accepted!' : 'Request denied!')
 		.setColor(colors.tictactoeCommand)
@@ -274,7 +370,7 @@ function deniedRequest(game, timeout) {
 	games.delete(game.interaction.id);
 }
 
-function awaitInput(game) {
+function awaitInput(game: Game) {
 	game.componentCollector = game.embed.createMessageComponentCollector({
 		componentType: ComponentType.Button,
 		time: game.timeout
@@ -288,7 +384,7 @@ function awaitInput(game) {
 			(!game.player1Turn && button.user.id !== game.player2.id)
 		)
 			return; // Used linear algebra solver to invert this
-		gameLoop(game, button.customId);
+		gameLoop(game, parseInt(button.customId));
 	});
 
 	// When the timer runs out/the interaction or channel is deleted
@@ -300,7 +396,7 @@ function awaitInput(game) {
 	});
 }
 
-async function gameLoop(game, move) {
+async function gameLoop(game: Game, move: number) {
 	// Converts from 0-8 to board coordinates
 	const x = move % 3;
 	const y = Math.floor(move / 3);
@@ -315,7 +411,7 @@ async function gameLoop(game, move) {
 	updateDisplay(game, game.board);
 
 	// Someone won the game
-	if (game.winner != 0) {
+	if (game.winner != Winner.OnGoing) {
 		gameEnded(game);
 		return;
 	} else {
@@ -357,17 +453,20 @@ async function gameLoop(game, move) {
 	gameLoop(game, botMove);
 }
 
-// Determines the bot's chance of making a mistake based on the player's win rate
-// 0% winrate, 90% chance of mistake
-// 100% winrate, 10% chance of mistake
-// 50% default with no winrate
-// mistake chance = 0.9 * 0.111 ^ winrate
-async function determineMistakeChance(winRate) {
+/**
+ * Determines the bot's chance of making a mistake based on the player's win rate
+ *  - 0% winrate, 90% chance of mistake
+ *  - 100% winrate, 10% chance of mistake
+ *  - 50% default with no winrate
+ *
+ * mistake chance = 0.9 * 0.111 ^ winrate
+ */
+function determineMistakeChance(winRate: number): number {
 	return 0.9 * Math.pow(0.1111, winRate);
 }
 
 // Returns a random valid move
-function findRandomMove(game) {
+function findRandomMove(game: Game) {
 	const validMoves = [];
 
 	for (let y = 0; y < 3; y++) {
@@ -381,12 +480,12 @@ function findRandomMove(game) {
 }
 
 // Sleep function for a small pause
-function sleep(ms) {
+function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Finds the best move for the bot to make (minimizer)
-function findBestMove(game) {
+function findBestMove(game: Game) {
 	let bestEval = 99;
 	let bestMove = -1; // 0-8
 
@@ -413,12 +512,18 @@ function findBestMove(game) {
 
 // Evaluates how good a move is by seeing if it can win by playing every single game
 // Player = maximizer, bot = minimizer
-function MinimaxAlphaBeta(board, depth, alpha, beta, isMaximizingPlayer) {
+function MinimaxAlphaBeta(
+	board: Board,
+	depth: number,
+	alpha: number,
+	beta: number,
+	isMaximizingPlayer: boolean
+) {
 	const score = checkWinner(board);
 
-	if (score == 1) return score * 10 - depth; // Player won
-	if (score == -1) return score * 10 + depth; // Bot won
-	if (score == 2) return 0; // Tie
+	if (score == Winner.Player1) return 1 * 10 - depth; // Player won
+	if (score == Winner.Player2) return -1 * 10 + depth; // Bot won
+	if (score == Winner.Tie) return 0; // Tie
 
 	if (isMaximizingPlayer) {
 		// Player is maximizing
@@ -472,7 +577,7 @@ function MinimaxAlphaBeta(board, depth, alpha, beta, isMaximizingPlayer) {
 }
 
 // Converts the board to discord buttons
-function updateDisplay(game, board) {
+function updateDisplay(game: Game, board: Board) {
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
 			const pos = board[y][x];
@@ -487,8 +592,7 @@ function updateDisplay(game, board) {
 }
 
 // Checks if there is a winner for the current board
-// Returns 1 for player1, -1 for player2, 2, for tie, 0 for none
-function checkWinner(board) {
+function checkWinner(board: Board): Winner {
 	let winner = 0;
 
 	// Rows
@@ -516,11 +620,13 @@ function checkWinner(board) {
 		}
 	}
 
-	if (full && winner == 0) winner = 2;
+	if (full && winner == Winner.OnGoing) winner = Winner.Tie;
+	if (winner == 1) winner = Winner.Player1;
+	if (winner == -1) winner = Winner.Player2;
 	return winner;
 }
 
-function displayWinningPositions(game, board) {
+function displayWinningPositions(game: Game, board: Board) {
 	// Rows
 	for (let y = 0; y < 3; y++) {
 		if (board[y][0] == board[y][1] && board[y][0] == board[y][2] && board[y][0] != 0) {
@@ -555,11 +661,11 @@ function displayWinningPositions(game, board) {
 }
 
 // Ends the game after someone wins
-function gameEnded(game) {
+function gameEnded(game: Game) {
 	displayWinningPositions(game, game.board);
 
-	saveData(game.player1.id, game.winner == 2 ? 0 : game.winner, game.bot); // Saves p1
-	saveData(game.player2.id, game.winner == 2 ? 0 : -game.winner, false); // Saves p2 (works for PastaBot too!)
+	saveData(game.player1.id, game.winner == Winner.Tie ? 0 : game.winner, game.bot); // Saves p1
+	saveData(game.player2.id, game.winner == Winner.Tie ? 0 : -game.winner, false); // Saves p2 (works for PastaBot too!)
 
 	// Disables all buttons
 	for (let y = 0; y < 3; y++) {
@@ -591,7 +697,7 @@ function gameEnded(game) {
 }
 
 // Ends the game if someone takes too long
-function ranOutOfTime(game) {
+function ranOutOfTime(game: Game) {
 	saveData(game.player1.id, game.player1Turn ? -1 : 1, game.bot); // Saves p1
 	saveData(game.player2.id, game.player1Turn ? 1 : -1, false); // Saves p2 (works for PastaBot too!)
 
@@ -621,22 +727,13 @@ function ranOutOfTime(game) {
 
 // Saves the new data to the database
 // Final: 1 - player, -1 - p2, 0 - tie
-async function saveData(userid, final, bot) {
-	// Reads from the database
-	let data = await tictactoeStatsSchema.findOne({ userID: userid });
-
-	// Checks to see if the user is in the database
-	if (!data) {
-		logger
-			.child({ mode: 'DATABASE', metaData: { userID: userid } })
-			.info('Creating new user stats for tictactoe');
-		const tictactoeStats = await tictactoeStatsSchema.create({
-			userID: userid
-		});
-		database.writeToDatabase(tictactoeStats, 'NEW TICTACTOE STATS');
-
-		data = await tictactoeStatsSchema.findOne({ userID: userid });
-	}
+async function saveData(userid: string, final: number, bot: boolean) {
+	// Finds the user data, creating a new entry if needed
+	const data = await tictactoeStatsSchema.findOneAndUpdate(
+		{ userID: userid },
+		{ $setOnInsert: { userID: userid } },
+		{ upsert: true, new: true }
+	);
 
 	// Updates the stats of the user
 	const newTictactoeStats = await tictactoeStatsSchema.findOneAndUpdate(
@@ -652,6 +749,13 @@ async function saveData(userid, final, bot) {
 			totalGames: data.totalGames + 1
 		}
 	);
+
+	if (!newTictactoeStats) {
+		logger
+			.child({ mode: 'REACTION ROLE', metaData: { userid: userid } })
+			.error(`Could not update database for user '${userid}'`);
+		return;
+	}
 
 	database.writeToDatabase(newTictactoeStats, 'UPDATED TICTACTOE STATS');
 }
@@ -676,7 +780,7 @@ function generateHelpMenu() {
 }
 
 // Sends the different leaderboards to the user depending on the type
-async function leaderboards(interaction) {
+async function leaderboards(interaction: ModChatInputCommandInteraction) {
 	if (interaction.options.getString('type') == 'played') {
 		// Most plays
 
@@ -721,11 +825,11 @@ async function leaderboards(interaction) {
 }
 
 // Sends the user's stats depending on who they want
-async function generateStatsEmbed(interaction) {
+async function generateStatsEmbed(interaction: ModChatInputCommandInteraction) {
 	// Boolean whether the user is searching for another user
 	const otherUser = interaction.options.getUser('user') != null;
 	const stats = await tictactoeStatsSchema.findOne({
-		userID: otherUser ? interaction.options.getUser('user').id : interaction.user.id
+		userID: otherUser ? interaction.options.getUser('user')?.id : interaction.user.id
 	});
 
 	if (stats == null) {
@@ -742,7 +846,7 @@ async function generateStatsEmbed(interaction) {
 		.setTitle('User Statistics')
 		.setColor(colors.tictactoeCommand)
 		.setDescription(
-			`**User - <@${otherUser ? interaction.options.getUser('user').id : interaction.user.id}>**
+			`**User - <@${otherUser ? interaction.options.getUser('user')?.id : interaction.user.id}>**
 
 **Current Standings**:
 *(total | bot | human)*
@@ -823,4 +927,4 @@ module.exports = {
 				break;
 		}
 	}
-};
+} as Command;

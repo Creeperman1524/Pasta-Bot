@@ -1,16 +1,24 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { logger } = require('../../logging');
+import { GuildMember, SlashCommandBuilder } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { logger } from '../../logging';
 
-const database = require('../../util/database');
-const valorantConfigSchema = require('../../schemas/valorantConfig.schema');
-const guildConfigSchema = require('../../schemas/guildConfigs.schema');
+import database from '../../util/database';
+import valorantConfigSchema from '../../schemas/valorantConfig.schema';
+import guildConfigSchema from '../../schemas/guildConfigs.schema';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
+import {
+	AccountData,
+	AccountResponse,
+	ErrorResponse,
+	RankData,
+	RankResponse
+} from '../../util/types/valoratnAPI';
 
 const header = {
-	Authorization: process.env.valorantToken
+	Authorization: process.env.valorantToken ?? ''
 };
 
-async function linkCommand(interaction) {
+async function linkCommand(interaction: ModChatInputCommandInteraction) {
 	const fetchingEmbed = newEmbed()
 		.setTitle('Fetching data...')
 		.setColor(colors.valorantCommand)
@@ -20,21 +28,6 @@ async function linkCommand(interaction) {
 		embeds: [fetchingEmbed]
 	});
 
-	let data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
-
-	// Checks to see if the user is in the databse
-	if (!data) {
-		logger
-			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
-			.info('Creating new valorant config');
-		const valorantConfig = await valorantConfigSchema.create({
-			userID: interaction.user.id
-		});
-		database.writeToDatabase(valorantConfig, 'NEW VALORANT CONFIG');
-
-		data = await valorantConfigSchema.findOne({ userID: interaction.user.id });
-	}
-
 	const name = interaction.options.getString('name');
 	const tagline = interaction.options.getString('tagline');
 
@@ -43,16 +36,16 @@ async function linkCommand(interaction) {
 		`https://api.henrikdev.xyz/valorant/v2/account/${name}/${tagline}`,
 		{ method: 'GET', headers: header }
 	);
-	const accountData = await userResponse.json();
+	const accountData = (await userResponse.json()) as AccountResponse;
 
 	// Something has gone wrong
-	if (accountData.errors || accountData.status != 200) {
+	if (accountData.status != 200) {
 		logger
 			.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } })
 			.error(accountData);
 		let description = '';
 
-		switch (accountData.errors[0].code) {
+		switch ((accountData as ErrorResponse).errors[0].code) {
 			case 22:
 				description = `The account \`${name}#${tagline}\` is invalid. Please use \`/valorant link\` to link a correct account.`;
 				break;
@@ -77,15 +70,28 @@ async function linkCommand(interaction) {
 		return;
 	}
 
-	const PUUID = accountData.data.puuid;
+	const PUUID = (accountData as AccountData).data.puuid;
 
 	// Saves the account information to the valorant config
 	const newValorantConfig = await valorantConfigSchema.findOneAndUpdate(
 		{ userID: interaction.user.id },
-		{
-			puuid: PUUID
-		}
+		{ puuid: PUUID }
 	);
+	if (!newValorantConfig) {
+		interaction.editReply({
+			content: 'Could not update the database! Something has gone wrong'
+		});
+		logger
+			.child({
+				mode: 'CONFIG',
+				metaData: { userID: interaction.user.id, guildID: interaction.guildId }
+			})
+			.error(
+				`Could not update database for user '${interaction.user?.username}' with PUUID: ${PUUID}`
+			);
+		return;
+	}
+
 	database.writeToDatabase(newValorantConfig, 'UPDATED VALORANT CONFIG');
 
 	const confirmationEmbed = newEmbed()
@@ -100,7 +106,7 @@ async function linkCommand(interaction) {
 	});
 }
 
-async function updateRole(interaction) {
+async function updateRole(interaction: ModChatInputCommandInteraction) {
 	const userData = await valorantConfigSchema.findOne({ userID: interaction.user.id });
 
 	// Checks if the user's account is linked
@@ -136,17 +142,17 @@ async function updateRole(interaction) {
 		{ method: 'GET', headers: header }
 	);
 
-	let rankData = await rankResponse.json();
+	let rankData: RankResponse = rankResponse ? await rankResponse.json() : null;
 
 	// Something has gone wrong
-	if (rankData.errors || rankData.status != 200) {
+	if (rankData.status != 200) {
 		logger
 			.child({ mode: 'VALORANT ROLE', metaData: { userID: interaction.user.id } })
-			.error(accountData);
+			.error(rankData);
 		let description = '';
 
 		// Check for deleted account/no played enough account even after linking
-		switch (rankData.errors[0].code) {
+		switch ((rankData as ErrorResponse).errors[0].code) {
 			case 22:
 				description =
 					'Your linked account is invalid. Please use `/valorant link` to link a correct account.';
@@ -173,8 +179,7 @@ async function updateRole(interaction) {
 	}
 
 	// Finds the data for the valorant roles
-	rankData = rankData.data;
-	const rank = rankData.current.tier.name;
+	const rank = (rankData as RankData).data.current.tier.name;
 	const rankRoleName = rank.split(' ')[0].toLowerCase();
 
 	const guildData = await guildConfigSchema.findOne({ guildID: interaction.guildId });
@@ -195,14 +200,17 @@ async function updateRole(interaction) {
 		await interaction.editReply({
 			embeds: [noConfigEmbed]
 		});
+		return;
 	}
 
 	// Removes all other rank roles
-	const guildMember = await interaction.guild.members.fetch(interaction.user.id);
+	const guildMember = (await interaction.guild?.members.fetch(
+		interaction.user.id
+	)) as GuildMember;
 	const rolesToRemove = [];
 
 	for (const rankRoleId of Object.values(guildData.valorantRoles)) {
-		const roleToRemove = await interaction.guild.roles.fetch(rankRoleId);
+		const roleToRemove = await interaction.guild?.roles.fetch(rankRoleId);
 
 		// The role doesn't exist in the server but exists in the database, meaning it was deleted
 		if (!roleToRemove) {
@@ -233,7 +241,7 @@ async function updateRole(interaction) {
 	await guildMember.roles.remove(rolesToRemove);
 
 	// Adds the rank role to the user
-	const roleToAdd = await interaction.guild.roles.fetch(guildData.valorantRoles[rankRoleName]);
+	const roleToAdd = await interaction.guild?.roles.fetch(guildData.valorantRoles[rankRoleName]);
 
 	// All roles should be checked from above, so if it's missing it's most likely an unrated role
 	if (!roleToAdd) {
@@ -308,4 +316,4 @@ module.exports = {
 				break;
 		}
 	}
-};
+} as Command;

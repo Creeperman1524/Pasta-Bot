@@ -1,7 +1,8 @@
-const fs = require('fs');
-const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { logger } = require('../../logging');
+import fs from 'fs';
+import { SlashCommandBuilder } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { logger } from '../../logging';
+import { Command } from '../../util/types/command';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -14,17 +15,17 @@ module.exports = {
 				.setRequired(true)
 				.setAutocomplete(true)
 		)
-		.setDefaultPermission(false),
-	permissions: ['OWNER'],
+		.setDefaultMemberPermissions(0), // TODO: this should be updated with better permission
 	category: 'admin',
 
 	async execute(interaction) {
+		interaction.editReply('This feature has been discontinued (for now). Sorry!');
+		return;
 		// Retrieves the command
-		const commandName = interaction.options.getString('command').toLowerCase();
-		const command = interaction.client.commands.get(commandName);
+		const commandName = interaction.options.getString('command')?.toLowerCase();
 
 		// If the command doesn't exist, return
-		if (!command) {
+		if (!commandName) {
 			const noCommandEmbed = newEmbed()
 				.setTitle('Incorrect Usage')
 				.setColor(colors.warn)
@@ -34,14 +35,16 @@ module.exports = {
 			});
 		}
 
-		try {
-			// Deletes the cache
-			const fileLocation = `../../commands/${await findFile(command.data.name)}`;
-			delete require.cache[require.resolve(fileLocation)];
+		// @ts-expect-error This is because the code is unreacable
+		const command = interaction.client.commands.get(commandName);
 
-			// Readds the command
-			const newCommand = require(fileLocation);
-			interaction.client.commands.set(newCommand.name, newCommand);
+		try {
+			const fileLocation = `../../commands/${await findFile(command?.data.name ?? '')}`;
+			// Bypasses the module cache by adding a new timestamp, essentially deleting it and re-adding it
+			const newCommandModule = await import(`${fileLocation}?update=${Date.now()}`);
+			const newCommand: Command = newCommandModule.default;
+
+			interaction.client.commands.set(newCommand.data.name, newCommand);
 		} catch (error) {
 			logger
 				.child({
@@ -49,8 +52,8 @@ module.exports = {
 					metaData: {
 						user: interaction.user.username,
 						userid: interaction.user.id,
-						guild: interaction.guild.name,
-						guildid: interaction.guild.id
+						guild: interaction.guild?.name,
+						guildid: interaction.guild?.id
 					}
 				})
 				.error(error);
@@ -59,7 +62,7 @@ module.exports = {
 				.setTitle('Error')
 				.setColor(colors.error)
 				.setDescription(
-					`There was an error while reloading a command \`${command.data.name}\``
+					`There was an error while reloading a command \`${command?.data.name}\``
 				);
 			return await interaction.editReply({
 				embeds: [errorEmbed]
@@ -69,7 +72,7 @@ module.exports = {
 		const successEmbed = newEmbed()
 			.setTitle('Success')
 			.setColor(colors.success)
-			.setDescription(`Command \`/${command.data.name}\` was reloaded!`);
+			.setDescription(`Command \`/${command?.data.name}\` was reloaded!`);
 
 		await interaction.editReply({
 			embeds: [successEmbed]
@@ -86,14 +89,14 @@ module.exports = {
 		// Responds with the command names that match what's currently typed
 		await interaction.respond(filtered.map((choice) => ({ name: choice, value: choice })));
 	}
-};
+} as Command;
 
-async function findFile(commandName) {
+async function findFile(commandName: string) {
 	const commandFolder = './src/commands';
-	const folders = await fs.readdirSync(commandFolder);
+	const folders = fs.readdirSync(commandFolder);
 
 	for (const category of folders) {
-		if (await fs.readdirSync(`${commandFolder}/${category}`).includes(`${commandName}.js`)) {
+		if (fs.readdirSync(`${commandFolder}/${category}`).includes(`${commandName}.js`)) {
 			return `${category}/${commandName}.js`;
 		}
 	}

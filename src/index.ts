@@ -24,6 +24,11 @@ import runTasks from './tasks';
 import { newEmbed, colors } from './util/embeds';
 
 import guildConfigSchema from './schemas/guildConfigs.schema';
+import {
+	Command,
+	ModAutocompleteInteraction,
+	ModChatInputCommandInteraction
+} from './util/types/command.js';
 
 // Creates the bot client
 const client = new Client({
@@ -36,7 +41,7 @@ const client = new Client({
 	partials: [Partials.Message, Partials.User, Partials.Reaction]
 }) as Bot;
 
-client.commands = new Collection();
+client.commands = new Collection<string, Command>();
 const commandFolders = fs.readdirSync('./src/commands');
 
 // Gather commands from folders
@@ -44,9 +49,9 @@ const commandFolders = fs.readdirSync('./src/commands');
 	for (const folder of commandFolders) {
 		const commandFiles = fs
 			.readdirSync(`./src/commands/${folder}`)
-			.filter((file) => file.endsWith('.js'));
+			.filter((file) => file.endsWith('.js') || file.endsWith('.ts'));
 		for (const file of commandFiles) {
-			const command = await import(`./commands/${folder}/${file.slice(0, -3)}`);
+			const command: Command = await import(`./commands/${folder}/${file.slice(0, -3)}`);
 			client.commands.set(command.data.name, command);
 		}
 	}
@@ -90,7 +95,7 @@ async function interactionCommand(interaction: ChatInputCommandInteraction<Cache
 			.info(
 				`Command '${interaction.commandName}' executed by '${interaction.user.username}' in guild '${interaction.guild?.name}'`
 			);
-		await command.execute(interaction);
+		await command.execute(interaction as ModChatInputCommandInteraction);
 	} catch (error) {
 		logger
 			.child({
@@ -119,8 +124,25 @@ async function interactionCommand(interaction: ChatInputCommandInteraction<Cache
 async function autocompleteCommand(interaction: AutocompleteInteraction<CacheType>) {
 	const command = client.commands.get(interaction.commandName);
 
+	if (!command || !command.autocomplete) {
+		logger
+			.child({
+				mode: 'AUTOCOMPLETE',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id,
+					command: interaction.commandName,
+					commandid: interaction.commandId
+				}
+			})
+			.error('Invalid command name passed from interaction');
+		return;
+	}
+
 	try {
-		command.autocomplete(interaction);
+		command.autocomplete(interaction as ModAutocompleteInteraction);
 	} catch (error) {
 		logger
 			.child({

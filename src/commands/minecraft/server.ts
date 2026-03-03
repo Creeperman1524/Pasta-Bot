@@ -1,10 +1,11 @@
-const mcping = require('mcping-js');
-const { SlashCommandBuilder } = require('discord.js');
-const { mcServerPort, mcServerVersion } = require('../../config.json');
-const { newEmbed, colors } = require('../../util/embeds');
+import mcping, { MinecraftServer } from 'mcping-js';
+import { SlashCommandBuilder } from 'discord.js';
+import { mcServerPort, mcServerVersion } from '../../config.json';
+import { newEmbed, colors } from '../../util/embeds';
 
-const fetch = require('node-fetch');
-const { logger } = require('../../logging');
+import fetch from 'node-fetch';
+import { logger } from '../../logging';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -67,22 +68,28 @@ module.exports = {
 			// break;
 		}
 	}
-};
+} as Command;
 
 // Status command
-function statusCommand(interaction) {
+function statusCommand(interaction: ModChatInputCommandInteraction) {
 	const ip = interaction.options.getString('ip');
 
 	// Checks if the user input a server
 	if (ip == null) {
-		const server = new mcping.MinecraftServer(process.env.mcServerIP, mcServerPort);
+		const serverIP = process.env.mcServerIP;
+		if (!serverIP) {
+			logger.child({ mode: 'DISPLAY SEVER' }).error('Missing default minecraft server IP');
+			return;
+		}
+
+		const server = new mcping.MinecraftServer(serverIP, parseInt(mcServerPort));
 
 		// Pings the server
-		pingServer(server, interaction, process.env.mcServerIP);
+		pingServer(server, interaction, serverIP);
 
 		return;
 	} else {
-		const server = new mcping.MinecraftServer(ip, mcServerPort);
+		const server = new mcping.MinecraftServer(ip, parseInt(mcServerPort));
 
 		// Pings the server
 		pingServer(server, interaction, ip);
@@ -90,121 +97,99 @@ function statusCommand(interaction) {
 	}
 }
 
-// Server ping handling
-let favicon, hasIcon, serverStatus;
+function pingServer(
+	server: MinecraftServer,
+	interaction: ModChatInputCommandInteraction,
+	ip: string
+) {
+	server.ping(1000, 765, (err, res) => {
+		// Determines if it's online or not
+		if (err || !res) {
+			// Offline
+			const offlineEmbed = newEmbed()
+				.setTitle(`Status for ${ip}:`)
+				.setColor(colors.serverPingCommand)
+				.setDescription('*Server is offline*');
+			interaction.editReply({
+				embeds: [offlineEmbed]
+			});
+			return;
+		}
 
-function pingServer(server, interaction, ip) {
-	server.ping(
-		1000,
-		765,
-		(err, res) => {
-			// Determines if it's online or not
-			if (err) {
-				// Offline
-				const offlineEmbed = newEmbed()
-					.setTitle(`Status for ${ip}:`)
-					.setColor(colors.serverPingCommand)
-					.setDescription('*Server is offline*');
-				interaction.editReply({
-					embeds: [offlineEmbed]
-				});
-				return;
-			} else {
-				// Retrieves the server icon
-				try {
-					favicon = res.favicon.slice(22);
-					hasIcon = 'yes';
-				} catch (error) {
-					hasIcon = 'no';
-				}
+		let favIcon = '';
 
-				// Retrieves the current players
-				let onlinePlayers = [];
-				if (typeof res.players.sample == 'undefined') {
-					// No one is online
-					serverStatus = '*No one is playing!*';
-					// } else if (res.players.sample.length == 0) {
-					//	// Server is sleeping
-					//	serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
-				} else {
-					// People are online
-					for (let i = 0; i < res.players.sample.length; i++) {
-						onlinePlayers.push(res.players.sample[i].name);
-					}
-					onlinePlayers = onlinePlayers.sort().join(', ');
+		// Retrieves the server icon
+		try {
+			favIcon = res.favicon.slice(22);
+		} catch {}
 
-					serverStatus =
-						`**${res.players.online}/${res.players.max}**` +
-						` player(s) online.\n\n${onlinePlayers}`;
-				}
-				if (hasIcon === 'yes') {
-					// Sends an embed with an icon image
-					const buffer = Buffer.from(favicon, 'base64');
-					const serverEmbedicon = newEmbed()
-						.setTitle(`Status for ${ip}:`)
-						.setColor(colors.serverPingCommand)
-						.setDescription(serverStatus)
-						.setThumbnail('attachment://icon.png')
-						.addFields({ name: 'Server version:', value: res.version.name });
-					interaction.editReply({
-						embeds: [serverEmbedicon],
-						files: [
-							{
-								attachment: buffer,
-								name: 'icon.png'
-							}
-						]
-					});
-				} else if (hasIcon === 'no') {
-					// Sends an embed without the icon
-					const serverEmbedNoIcon = newEmbed()
-						.setTitle(`Status for ${ip}:`)
-						.setColor(colors.serverPingCommand)
-						.setDescription(serverStatus)
-						.addFields({ name: 'Server version:', value: res.version.name });
-					interaction.editReply({
-						embeds: [serverEmbedNoIcon]
-					});
-				}
+		// Retrieves the current players
+		let onlinePlayers: string[] = [];
+		let serverStatus: string;
+
+		if (typeof res.players.sample == 'undefined') {
+			// Server online with no players
+			serverStatus = '*No one is playing!*';
+			// } else if (res.players.sample.length == 0) {
+			//	// Server is sleeping
+			//	serverStatus = '**Server is currently sleeping!**\nLogging into the server will automatically start it up (after a few minutes)';
+		} else {
+			// People are online
+			for (let i = 0; i < res.players.sample.length; i++) {
+				onlinePlayers.push(res.players.sample[i].name);
 			}
-		},
-		3000
-	);
+			const onlinePlayersMessage = onlinePlayers.sort().join(', ');
+
+			serverStatus =
+				`**${res.players.online}/${res.players.max}**` +
+				` player(s) online.\n\n${onlinePlayersMessage}`;
+		}
+
+		if (favIcon != '') {
+			// Sends an embed with an icon image
+			const buffer = Buffer.from(favIcon, 'base64');
+			const serverEmbedicon = newEmbed()
+				.setTitle(`Status for ${ip}:`)
+				.setColor(colors.serverPingCommand)
+				.setDescription(serverStatus)
+				.setThumbnail('attachment://icon.png')
+				.addFields({ name: 'Server version:', value: res.version.name });
+			interaction.editReply({
+				embeds: [serverEmbedicon],
+				files: [{ attachment: buffer, name: 'icon.png' }]
+			});
+			return;
+		}
+
+		// Sends an embed without the icon
+		const serverEmbedNoIcon = newEmbed()
+			.setTitle(`Status for ${ip}:`)
+			.setColor(colors.serverPingCommand)
+			.setDescription(serverStatus)
+			.addFields({ name: 'Server version:', value: res.version.name });
+		interaction.editReply({
+			embeds: [serverEmbedNoIcon]
+		});
+	});
 }
 
 // Ip command
-function ipCommand(interaction) {
+function ipCommand(interaction: ModChatInputCommandInteraction) {
 	const ipEmbed = newEmbed()
 		.setTitle('Connection Info')
 		.setColor(colors.serverIPCommand)
 		.addFields(
-			{
-				name: 'IP',
-				value: `\`${process.env.mcServerIP}\``,
-				inline: true
-			},
-			{
-				name: 'Port',
-				value: `\`${mcServerPort}\``,
-				inline: true
-			},
-			{
-				name: 'Platform',
-				value: '`Minecraft Java Edition`',
-				inline: true
-			},
-			{
-				name: 'Version',
-				value: `\`${mcServerVersion}\` - Fabric`,
-				inline: true
-			}
+			{ name: 'IP', value: `\`${process.env.mcServerIP}\``, inline: true },
+			{ name: 'Port', value: `\`${mcServerPort}\``, inline: true },
+			{ name: 'Platform', value: '`Minecraft Java Edition`', inline: true },
+			{ name: 'Version', value: `\`${mcServerVersion}\` - Fabric`, inline: true }
 		);
 
 	interaction.editReply({ embeds: [ipEmbed] });
 }
 
 // Seed command
-function seedCommand(interaction) {
+function seedCommand(interaction: ModChatInputCommandInteraction) {
 	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
 		.setColor(colors.serverSeedCommand)
@@ -214,7 +199,7 @@ function seedCommand(interaction) {
 }
 
 // Map command
-function mapCommand(interaction) {
+function mapCommand(interaction: ModChatInputCommandInteraction) {
 	const mapEmbed = newEmbed()
 		.setTitle('Server Map')
 		.setColor(colors.serverMapCommand)
@@ -226,7 +211,8 @@ function mapCommand(interaction) {
 }
 
 // Wakeup command
-async function wakeupCommand(interaction) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function wakeupCommand(interaction: ModChatInputCommandInteraction) {
 	const statusURL = `http://${process.env.mcServerIP}:8123/status`;
 	const wakeupURL = `http://${process.env.mcServerIP}:8123/wakeup`;
 
@@ -250,7 +236,7 @@ async function wakeupCommand(interaction) {
 			// Wakes the server up
 			await fetch(wakeupURL, {
 				method: 'POST',
-				body: null
+				body: undefined
 			});
 		} else if (status.status == 'Running') {
 			// Notify the user that the server is running
@@ -265,8 +251,8 @@ async function wakeupCommand(interaction) {
 					metaData: {
 						user: interaction.user.username,
 						userid: interaction.user.id,
-						guild: interaction.guild.name,
-						guildid: interaction.guild.id
+						guild: interaction.guild?.name,
+						guildid: interaction.guild?.id
 					}
 				})
 				.error(error);

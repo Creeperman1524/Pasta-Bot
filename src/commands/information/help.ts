@@ -1,6 +1,7 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { paginate } = require('../../util/pagination');
+import { APIEmbedField, ApplicationCommandOptionType, SlashCommandBuilder } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { paginate } from '../../util/pagination';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -34,9 +35,9 @@ module.exports = {
 		// Responds with the command names that match what's currently typed
 		await interaction.respond(filtered.map((choice) => ({ name: choice, value: choice })));
 	}
-};
+} as Command;
 
-async function generalHelp(interaction) {
+async function generalHelp(interaction: ModChatInputCommandInteraction) {
 	const { commands } = interaction.client;
 
 	// Gathers all of the categories from the commands
@@ -49,7 +50,7 @@ async function generalHelp(interaction) {
 
 	// Loops through all categories to find which command corresponds to which
 	for (const category of categories) {
-		const fields = [];
+		const fields: APIEmbedField[] = [];
 		const filteredCommands = commands.filter((command) => command.category == category);
 		filteredCommands.forEach((command) => {
 			fields.push({
@@ -71,11 +72,12 @@ async function generalHelp(interaction) {
 	paginate(interaction, embeds, 60000);
 }
 
-async function detailedHelp(interaction, commandName) {
+async function detailedHelp(interaction: ModChatInputCommandInteraction, commandName: string) {
 	const { commands } = interaction.client;
+	const command = commands.get(commandName);
 
 	// If the command doesn't exist
-	if (!commands.get(commandName)) {
+	if (!command) {
 		const notFoundEmbed = newEmbed()
 			.setTitle('Command Not Found!')
 			.setColor(colors.warn)
@@ -87,13 +89,12 @@ async function detailedHelp(interaction, commandName) {
 	}
 
 	// Loops through all subcommands
-	const command = commands.get(commandName);
-	const subCommands = command.data.options;
-	const fields = [];
+	const subCommands = command.data.toJSON().options ?? [];
+	const fields: APIEmbedField[] = [];
 
 	for (const subCommand of subCommands) {
 		// Checks if it's a subcommand (and not an option)
-		if (!subCommand.toJSON().options) continue;
+		if (subCommand.type !== ApplicationCommandOptionType.Subcommand) continue;
 
 		fields.push({
 			name: `/${command.data.name} ${subCommand.name}`,
@@ -108,7 +109,7 @@ async function detailedHelp(interaction, commandName) {
 		.setDescription(
 			`\`${command.data.description}\`\n
 						**Category:** \`${command.category}\`\n
-						**Default Permission:** \`${command.data.defaultPermission || true}\``
+						**Default Permission:** \`${command.data.default_permission || true}\``
 		) // TODO: permissions v2
 		.addFields(fields);
 

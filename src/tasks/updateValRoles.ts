@@ -6,32 +6,10 @@ import guildConfigSchema, { GuildConfigData } from '../schemas/guildConfigs.sche
 import { apiRetries } from '../config.json';
 import { TaskTime } from '../util/types/task.js';
 import { GuildMember, Role } from 'discord.js';
+import { RankData, RankResponse } from '../util/types/valoratnAPI';
 
 const header: HeadersInit = {
 	Authorization: process.env.valorantToken || ''
-};
-
-// From https://docs.henrikdev.xyz/valorant/api-reference/mmr
-type ResponseData = RankData | ErrorResponse;
-
-type RankData = {
-	status: 200;
-	data: {
-		current: {
-			tier: {
-				name: string;
-			};
-		};
-	};
-};
-
-type ErrorResponse = {
-	status: number;
-	errors: {
-		message: string;
-		code: number;
-		details: string;
-	};
 };
 
 module.exports = {
@@ -109,7 +87,7 @@ async function updateUser(guildMember: GuildMember, guildData: GuildConfigData) 
 
 // Finds the current rank of the account
 async function getRankData(PUUID: string): Promise<RankData | null> {
-	let rankData: ResponseData;
+	let rankData: RankResponse;
 	let retries = 0;
 
 	// Tries to get the rank

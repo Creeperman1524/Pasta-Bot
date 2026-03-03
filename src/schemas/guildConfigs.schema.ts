@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { ReactionMessages } from '../util/types/reactionMessage';
 
 // export type ModuleName = 'valorant' | 'logging';
 export type ModuleData = Record<string, boolean>;
@@ -22,9 +23,8 @@ export type GuildConfigData = {
 
 	/**
 	 * A dictionary storing the reaction messages information for this guild
-	 * @TODO: create a type for this later
 	 */
-	reactionMessages: any;
+	reactionMessages: ReactionMessages;
 
 	/**
 	 * A dictionary storing the valorant roles configuration for this guild

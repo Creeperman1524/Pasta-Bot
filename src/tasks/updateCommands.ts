@@ -1,5 +1,5 @@
 import { logger } from '../logging';
-import deployCommands from '../deploy-commands.js';
+import deployCommands from '../deploy-commands';
 import { commandRefreshInterval } from '../config.json';
 import { TaskOnce } from '../util/types/task.js';
 

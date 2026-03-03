@@ -1,26 +1,26 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { newEmbed, colors } = require('../../util/embeds');
-const { configs } = require('../../config.json');
-const { logger } = require('../../logging');
+import { Role, SlashCommandBuilder, TextChannel } from 'discord.js';
+import { newEmbed, colors } from '../../util/embeds';
+import { configs as rawConfigs } from '../../config.json';
+import { logger } from '../../logging';
 
-const database = require('../../util/database');
-const guildConfigSchema = require('../../schemas/guildConfigs.schema');
+import database from '../../util/database';
+import guildConfigSchema from '../../schemas/guildConfigs.schema';
+import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
-async function setConfig(interaction) {
-	let data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
+type ParsedOption =
+	| { type: 'boolean'; value: boolean }
+	| { type: 'channel'; value: TextChannel }
+	| { type: 'role'; value: Role };
 
-	// Checks to see if the guild has any configs set yet
-	if (!data) {
-		logger
-			.child({ mode: 'DATABASE', metaData: { userID: interaction.user.id } })
-			.info('Creating new guild config');
-		const guildConfig = await guildConfigSchema.create({
-			guildID: interaction.guildId
-		});
-		database.writeToDatabase(guildConfig, 'NEW GUILD CONFIG');
+const configs = rawConfigs as Record<string, string>;
 
-		data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
-	}
+async function setConfig(interaction: ModChatInputCommandInteraction) {
+	// Check for the guild data, creating a new entry if needed
+	const data = await guildConfigSchema.findOneAndUpdate(
+		{ guildID: interaction.guildId },
+		{ $setOnInsert: { guildID: interaction.guildId } },
+		{ upsert: true, new: true }
+	);
 
 	const modules = data.modules || {};
 	const valorantRoles = data.valorantRoles || {};
@@ -28,41 +28,29 @@ async function setConfig(interaction) {
 
 	const rule = interaction.options.getString('rule');
 
+	if (!rule) {
+		const missingRuleEmbed = newEmbed()
+			.setTitle('No data!')
+			.setColor(colors.configCommand)
+			.setDescription('You must provide a rule to update!');
+
+		await interaction.editReply({
+			embeds: [missingRuleEmbed]
+		});
+		return;
+	}
+
 	// Checks if the rule is valid
 	const valid = await validateRule(rule, interaction);
 	if (!valid) return;
 
 	const type = configs[rule];
-	let option;
-	let incorrectType = false;
 
 	// Checks for valid value type
 	// TODO: also check if the other values are set (or just ignore them)
-	switch (type) {
-		case 'boolean':
-			if (!interaction.options.getBoolean('boolean')) {
-				incorrectType = true;
-			} else {
-				option = interaction.options.getBoolean('boolean');
-			}
-			break;
-		case 'channel':
-			if (!interaction.options.getChannel('channel')) {
-				incorrectType = true;
-			} else {
-				option = interaction.options.getChannel('channel');
-			}
-			break;
-		case 'role':
-			if (!interaction.options.getRole('role')) {
-				incorrectType = true;
-			} else {
-				option = interaction.options.getRole('role');
-			}
-			break;
-	}
+	const parsed = parseOption(interaction, type);
 
-	if (incorrectType) {
+	if (parsed == null) {
 		const incorrectTypeEmbed = newEmbed()
 			.setTitle('Invalid Type!')
 			.setColor(colors.error)
@@ -80,18 +68,18 @@ async function setConfig(interaction) {
 
 	// Set the value in the config
 	// TODO: maybe make this better than hard coding all these
-	if (rule.match(/valorant-role-/)) {
+	if (rule.match(/valorant-role-/) && parsed.type == 'role') {
 		// Valorant roles
-		newValue = `<@&${option.id}>`;
+		newValue = `<@&${parsed.value.id}>`;
 
-		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
-		valorantRoles[rankName] = option.id;
-	} else if (rule.match(/enable-/)) {
+		const rankName = rule.match(/valorant-role-(?<rank>(.*))/)?.groups?.rank as string;
+		valorantRoles[rankName] = parsed.value.id;
+	} else if (rule.match(/enable-/) && parsed.type == 'boolean') {
 		// Modules
-		newValue = `\`${option}\``;
+		newValue = `\`${parsed.value}\``;
 
-		const moduleName = rule.match(/enable-(?<name>(.*))/).groups.name;
-		modules[moduleName] = option;
+		const moduleName = rule.match(/enable-(?<name>(.*))/)?.groups?.name as string;
+		modules[moduleName] = parsed.value;
 	} else {
 		// Did not make custom save path for rule!!
 		newValue = '`nil`';
@@ -112,6 +100,22 @@ async function setConfig(interaction) {
 			loggingChannelId: loggingChannelID
 		}
 	);
+
+	if (!newGuildConfig) {
+		interaction.editReply({
+			content: 'Could not update the database! Something has gone wrong'
+		});
+		logger
+			.child({
+				mode: 'CONFIG',
+				metaData: { userID: interaction.user.id, guildID: interaction.guildId }
+			})
+			.error(
+				`Could not update database for guild '${interaction.guild?.name}' with modules '${modules}', valorantRoles: '${valorantRoles}' and loggingCHannelID: '${loggingChannelID}'`
+			);
+		return;
+	}
+
 	database.writeToDatabase(newGuildConfig, 'UPDATED GUILD CONFIG');
 
 	const confirmationEmbed = newEmbed()
@@ -124,7 +128,7 @@ async function setConfig(interaction) {
 	});
 }
 
-async function viewConfig(interaction) {
+async function viewConfig(interaction: ModChatInputCommandInteraction) {
 	// TODO: add a way to bulk-view configs (like doing /config view valorant-role for a list of all roles)
 	const data = await guildConfigSchema.findOne({ guildID: interaction.guildId });
 
@@ -138,6 +142,7 @@ async function viewConfig(interaction) {
 		await interaction.editReply({
 			embeds: [noDataEmbed]
 		});
+		return;
 	}
 
 	const modules = data.modules || {};
@@ -145,6 +150,18 @@ async function viewConfig(interaction) {
 	// const loggingChannelID = data.loggingChannelID || '';
 
 	const rule = interaction.options.getString('rule');
+
+	if (!rule) {
+		const missingRuleEmbed = newEmbed()
+			.setTitle('No data!')
+			.setColor(colors.configCommand)
+			.setDescription('You must provide a rule to update!');
+
+		await interaction.editReply({
+			embeds: [missingRuleEmbed]
+		});
+		return;
+	}
 
 	// Checks if the rule is valid
 	const valid = await validateRule(rule, interaction);
@@ -156,12 +173,12 @@ async function viewConfig(interaction) {
 	if (rule.match(/valorant-role-/)) {
 		// Valorant roles
 
-		const rankName = rule.match(/valorant-role-(?<rank>(.*))/).groups.rank;
+		const rankName = rule.match(/valorant-role-(?<rank>(.*))/)?.groups?.rank as string;
 		value = valorantRoles[rankName] ? `<@&${valorantRoles[rankName]}>` : '`Unassigned`';
 	} else if (rule.match(/enable-/)) {
 		// Modules
 
-		const moduleName = rule.match(/enable-(?<name>(.*))/).groups.name;
+		const moduleName = rule.match(/enable-(?<name>(.*))/)?.groups?.name as string;
 		value = modules[moduleName] ? `\`${modules[moduleName]}\`` : '`false`';
 	} else {
 		// No custom save path for this rule!!
@@ -185,21 +202,42 @@ async function viewConfig(interaction) {
 }
 
 // Checks if a rule is valid in the configs
-async function validateRule(rule, interaction) {
-	if (!configs[rule]) {
-		const invalidRuleEmbed = newEmbed()
-			.setTitle('Invalid Rule!')
-			.setColor(colors.error)
-			.setDescription(`The provided rule \`${rule}\` is not a valid rule!`);
+async function validateRule(rule: string, interaction: ModChatInputCommandInteraction) {
+	if (configs[rule]) return true;
 
-		await interaction.editReply({
-			embeds: [invalidRuleEmbed]
-		});
+	const invalidRuleEmbed = newEmbed()
+		.setTitle('Invalid Rule!')
+		.setColor(colors.error)
+		.setDescription(`The provided rule \`${rule}\` is not a valid rule!`);
 
-		return false;
+	await interaction.editReply({
+		embeds: [invalidRuleEmbed]
+	});
+
+	return false;
+}
+
+// Parse an option from the user
+function parseOption(
+	interaction: ModChatInputCommandInteraction,
+	type: string
+): ParsedOption | null {
+	switch (type) {
+		case 'boolean': {
+			const value = interaction.options.getBoolean('boolean');
+			return value === null ? null : { type: 'boolean', value };
+		}
+		case 'channel': {
+			const value = interaction.options.getChannel('channel');
+			return value === null ? null : { type: 'channel', value: value as TextChannel };
+		}
+		case 'role': {
+			const value = interaction.options.getRole('role');
+			return value === null ? null : { type: 'role', value: value as Role };
+		}
+		default:
+			return null;
 	}
-
-	return true;
 }
 
 module.exports = {
@@ -266,4 +304,4 @@ module.exports = {
 				break;
 		}
 	}
-};
+} as Command;
