@@ -101,16 +101,16 @@ module.exports = {
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'create':
-				createReactionMessage(interaction);
+				await createReactionMessage(interaction);
 				break;
 			case 'add':
-				addRoletoMessage(interaction);
+				await addRoletoMessage(interaction);
 				break;
 			case 'remove':
-				removeRolefromMessage(interaction);
+				await removeRolefromMessage(interaction);
 				break;
 			case 'delete':
-				deleteReactionMessage(interaction);
+				await deleteReactionMessage(interaction);
 				break;
 		}
 	}

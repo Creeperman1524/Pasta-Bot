@@ -911,7 +911,7 @@ module.exports = {
 
 	category: 'minigames',
 
-	execute(interaction) {
+	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'start':
 				createGame(interaction);
@@ -920,11 +920,20 @@ module.exports = {
 				interaction.editReply({ embeds: [generateHelpMenu()] });
 				break;
 			case 'leaderboards':
-				leaderboards(interaction);
+				await leaderboards(interaction);
 				break;
 			case 'stats':
-				generateStatsEmbed(interaction);
+				await generateStatsEmbed(interaction);
 				break;
 		}
 	}
 } as Command;
+
+// Named exports for unit testing of pure internal functions
+// Named exports for unit testing of pure internal functions
+module.exports.checkWinner = checkWinner;
+module.exports.findBestMove = findBestMove;
+module.exports.findRandomMove = findRandomMove;
+module.exports.determineMistakeChance = determineMistakeChance;
+module.exports.MinimaxAlphaBeta = MinimaxAlphaBeta;
+module.exports.Winner = Winner;

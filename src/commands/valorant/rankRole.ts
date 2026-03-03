@@ -309,10 +309,10 @@ module.exports = {
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'link':
-				linkCommand(interaction);
+				await linkCommand(interaction);
 				break;
 			case 'update-role':
-				updateRole(interaction);
+				await updateRole(interaction);
 				break;
 		}
 	}

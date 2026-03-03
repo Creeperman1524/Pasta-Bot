@@ -748,11 +748,21 @@ module.exports = {
 				interaction.editReply({ embeds: [generateHelpMenu()] });
 				break;
 			case 'leaderboards':
-				leaderboards(interaction);
+				await leaderboards(interaction);
 				break;
 			case 'stats':
-				generateStatsEmbed(interaction);
+				await generateStatsEmbed(interaction);
 				break;
 		}
 	}
 } as Command;
+
+// Named exports for unit testing of pure internal functions
+module.exports.generateBoard = generateBoard;
+module.exports.generateMines = generateMines;
+module.exports.calculateTileNum = calculateTileNum;
+module.exports.checkTile = checkTile;
+module.exports.floodFill = floodFill;
+module.exports.positionMatch = positionMatch;
+module.exports.randomNumber = randomNumber;
+module.exports.getNumber = getNumber;
