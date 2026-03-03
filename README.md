@@ -9,11 +9,11 @@ A [Discord](https://discord.com) Bot that I created with many different minigame
 ## :computer: Features
 
 - Fully integrated with discord slash (/) commands
-  - Provides autocomplete for certain command options too
+    - Provides autocomplete for certain command options too
 - Customizable status display
-  - Shows birthdays supplied by the `birthdays.json` file
-  - Shows holidays/events supplied by the `events.json`
-  - Integrates with a Minecraft server to display the current status of the server and current player count
+    - Shows birthdays supplied by the `birthdays.json` file
+    - Shows holidays/events supplied by the `events.json`
+    - Integrates with a Minecraft server to display the current status of the server and current player count
 - Reaction role messages that can be edited at any time
 - Minecraft server integration to give the status of a Minecraft server
 - Valorant integration to give custom roles for specific ranks
@@ -24,9 +24,9 @@ A [Discord](https://discord.com) Bot that I created with many different minigame
 ### Minesweeper
 
 - Play a game of minesweeper right in discord
-  - Use button controls for digging, moving, and flagging
+    - Use button controls for digging, moving, and flagging
 - View player game statistics
-  - Global leaderboard for fastest games, most played games and most won games
+    - Global leaderboard for fastest games, most played games and most won games
 
 <p align="center">
     <img src="./docs/assets/minesweeper-digging.gif" alt="Digging in Minesweeper">
@@ -40,7 +40,7 @@ A [Discord](https://discord.com) Bot that I created with many different minigame
 - Ability to play against PastaBot themselves (with a scaling difficulty)
 - Challenge other players to a match
 - View player game statistics
-  - Global leaderboard for most played and most won games
+    - Global leaderboard for most played and most won games
 
 <p align="center">
     <img src="./docs/assets/tictactoe-full.png" alt="Full game of Tic-Tac-Toe">
