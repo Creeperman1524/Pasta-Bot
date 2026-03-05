@@ -14,7 +14,7 @@ import guildConfigSchema from '../../schemas/guildConfigs.schema';
 import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 import { ReactionMessages } from '../../util/types/reactionMessage';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('reactionrole')
 		.setDescription('Customizes a reaction role message')
@@ -463,7 +463,19 @@ async function findMessage(
 
 	// If that message isn't a reaction message
 	if (!reactionGuild[messageID]) {
-		interaction.editReply({ content: "That message link isn't a valid reaction message!" });
+		logger
+			.child({
+				mode: 'REACTION ROLE',
+				metaData: {
+					user: interaction.user.username,
+					userid: interaction.user.id,
+					guild: interaction.guild?.name,
+					guildid: interaction.guild?.id
+				}
+			})
+			.error(
+				`Reaction message '${messageLink}' is not a valid reaction message for guild ${interaction.guild?.name}! `
+			);
 		return null;
 	}
 

@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import { logger } from '../../logging';
 import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('server')
 		.setDescription('Useful commands for information on the minecraft server')

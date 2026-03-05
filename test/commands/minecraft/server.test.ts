@@ -35,7 +35,7 @@ function setupPing(err: Error | null, res: PingResult | null): void {
 	);
 }
 
-describe('/server command', () => {
+describe('/server', () => {
 	const origEnv = { ...process.env };
 
 	beforeEach(() => {
@@ -47,12 +47,13 @@ describe('/server command', () => {
 		process.env = { ...origEnv };
 	});
 
-	describe('ip subcommand', () => {
+	describe('ip', () => {
 		it('embed includes IP, port, and version fields', async () => {
 			const interaction = createMockInteraction({ subcommand: 'ip' });
 			await command.execute(interaction);
 			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
 			const fields: { name: string }[] = embeds[0].toJSON().fields ?? [];
+
 			const names = fields.map((f) => f.name);
 			expect(names).toContain('IP');
 			expect(names).toContain('Port');
@@ -60,26 +61,28 @@ describe('/server command', () => {
 		});
 	});
 
-	describe('seed subcommand', () => {
+	describe('seed', () => {
 		it('embed description contains the server seed', async () => {
 			const interaction = createMockInteraction({ subcommand: 'seed' });
 			await command.execute(interaction);
 			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
+
 			expect(embeds[0].toJSON().description).toContain('test-seed-123');
 		});
 	});
 
-	describe('map subcommand', () => {
+	describe('map', () => {
 		it('embed description contains the server map URL', async () => {
 			const interaction = createMockInteraction({ subcommand: 'map' });
 			await command.execute(interaction);
 			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
+
 			expect(embeds[0].toJSON().description).toContain('127.0.0.1');
 			expect(embeds[0].toJSON().description).toContain('8123');
 		});
 	});
 
-	describe('status subcommand', () => {
+	describe('status', () => {
 		it('uses mcServerIP env var when no IP option is provided', async () => {
 			setupPing(new Error('offline'), null);
 			const interaction = createMockInteraction({
@@ -87,6 +90,7 @@ describe('/server command', () => {
 				getString: { ip: null }
 			});
 			await command.execute(interaction);
+
 			// Ping was called — the MinecraftServer constructor received the env IP
 			expect(MinecraftServer).toHaveBeenCalledWith('127.0.0.1', expect.any(Number));
 		});
@@ -112,7 +116,7 @@ describe('/server command', () => {
 			expect(embeds[0].toJSON().description).toMatch(/offline/i);
 		});
 
-		it('replies with player count when nobody is online (no sample)', async () => {
+		it('replies with player count when nobody is online', async () => {
 			setupPing(null, {
 				players: { online: 0, max: 20, sample: undefined },
 				version: { name: '1.21' },
@@ -146,7 +150,7 @@ describe('/server command', () => {
 		});
 	});
 
-	describe('wakeup subcommand', () => {
+	describe('wakeup', () => {
 		it('replies with the discontinued message', async () => {
 			const interaction = createMockInteraction({ subcommand: 'wakeup' });
 			await command.execute(interaction);

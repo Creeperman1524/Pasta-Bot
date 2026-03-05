@@ -4,7 +4,7 @@ import { Status, StatusUpdate } from '../util/types/status';
 
 const birthdays = rawBirthdays as Record<string, string[]>;
 
-module.exports = {
+export default {
 	name: 'birthdayDisplay',
 
 	async execute() {

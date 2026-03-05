@@ -16,6 +16,7 @@ jest.mock('mcping-js', () => ({
 }));
 
 import displayServerModule from '../../src/status/displayServer';
+import { Bot } from '../../src/util/types/bot';
 
 // Ping response shape returned by mcping-js
 type PingResult = {
@@ -34,7 +35,7 @@ function setupPing(err: Error | undefined, result: PingResult | null): void {
 	);
 }
 
-describe('displayServer.execute()', () => {
+describe('displayServer', () => {
 	const origEnv = process.env.mcServerIP;
 
 	beforeEach(() => {
@@ -47,13 +48,13 @@ describe('displayServer.execute()', () => {
 
 	it('logs error and returns undefined when mcServerIP is missing', async () => {
 		delete process.env.mcServerIP;
-		const result = await displayServerModule.execute();
+		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result).toBeUndefined();
 	});
 
 	it('returns DoNotDisturb + offline message when ping returns an error', async () => {
 		setupPing(new Error('timeout'), null);
-		const result = await displayServerModule.execute();
+		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result.message).toContain('offline');
 		expect(result.activity).toBe('dnd');
 	});
@@ -64,7 +65,7 @@ describe('displayServer.execute()', () => {
 			version: { name: '1.21' },
 			favicon: ''
 		});
-		const result = await displayServerModule.execute();
+		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result.message).toMatch(/\d+\/\d+ players/);
 		expect(result.activity).toBe('idle');
 	});
@@ -75,7 +76,7 @@ describe('displayServer.execute()', () => {
 			version: { name: '1.21' },
 			favicon: ''
 		});
-		const result = await displayServerModule.execute();
+		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result.message).toContain('sleepy');
 		expect(result.activity).toBe('idle');
 	});
@@ -86,7 +87,7 @@ describe('displayServer.execute()', () => {
 			version: { name: '1.21' },
 			favicon: ''
 		});
-		const result = await displayServerModule.execute();
+		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result.activity).toBe('online');
 		expect(result.message).toContain('Alice');
 		expect(result.message).toContain('Zara');

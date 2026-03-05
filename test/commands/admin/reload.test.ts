@@ -26,17 +26,24 @@ function makeCommand(name: string): Command {
 
 import command from '../../../src/commands/admin/reload';
 
-describe('/reload command', () => {
-	it('execute() replies with the discontinued message', async () => {
-		const interaction = createMockInteraction();
-		await command.execute(interaction);
-		expect(interaction.editReply).toHaveBeenCalledWith(expect.stringContaining('discontinued'));
+describe('/reload', () => {
+	describe('execute', () => {
+		it('replies with the discontinued message', async () => {
+			const interaction = createMockInteraction();
+			await command.execute(interaction);
+			expect(interaction.editReply).toHaveBeenCalledWith(
+				expect.stringContaining('discontinued')
+			);
+		});
 	});
 
-	describe('autocomplete()', () => {
+	describe('autocomplete', () => {
 		it('responds with all command names when query is empty', async () => {
 			const cmds = [makeCommand('ping'), makeCommand('info')];
 			const interaction = createMockAutocompleteInteraction({ focused: '', commands: cmds });
+
+			if (!command.autocomplete) fail('autocomplete function is missing');
+
 			await command.autocomplete(interaction);
 			const [choices] = (interaction.respond as jest.Mock).mock.calls;
 			const names = choices[0].map((c: { name: string }) => c.name);
@@ -50,6 +57,9 @@ describe('/reload command', () => {
 				focused: 'pi',
 				commands: cmds
 			});
+
+			if (!command.autocomplete) fail('autocomplete function is missing');
+
 			await command.autocomplete(interaction);
 			const [choices] = (interaction.respond as jest.Mock).mock.calls;
 			const names = choices[0].map((c: { name: string }) => c.name);

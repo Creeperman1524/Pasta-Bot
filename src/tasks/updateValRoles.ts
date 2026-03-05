@@ -12,7 +12,7 @@ const header: HeadersInit = {
 	Authorization: process.env.valorantToken || ''
 };
 
-module.exports = {
+export default {
 	name: 'updateValRoles',
 	mode: 'TIME',
 	timeHour: 0,

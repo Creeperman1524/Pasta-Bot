@@ -695,7 +695,7 @@ async function generateStatsEmbed(interaction: ModChatInputCommandInteraction) {
 }
 
 // The discord command bits
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('minesweeper')
 		.setDescription('A minesweeper minigame')
@@ -757,12 +757,14 @@ module.exports = {
 	}
 } as Command;
 
-// Named exports for unit testing of pure internal functions
-module.exports.generateBoard = generateBoard;
-module.exports.generateMines = generateMines;
-module.exports.calculateTileNum = calculateTileNum;
-module.exports.checkTile = checkTile;
-module.exports.floodFill = floodFill;
-module.exports.positionMatch = positionMatch;
-module.exports.randomNumber = randomNumber;
-module.exports.getNumber = getNumber;
+// Exported private functions for unit testing
+export const testingFuncs = {
+	generateBoard,
+	generateMines,
+	calculateTileNum,
+	checkTile,
+	floodFill,
+	positionMatch,
+	randomNumber,
+	getNumber
+};

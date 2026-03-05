@@ -73,9 +73,16 @@ Use `ModChatInputCommandInteraction` (not the bare discord.js type) so `interact
 ### Code style
 Prettier enforces: tabs, single quotes, no trailing commas, 100-char print width. TypeScript strict mode is on; `allowJs` is temporarily enabled while JS files are being migrated.
 
+Always run `npm run lint` and `npm run format` for any new code added, fixing the linting errors if necessary.
+
+### Commits
+Only commit changes when explicitly given the permission to. When doing so, always include yourself (Copilot) as a co-author.
+
+Commits should be prefixed as feat/fix/docs/style/refactor/chore: <name\> with a small summary of what the commit contains
+
 ## AI Session Documentation
 
-After completing a significant session, create a markdown file in `docs/llm-changes/copilot/` summarising the work. Name the file `YYYY-MM-DD-short-description.md` using the current date. The file must follow this structure:
+After completing a significant session or autopilot task, create a markdown file in `docs/llm-changes/copilot/` summarising the work. Name the file `YYYY-MM-DD-short-description.md` using the current date. The file must follow this structure:
 
 ```md
 # Short Title of Changes

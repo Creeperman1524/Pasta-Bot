@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports --
- * info.ts calls getCurrentBuildCommit() at module load time (not in execute).
- * Each test must call jest.resetModules() + require() to re-load the module
- * with a fresh node-fetch mock, so the module-level fetch sees the right response.
- */
 jest.mock('../../../src/logging', () => ({
 	logger: {
 		child: jest.fn().mockReturnValue({
@@ -20,13 +15,11 @@ import nodeFetch from 'node-fetch';
 
 import { createMockInteraction } from '../../helpers/mockInteraction';
 
-describe('/info command', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+describe('/info', () => {
+	beforeEach(() => jest.clearAllMocks());
 
 	it('calls editReply with an embed and a button component row', async () => {
-		(nodeFetch as jest.Mock).mockResolvedValue({
+		(nodeFetch as unknown as jest.Mock).mockResolvedValue({
 			json: jest.fn().mockResolvedValue({
 				commit: { sha: 'abc12345', commit: { author: { date: '2026-01-01T00:00:00Z' } } }
 			})
@@ -44,9 +37,9 @@ describe('/info command', () => {
 				})
 			})
 		);
-		const command = require('../../../src/commands/information/info');
+		const command = await import('../../../src/commands/information/info');
 		const interaction = createMockInteraction({ guildSize: 3 });
-		await command.execute(interaction);
+		await command.default.execute(interaction);
 
 		const [callArgs] = (interaction.editReply as jest.Mock).mock.calls;
 		expect(callArgs[0]).toHaveProperty('embeds');
@@ -65,9 +58,9 @@ describe('/info command', () => {
 				})
 			})
 		);
-		const command = require('../../../src/commands/information/info');
+		const command = await import('../../../src/commands/information/info');
 		const interaction = createMockInteraction({ guildSize: 5 });
-		await command.execute(interaction);
+		await command.default.execute(interaction);
 
 		const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
 		const fields: { name: string; value: string }[] = embeds[0].toJSON().fields ?? [];
@@ -88,9 +81,9 @@ describe('/info command', () => {
 				})
 			})
 		);
-		const command = require('../../../src/commands/information/info');
+		const command = await import('../../../src/commands/information/info');
 		const interaction = createMockInteraction();
-		await command.execute(interaction);
+		await command.default.execute(interaction);
 
 		const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
 		const fields: { name: string; value: string }[] = embeds[0].toJSON().fields ?? [];
@@ -101,11 +94,12 @@ describe('/info command', () => {
 	it('embed shows fallback when fetch fails', async () => {
 		jest.resetModules();
 		jest.mock('node-fetch', () => jest.fn().mockRejectedValue(new Error('network error')));
-		const command = require('../../../src/commands/information/info');
+
+		const command = await import('../../../src/commands/information/info');
 		const interaction = createMockInteraction();
 		// Wait a tick for the module-level fetch to settle
 		await new Promise((r) => setTimeout(r, 50));
-		await command.execute(interaction);
+		await command.default.execute(interaction);
 
 		const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
 		const fields: { name: string; value: string }[] = embeds[0].toJSON().fields ?? [];

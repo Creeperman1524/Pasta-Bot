@@ -32,13 +32,7 @@ jest.mock('../../../src/util/leaderboard', () => ({
 	leaderboardMulti: jest.fn().mockReturnValue('1 - <@user> : `0`')
 }));
 
-/*
- * This module exports both a Command (via module.exports = ...) and named test helpers
- * (via module.exports.x = x). TypeScript only knows about the Command type, so the named
- * exports cannot be reached via import syntax — require() with a type cast is necessary.
- */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const tictactoe = require('../../../src/commands/minigames/tictactoe');
+import tictactoe, { testingFuncs } from '../../../src/commands/minigames/tictactoe';
 const {
 	checkWinner,
 	findBestMove,
@@ -46,252 +40,221 @@ const {
 	determineMistakeChance,
 	MinimaxAlphaBeta,
 	Winner
-} = tictactoe;
+} = testingFuncs;
 
 import { createMockInteraction } from '../../helpers/mockInteraction';
 
-// A 3x3 board — rows are the first index, columns the second
-type TicBoard = [number[], number[], number[]];
-
-// Board factories for common test states
-const emptyBoard = (): TicBoard => [
-	[0, 0, 0],
-	[0, 0, 0],
-	[0, 0, 0]
-];
-
 // ---------------------------------------------------------------------------
 
-describe('checkWinner()', () => {
-	it('returns Player1 for a horizontal win (row 0)', () => {
-		expect(
-			checkWinner([
-				[1, 1, 1],
-				[0, 0, 0],
-				[0, 0, 0]
-			])
-		).toBe(Winner.Player1);
-	});
+describe('game logic', () => {
+	describe('checkWinner()', () => {
+		it('returns Player1 for a horizontal win', () => {
+			expect(
+				checkWinner([
+					[1, 1, 1],
+					[0, 0, 0],
+					[0, 0, 0]
+				])
+			).toBe(Winner.Player1);
+		});
 
-	it('returns Player1 for a vertical win (col 0)', () => {
-		expect(
-			checkWinner([
-				[1, 0, 0],
-				[1, 0, 0],
-				[1, 0, 0]
-			])
-		).toBe(Winner.Player1);
-	});
+		it('returns Player1 for a vertical win', () => {
+			expect(
+				checkWinner([
+					[1, 0, 0],
+					[1, 0, 0],
+					[1, 0, 0]
+				])
+			).toBe(Winner.Player1);
+		});
 
-	it('returns Player1 for a diagonal win (top-left → bottom-right)', () => {
-		expect(
-			checkWinner([
-				[1, 0, 0],
-				[0, 1, 0],
-				[0, 0, 1]
-			])
-		).toBe(Winner.Player1);
-	});
+		it('returns Player1 for a negative diagonal win', () => {
+			expect(
+				checkWinner([
+					[1, 0, 0],
+					[0, 1, 0],
+					[0, 0, 1]
+				])
+			).toBe(Winner.Player1);
+		});
 
-	it('returns Player1 for a diagonal win (top-right → bottom-left)', () => {
-		expect(
-			checkWinner([
-				[0, 0, 1],
-				[0, 1, 0],
-				[1, 0, 0]
-			])
-		).toBe(Winner.Player1);
-	});
+		it('returns Player1 for a positive diagonal win', () => {
+			expect(
+				checkWinner([
+					[0, 0, 1],
+					[0, 1, 0],
+					[1, 0, 0]
+				])
+			).toBe(Winner.Player1);
+		});
 
-	it('returns Player2 for a horizontal win', () => {
-		expect(
-			checkWinner([
-				[-1, -1, -1],
-				[0, 0, 0],
-				[0, 0, 0]
-			])
-		).toBe(Winner.Player2);
-	});
+		it('returns Player2 for a horizontal win', () => {
+			expect(
+				checkWinner([
+					[-1, -1, -1],
+					[0, 0, 0],
+					[0, 0, 0]
+				])
+			).toBe(Winner.Player2);
+		});
 
-	it('returns Player2 for a vertical win', () => {
-		expect(
-			checkWinner([
-				[-1, 0, 0],
-				[-1, 0, 0],
-				[-1, 0, 0]
-			])
-		).toBe(Winner.Player2);
-	});
+		it('returns Player2 for a vertical win', () => {
+			expect(
+				checkWinner([
+					[-1, 0, 0],
+					[-1, 0, 0],
+					[-1, 0, 0]
+				])
+			).toBe(Winner.Player2);
+		});
 
-	it('returns Tie for a full board with no winner', () => {
-		// X O X | X X O | O X O  — no three in a row
-		expect(
-			checkWinner([
-				[1, -1, 1],
-				[1, 1, -1],
-				[-1, 1, -1]
-			])
-		).toBe(Winner.Tie);
-	});
+		it('returns Tie for a full board with no winner', () => {
+			expect(
+				checkWinner([
+					[1, -1, 1],
+					[1, 1, -1],
+					[-1, 1, -1]
+				])
+			).toBe(Winner.Tie);
+		});
 
-	it('returns OnGoing for an in-progress board', () => {
-		expect(
-			checkWinner([
-				[1, 0, 0],
-				[0, -1, 0],
-				[0, 0, 0]
-			])
-		).toBe(Winner.OnGoing);
-	});
-});
-
-// ---------------------------------------------------------------------------
-
-describe('determineMistakeChance()', () => {
-	it('returns a value close to 0.9 when winRate is 0 (easiest bot)', () => {
-		expect(determineMistakeChance(0)).toBeCloseTo(0.9);
-	});
-
-	it('decreases as winRate increases (harder bot with more wins)', () => {
-		expect(determineMistakeChance(0.5)).toBeLessThan(determineMistakeChance(0));
-		expect(determineMistakeChance(1)).toBeLessThan(determineMistakeChance(0.5));
-	});
-
-	it('always returns a non-negative value across the full win-rate range', () => {
-		[0, 0.25, 0.5, 0.75, 1].forEach((wr) => {
-			expect(determineMistakeChance(wr)).toBeGreaterThanOrEqual(0);
+		it('returns OnGoing for an in-progress board', () => {
+			expect(
+				checkWinner([
+					[1, 0, 0],
+					[0, -1, 0],
+					[0, 0, 0]
+				])
+			).toBe(Winner.OnGoing);
 		});
 	});
-});
 
-// ---------------------------------------------------------------------------
-
-describe('MinimaxAlphaBeta()', () => {
-	it('returns positive score when Player1 has already won', () => {
-		// Player1 won — depth 0, not maximizing (bot's turn to evaluate)
-		const score = MinimaxAlphaBeta(
-			[
-				[1, 1, 1],
-				[0, 0, 0],
-				[0, 0, 0]
-			],
-			0,
-			-99,
-			99,
-			false
-		);
-		expect(score).toBeGreaterThan(0);
-	});
-
-	it('returns negative score when Player2 (bot) has already won', () => {
-		const score = MinimaxAlphaBeta(
-			[
-				[-1, -1, -1],
-				[0, 0, 0],
-				[0, 0, 0]
-			],
-			0,
-			-99,
-			99,
-			true
-		);
-		expect(score).toBeLessThan(0);
-	});
-
-	it('returns 0 for a tie board', () => {
-		const score = MinimaxAlphaBeta(
-			[
-				[1, -1, 1],
-				[1, 1, -1],
-				[-1, 1, -1]
-			],
-			0,
-			-99,
-			99,
-			true
-		);
-		expect(score).toBe(0);
-	});
-});
-
-// ---------------------------------------------------------------------------
-
-describe('findBestMove()', () => {
-	it('takes a winning move when one is immediately available for the bot', () => {
-		// Bot (-1) can win column 0 by playing row 2
-		//  -1  0  0
-		//  -1  0  0
-		//   0  0  0
-		const move = findBestMove({
-			board: [
-				[-1, 0, 0],
-				[-1, 0, 0],
-				[0, 0, 0]
-			]
+	describe('determineMistakeChance()', () => {
+		it('returns a value close to 0.9 when winRate is 0 (easiest bot)', () => {
+			expect(determineMistakeChance(0)).toBeCloseTo(0.9);
 		});
-		// Winning move is row 2, col 0 → linear index 6
-		expect(move).toBe(6);
+
+		it('decreases as winRate increases (harder bot with more wins)', () => {
+			expect(determineMistakeChance(0.5)).toBeLessThan(determineMistakeChance(0));
+			expect(determineMistakeChance(1)).toBeLessThan(determineMistakeChance(0.5));
+		});
+
+		it('always returns a non-negative value across the full win-rate range', () => {
+			[0, 0.25, 0.5, 0.75, 1].forEach((wr) => {
+				expect(determineMistakeChance(wr)).toBeGreaterThanOrEqual(0);
+			});
+		});
 	});
 
-	it('blocks the player from winning on their next turn', () => {
-		// Player (1) threatens to complete row 0 at col 2
-		//  1  1  0
-		//  0  0  0
-		//  0  0  0
-		const move = findBestMove({
-			board: [
+	describe('MinimaxAlphaBeta()', () => {
+		it('returns positive score when Player1 has already won', () => {
+			// Player1 won — depth 0, not maximizing (bot's turn to evaluate)
+			const score = MinimaxAlphaBeta(
+				[
+					[1, 1, 1],
+					[0, 0, 0],
+					[0, 0, 0]
+				],
+				0,
+				-99,
+				99,
+				false
+			);
+			expect(score).toBeGreaterThan(0);
+		});
+
+		it('returns negative score when Player2 (bot) has already won', () => {
+			const score = MinimaxAlphaBeta(
+				[
+					[-1, -1, -1],
+					[0, 0, 0],
+					[0, 0, 0]
+				],
+				0,
+				-99,
+				99,
+				true
+			);
+			expect(score).toBeLessThan(0);
+		});
+
+		it('returns 0 for a tie board', () => {
+			const score = MinimaxAlphaBeta(
+				[
+					[1, -1, 1],
+					[1, 1, -1],
+					[-1, 1, -1]
+				],
+				0,
+				-99,
+				99,
+				true
+			);
+			expect(score).toBe(0);
+		});
+	});
+
+	describe('findBestMove()', () => {
+		it('takes a winning move when one is immediately available for the bot', () => {
+			const move = findBestMove([
+				[-1, 0, 0],
+				[-1, 0, 0],
+				[0, 0, 0]
+			]);
+			// Winning move is row 2, col 0 → linear index 6
+			expect(move).toBe(6);
+		});
+
+		it('blocks the player from winning on their next turn', () => {
+			const move = findBestMove([
 				[1, 1, 0],
 				[0, 0, 0],
 				[0, 0, 0]
-			]
+			]);
+			// Must block at row 0, col 2 → index 2
+			expect(move).toBe(2);
 		});
-		// Must block at row 0, col 2 → index 2
-		expect(move).toBe(2);
 	});
-});
 
-// ---------------------------------------------------------------------------
-
-describe('findRandomMove()', () => {
-	it('returns a valid empty position on a partially-filled board', () => {
-		const move = findRandomMove({
-			board: [
+	describe('findRandomMove()', () => {
+		it('returns a valid empty position on a partially-filled board', () => {
+			const move = findRandomMove([
 				[1, -1, 0],
 				[0, 1, 0],
 				[-1, 0, 0]
-			]
+			]);
+			// Empty cells: indices 2, 3, 5, 7, 8
+			expect([2, 3, 5, 7, 8]).toContain(move);
 		});
-		// Empty cells: indices 2, 3, 5, 7, 8
-		expect([2, 3, 5, 7, 8]).toContain(move);
-	});
 
-	it('returns the only remaining empty position when one cell is left', () => {
-		const move = findRandomMove({
-			board: [
+		it('returns the only remaining empty position when one cell is left', () => {
+			const move = findRandomMove([
 				[1, -1, 1],
 				[1, 1, -1],
 				[-1, 0, -1]
-			]
+			]);
+			// Only empty cell is row 2, col 1 → index 7
+			expect(move).toBe(7);
 		});
-		// Only empty cell is row 2, col 1 → index 7
-		expect(move).toBe(7);
 	});
 });
 
 // ---------------------------------------------------------------------------
 
-describe('/tictactoe command', () => {
-	describe('help subcommand', () => {
-		it('calls editReply with an embed', async () => {
+describe('/tictactoe', () => {
+	describe('help', () => {
+		it('calls editReply with a help embed', async () => {
 			const interaction = createMockInteraction({ subcommand: 'help' });
 			await tictactoe.execute(interaction);
 			expect(interaction.editReply).toHaveBeenCalledWith(
 				expect.objectContaining({ embeds: expect.any(Array) })
 			);
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toContain('How to Play');
 		});
 	});
 
-	describe('leaderboards subcommand', () => {
+	describe('leaderboards', () => {
 		beforeEach(() => {
 			mockTictactoeStats.find.mockResolvedValue([]);
 		});
@@ -305,10 +268,12 @@ describe('/tictactoe command', () => {
 			expect(interaction.editReply).toHaveBeenCalledWith(
 				expect.objectContaining({ embeds: expect.any(Array) })
 			);
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toContain('Leaderboard');
 		});
 	});
 
-	describe('stats subcommand', () => {
+	describe('stats', () => {
 		it('replies with "No Data" embed when user is not in the database', async () => {
 			mockTictactoeStats.findOne.mockResolvedValue(null);
 			const interaction = createMockInteraction({ subcommand: 'stats' });
@@ -336,6 +301,3 @@ describe('/tictactoe command', () => {
 		});
 	});
 });
-
-// Keep emptyBoard defined so it's available for future tests without lint warnings
-void emptyBoard;

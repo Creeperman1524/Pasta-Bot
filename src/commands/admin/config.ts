@@ -240,7 +240,7 @@ function parseOption(
 	}
 }
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('config')
 		.setDescription('Edit specific server features')

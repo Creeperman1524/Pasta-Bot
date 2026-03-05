@@ -3,7 +3,7 @@ import { newEmbed, colors } from '../../util/embeds';
 import { paginate } from '../../util/pagination';
 import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('help')
 		.setDescription('Displays a help message')

@@ -32,13 +32,7 @@ jest.mock('../../../src/util/leaderboard', () => ({
 	leaderboardMulti: jest.fn().mockReturnValue('1 - <@user> : `0`')
 }));
 
-/*
- * This module exports both a Command (via module.exports = ...) and named test helpers
- * (via module.exports.x = x). TypeScript only knows about the Command type, so the named
- * exports cannot be reached via import syntax — require() with a type cast is necessary.
- */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const minesweeper = require('../../../src/commands/minigames/minesweeper');
+import minesweeper, { testingFuncs } from '../../../src/commands/minigames/minesweeper';
 const {
 	generateBoard,
 	generateMines,
@@ -47,7 +41,7 @@ const {
 	positionMatch,
 	randomNumber,
 	getNumber
-} = minesweeper;
+} = testingFuncs;
 
 import { createMockInteraction } from '../../helpers/mockInteraction';
 
@@ -73,9 +67,7 @@ function makeSmallBoard(mineTiles: [number, number][]): Board {
 	);
 }
 
-// ---------------------------------------------------------------------------
-
-describe('minesweeper internals', () => {
+describe('game logic', () => {
 	describe('randomNumber()', () => {
 		it('always returns a value in [0, BOARD_SIZE-1]', () => {
 			for (let i = 0; i < 50; i++) {
@@ -162,6 +154,17 @@ describe('minesweeper internals', () => {
 			}
 			expect(count).toBe(NUM_OF_MINES);
 		});
+
+		it('inner tiles have their mine count precomputed', () => {
+			// Checks to see whether any tile has a different number than 0
+			let count = 0;
+			for (let x = 1; x <= BOARD_SIZE; x++) {
+				for (let y = 1; y <= BOARD_SIZE; y++) {
+					count += board[x][y].num;
+				}
+			}
+			expect(count).not.toBe(0);
+		});
 	});
 
 	describe('checkTile()', () => {
@@ -237,25 +240,27 @@ describe('minesweeper internals', () => {
 
 // ---------------------------------------------------------------------------
 
-describe('/minesweeper command', () => {
-	describe('help subcommand', () => {
-		it('calls editReply with an embed', async () => {
+describe('/minesweeper', () => {
+	describe('help', () => {
+		it('calls editReply with a help embed', async () => {
 			const interaction = createMockInteraction({ subcommand: 'help' });
 			await minesweeper.execute(interaction);
 			expect(interaction.editReply).toHaveBeenCalledWith(
 				expect.objectContaining({ embeds: expect.any(Array) })
 			);
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toContain('How to Play');
 		});
 	});
 
-	describe('leaderboards subcommand', () => {
+	describe('leaderboards', () => {
 		beforeEach(() => {
 			// Return empty arrays so leaderboard util receives no data (it's mocked anyway)
 			mockMinesweeperStats.find.mockResolvedValue([]);
 		});
 
 		it.each(['fastest', 'played', 'wins'])(
-			'calls editReply with an embed for type "%s"',
+			'calls editReply with a leaderboard embed for type "%s"',
 			async (type) => {
 				const interaction = createMockInteraction({
 					subcommand: 'leaderboards',
@@ -265,17 +270,19 @@ describe('/minesweeper command', () => {
 				expect(interaction.editReply).toHaveBeenCalledWith(
 					expect.objectContaining({ embeds: expect.any(Array) })
 				);
+				const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+				expect(embed?.toJSON().title).toContain('Leaderboard');
 			}
 		);
 	});
 
-	describe('stats subcommand', () => {
+	describe('stats', () => {
 		it('replies with "No Data" embed when user is not in the database', async () => {
 			mockMinesweeperStats.findOne.mockResolvedValue(null);
 			const interaction = createMockInteraction({ subcommand: 'stats' });
 			await minesweeper.execute(interaction);
-			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
-			expect(embeds[0].toJSON().title).toBe('No Data');
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toContain('No Data');
 		});
 
 		it('replies with User Statistics embed when the user has recorded data', async () => {
@@ -287,11 +294,12 @@ describe('/minesweeper command', () => {
 			});
 			const interaction = createMockInteraction({ subcommand: 'stats' });
 			await minesweeper.execute(interaction);
-			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
-			expect(embeds[0].toJSON().title).toBe('User Statistics');
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toContain('User Statistics');
+
 			// Wins and total games should appear in the embed description
-			expect(embeds[0].toJSON().description).toContain('5');
-			expect(embeds[0].toJSON().description).toContain('10');
+			expect(embed?.toJSON().description).toContain('5');
+			expect(embed?.toJSON().description).toContain('10');
 		});
 	});
 });

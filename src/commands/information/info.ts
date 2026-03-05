@@ -39,7 +39,7 @@ async function getCurrentBuildCommit() {
 
 getCurrentBuildCommit();
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('info')
 		.setDescription("Displays some info about the bot's current stats"),

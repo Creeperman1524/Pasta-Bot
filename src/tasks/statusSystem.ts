@@ -11,7 +11,7 @@ const statusFiles = fs.readdirSync('./src/status');
 (async () => {
 	for (const file of statusFiles) {
 		const func = await import(`../status/${file.slice(0, -3)}`);
-		functions.push(func);
+		functions.push(func.default);
 	}
 })();
 
@@ -32,7 +32,7 @@ function iterateCounter(presences: StatusRecord) {
 	if (i > functions.length - 1) i = 0;
 }
 
-module.exports = {
+export default {
 	name: 'statusSystem',
 	mode: 'INTERVAL',
 	interval: parseInt(statusInterval),

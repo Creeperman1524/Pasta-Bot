@@ -42,8 +42,8 @@ function mockRankResponse(data: object) {
 	mockFetch.mockResolvedValueOnce({ json: jest.fn().mockResolvedValue(data) });
 }
 
-describe('/valorant command', () => {
-	describe('link subcommand', () => {
+describe('/valorant', () => {
+	describe('link', () => {
 		it('replies with error embed for API error code 22 (invalid account)', async () => {
 			mockAccountResponse({
 				status: 404,
@@ -56,7 +56,7 @@ describe('/valorant command', () => {
 			await command.execute(interaction);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
-			expect(lastEmbed?.toJSON().description).toMatch(/invalid/i);
+			expect(lastEmbed?.toJSON().description).toContain('invalid');
 		});
 
 		it('replies with error embed for API error code 24 (not enough data)', async () => {
@@ -71,7 +71,7 @@ describe('/valorant command', () => {
 			await command.execute(interaction);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
-			expect(lastEmbed?.toJSON().description).toMatch(/match data/i);
+			expect(lastEmbed?.toJSON().description).toContain('match data');
 		});
 
 		it('saves PUUID and replies with success embed on API success', async () => {
@@ -88,7 +88,7 @@ describe('/valorant command', () => {
 			);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
-			expect(lastEmbed?.toJSON().title).toMatch(/Linked/i);
+			expect(lastEmbed?.toJSON().title).toContain('Linked');
 		});
 
 		it('replies with error content when DB update fails', async () => {
@@ -101,17 +101,17 @@ describe('/valorant command', () => {
 			await command.execute(interaction);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastCall = calls[calls.length - 1][0];
-			expect(lastCall.content ?? '').toMatch(/database/i);
+			expect(lastCall.content ?? '').toContain('database');
 		});
 	});
 
-	describe('update-role subcommand', () => {
+	describe('update-role', () => {
 		it('replies with "not linked" embed when no valorant config exists', async () => {
 			mockValorantFind.mockResolvedValue(null);
 			const interaction = createMockInteraction({ subcommand: 'update-role' });
 			await command.execute(interaction);
 			const [[{ embeds }]] = (interaction.editReply as jest.Mock).mock.calls;
-			expect(embeds[0].toJSON().title).toMatch(/not linked/i);
+			expect(embeds[0].toJSON().title).toContain('not linked');
 		});
 
 		it('replies with error embed when rank API fails', async () => {
@@ -138,7 +138,7 @@ describe('/valorant command', () => {
 			await command.execute(interaction);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
-			expect(lastEmbed?.toJSON().title).toMatch(/Role not set/i);
+			expect(lastEmbed?.toJSON().title).toContain('Role not set');
 		});
 
 		it('replies with Unrated embed for unranked player', async () => {
@@ -161,7 +161,43 @@ describe('/valorant command', () => {
 			await command.execute(interaction);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
-			expect(lastEmbed?.toJSON().description).toMatch(/Unrated/i);
+			expect(lastEmbed?.toJSON().description).toContain('Unrated');
+		});
+
+		it('awards the user a new role', async () => {
+			mockValorantFind.mockResolvedValue({ puuid: 'abc' });
+			mockRankResponse({
+				status: 200,
+				data: { current: { tier: { name: 'Gold 2' } } }
+			});
+			mockGuildFind.mockResolvedValue({
+				valorantRoles: { bronze: 'old-role-id', gold: 'role-id' }
+			});
+
+			const roleRemoveMock = jest.fn();
+			const roleAddMock = jest.fn();
+
+			const mockOldRole = { id: 'old-role-id' };
+			const mockNewRole = { id: 'role-id' };
+			const mockMember = {
+				roles: { remove: roleRemoveMock, add: roleAddMock }
+			};
+			const interaction = createMockInteraction({ subcommand: 'update-role' });
+			(interaction.guild!.roles.fetch as jest.Mock)
+				.mockResolvedValueOnce(mockOldRole) // To remove
+				.mockResolvedValueOnce(mockNewRole) // To remove
+				.mockResolvedValueOnce(mockNewRole); // To add
+			(interaction.guild!.members.fetch as jest.Mock).mockResolvedValue(mockMember);
+
+			await command.execute(interaction);
+
+			const calls = (interaction.editReply as jest.Mock).mock.calls;
+			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];
+
+			expect(roleRemoveMock).toHaveBeenCalledWith([mockOldRole, mockNewRole]); // Removes all roles
+			expect(roleAddMock).toHaveBeenCalledWith(mockNewRole); // Adds the role
+			expect(lastEmbed?.toJSON().description).toContain('Gold');
+			expect(lastEmbed?.toJSON().description).toContain('role-id');
 		});
 	});
 });

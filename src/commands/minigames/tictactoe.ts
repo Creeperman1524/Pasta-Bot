@@ -444,9 +444,9 @@ async function gameLoop(game: Game, move: number) {
 	let botMove = -1;
 
 	if (Math.random() > mistakeChance) {
-		botMove = findBestMove(game);
+		botMove = findBestMove(game.board);
 	} else {
-		botMove = findRandomMove(game);
+		botMove = findRandomMove(game.board);
 	}
 
 	await sleep(Math.random() * 1000);
@@ -466,12 +466,12 @@ function determineMistakeChance(winRate: number): number {
 }
 
 // Returns a random valid move
-function findRandomMove(game: Game) {
+function findRandomMove(board: Board) {
 	const validMoves = [];
 
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
-			if (game.board[y][x] != 0) continue; // Already a move there
+			if (board[y][x] != 0) continue; // Already a move there
 			validMoves.push(y * 3 + (x % 3));
 		}
 	}
@@ -485,17 +485,17 @@ function sleep(ms: number) {
 }
 
 // Finds the best move for the bot to make (minimizer)
-function findBestMove(game: Game) {
+function findBestMove(board: Board) {
 	let bestEval = 99;
 	let bestMove = -1; // 0-8
 
 	// Tries to make all possible moves
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
-			if (game.board[y][x] != 0) continue; // Already a move there
+			if (board[y][x] != 0) continue; // Already a move there
 
-			game.board[y][x] = -1; // Makes the move
-			const moveEval = MinimaxAlphaBeta(game.board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
+			board[y][x] = -1; // Makes the move
+			const moveEval = MinimaxAlphaBeta(board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
 
 			if (moveEval < bestEval) {
 				// Minimizing
@@ -503,7 +503,7 @@ function findBestMove(game: Game) {
 				bestMove = y * 3 + (x % 3);
 			}
 
-			game.board[y][x] = 0; // Unmake the move
+			board[y][x] = 0; // Unmake the move
 		}
 	}
 
@@ -862,7 +862,7 @@ Human: \`${stats.totalHuman != 0 ? Math.round((stats.winsHuman / stats.totalHuma
 }
 
 // The discord command bits
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('tictactoe')
 		.setDescription('A tic-tac-toe minigame')
@@ -929,11 +929,12 @@ module.exports = {
 	}
 } as Command;
 
-// Named exports for unit testing of pure internal functions
-// Named exports for unit testing of pure internal functions
-module.exports.checkWinner = checkWinner;
-module.exports.findBestMove = findBestMove;
-module.exports.findRandomMove = findRandomMove;
-module.exports.determineMistakeChance = determineMistakeChance;
-module.exports.MinimaxAlphaBeta = MinimaxAlphaBeta;
-module.exports.Winner = Winner;
+// Exported private functions for unit testing
+export const testingFuncs = {
+	checkWinner,
+	findBestMove,
+	findRandomMove,
+	determineMistakeChance,
+	MinimaxAlphaBeta,
+	Winner
+};

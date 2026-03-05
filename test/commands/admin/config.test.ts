@@ -31,8 +31,8 @@ const baseData = {
 	loggingChannelID: ''
 };
 
-describe('/config command', () => {
-	describe('set subcommand', () => {
+describe('/config', () => {
+	describe('set', () => {
 		it('replies with error embed when no rule is provided', async () => {
 			mockFindOneAndUpdate.mockResolvedValue({ ...baseData });
 			const interaction = createMockInteraction({
@@ -88,7 +88,7 @@ describe('/config command', () => {
 			mockFindOneAndUpdate
 				.mockResolvedValueOnce({ ...baseData })
 				.mockResolvedValueOnce(savedData);
-			const mockRole = { id: 'role-id-123', name: 'Iron' };
+			const mockRole = { id: '123456', name: 'Iron' };
 			const interaction = createMockInteraction({
 				subcommand: 'set',
 				getString: { rule: 'valorant-role-iron' },
@@ -100,7 +100,7 @@ describe('/config command', () => {
 		});
 	});
 
-	describe('view subcommand', () => {
+	describe('view', () => {
 		it('replies with no-data embed when guild has no configs', async () => {
 			mockFindOne.mockResolvedValue(null);
 			const interaction = createMockInteraction({ subcommand: 'view' });
@@ -129,6 +129,33 @@ describe('/config command', () => {
 			await command.execute(interaction);
 			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
 			expect(embed?.toJSON().title).toBe('Config View');
+			expect(embed?.toJSON().description).toContain('enable-logging');
+			expect(embed?.toJSON().description).toContain('true');
+		});
+
+		it('shows "false" when boolean module value is not configured', async () => {
+			mockFindOne.mockResolvedValue({ modules: {}, valorantRoles: {} });
+			const interaction = createMockInteraction({
+				subcommand: 'view',
+				getString: { rule: 'enable-logging' }
+			});
+			await command.execute(interaction);
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().title).toBe('Config View');
+			expect(embed?.toJSON().description).toContain('enable-logging');
+			expect(embed?.toJSON().description).toContain('false');
+		});
+
+		it('shows current role module value', async () => {
+			mockFindOne.mockResolvedValue({ modules: {}, valorantRoles: { iron: '123456' } });
+			const interaction = createMockInteraction({
+				subcommand: 'view',
+				getString: { rule: 'valorant-role-iron' }
+			});
+			await command.execute(interaction);
+			const embed = (interaction.editReply as jest.Mock).mock.calls[0][0].embeds?.[0];
+			expect(embed?.toJSON().description).not.toContain('Unassigned');
+			expect(embed?.toJSON().description).toContain('123456');
 		});
 
 		it('shows Unassigned when a valorant role is not configured', async () => {

@@ -4,7 +4,7 @@ import { Status, StatusUpdate } from '../util/types/status';
 
 const events = rawEvents as Record<string, number[]>;
 
-module.exports = {
+export default {
 	name: 'calendarEvents',
 
 	async execute() {

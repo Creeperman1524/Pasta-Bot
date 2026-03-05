@@ -1,9 +1,10 @@
+const loggerError = jest.fn();
 jest.mock('../../../src/logging', () => ({
 	logger: {
 		child: jest.fn().mockReturnValue({
 			info: jest.fn(),
 			warn: jest.fn(),
-			error: jest.fn(),
+			error: loggerError,
 			debug: jest.fn()
 		})
 	}
@@ -24,13 +25,27 @@ import { ChannelType } from 'discord.js';
 import { createMockInteraction } from '../../helpers/mockInteraction';
 
 import command from '../../../src/commands/admin/reactionrole';
+import { on } from 'node:cluster';
 
 function makeTextChannel(id = 'chan-1') {
 	return { id, type: ChannelType.GuildText, send: jest.fn(), messages: { fetch: jest.fn() } };
 }
 
-describe('/reactionrole command', () => {
-	describe('create subcommand', () => {
+describe('/reactionrole', () => {
+	describe('create', () => {
+		it('replies with error when no text channel is provided', async () => {
+			mockFindOneAndUpdate.mockResolvedValue({ reactionMessages: {} });
+			const interaction = createMockInteraction({
+				subcommand: 'create',
+				getString: { title: 'My Roles' },
+				getChannel: { channel: null }
+			});
+			await command.execute(interaction);
+			expect(interaction.editReply).toHaveBeenCalledWith(
+				expect.objectContaining({ content: expect.stringContaining('valid channel') })
+			);
+		});
+
 		it('replies with error when a non-text channel is provided', async () => {
 			mockFindOneAndUpdate.mockResolvedValue({ reactionMessages: {} });
 			const voiceChannel = { id: 'vc-1', type: ChannelType.GuildVoice };
@@ -68,7 +83,7 @@ describe('/reactionrole command', () => {
 		});
 	});
 
-	describe('delete subcommand', () => {
+	describe('delete', () => {
 		it('replies with error when guild has no reaction messages', async () => {
 			mockFindOne.mockResolvedValue({ reactionMessages: {} });
 			const interaction = createMockInteraction({ subcommand: 'delete' });
@@ -77,9 +92,28 @@ describe('/reactionrole command', () => {
 				expect.objectContaining({ content: expect.stringContaining("doesn't seem") })
 			);
 		});
+
+		it('replies with error when a message is not a reaction message', async () => {
+			mockFindOne.mockResolvedValue({
+				reactionMessages: { 'message-id': ['role-id', 'emoji'] }
+			});
+			const interaction = createMockInteraction({
+				subcommand: 'delete',
+				getString: { messagelink: '' }
+			});
+			await command.execute(interaction);
+			expect(interaction.editReply).toHaveBeenCalledWith(
+				expect.objectContaining({ content: expect.stringContaining('this server') })
+			);
+			expect(loggerError).toHaveBeenCalledWith(
+				expect.stringContaining('not a valid reaction message')
+			);
+		});
+
+		// TODO: make a successful delete test (that will take a lot of mocking)
 	});
 
-	describe('add subcommand', () => {
+	describe('add', () => {
 		it('replies with error when guild has no reaction messages', async () => {
 			mockFindOne.mockResolvedValue({ reactionMessages: {} });
 			const interaction = createMockInteraction({ subcommand: 'add' });
@@ -126,7 +160,7 @@ describe('/reactionrole command', () => {
 		});
 	});
 
-	describe('remove subcommand', () => {
+	describe('remove', () => {
 		it('replies with error when guild has no reaction messages', async () => {
 			mockFindOne.mockResolvedValue({ reactionMessages: {} });
 			const interaction = createMockInteraction({ subcommand: 'remove' });

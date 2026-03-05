@@ -10,7 +10,7 @@ const taskFiles = fs.readdirSync('./src/tasks');
 (async () => {
 	for (const file of taskFiles) {
 		const task = await import(`./tasks/${file.slice(0, -3)}`);
-		tasks.push(task);
+		tasks.push(task.default as Task);
 	}
 })();
 

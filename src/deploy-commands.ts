@@ -1,13 +1,10 @@
-import fs from 'fs';
-import { REST, Routes } from 'discord.js';
+import { REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from 'discord.js';
 
 import { logger } from './logging';
 import { Bot } from './util/types/bot';
-import { Command } from './util/types/command';
 
 const rest = new REST().setToken(process.env.token as string);
 
-const commands: Command[] = [];
 const guildIDs: string[] = [];
 
 export default {
@@ -16,7 +13,7 @@ export default {
 			guildIDs.push(guild.id);
 		});
 
-		await updateCommands();
+		await updateCommands(client);
 
 		logger
 			.child({ mode: 'DEPLOY' })
@@ -27,28 +24,16 @@ export default {
 };
 
 // Refreshes all of the commands
-async function updateCommands() {
-	const commandData = [];
-	const commandFolders = fs.readdirSync('./src/commands');
+async function updateCommands(client: Bot) {
+	const commandData: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 
 	logger.child({ mode: 'DEPLOY' }).info('Started refreshing application (/) commands...');
 
-	// Gather commands from folders
-	for (const folder of commandFolders) {
-		const commandFiles = fs
-			.readdirSync(`./src/commands/${folder}`)
-			.filter((file) => file.endsWith('.js') || file.endsWith('.ts'));
-		for (const file of commandFiles) {
-			const command: Command = await import(`./commands/${folder}/${file.slice(0, -3)}`);
-			commands.push(command);
-			if (command.data) {
-				commandData.push(command.data.toJSON());
-				logger
-					.child({ mode: 'DEPLOY' })
-					.debug(`Pushing '${command.data.name}' to command list`);
-			}
-		}
-	}
+	// Gather the commands from the bot
+	client.commands.forEach((command) => {
+		commandData.push(command.data.toJSON());
+		logger.child({ mode: 'DEPLOY' }).debug(`Pushing '${command.data.name}' to command list`);
+	});
 
 	// Updates global slash commands
 	try {

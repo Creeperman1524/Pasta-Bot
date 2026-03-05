@@ -13,7 +13,7 @@ import { createMockInteraction } from '../../helpers/mockInteraction';
 
 import command from '../../../src/commands/information/ping';
 
-describe('/ping command', () => {
+describe('/ping', () => {
 	it('calls editReply with an embed', async () => {
 		const interaction = createMockInteraction({ clientWsPing: 55 });
 		await command.execute(interaction);

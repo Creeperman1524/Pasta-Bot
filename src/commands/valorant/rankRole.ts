@@ -271,7 +271,7 @@ async function updateRole(interaction: ModChatInputCommandInteraction) {
 	});
 }
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('valorant')
 		.setDescription('Commands dealing with Valorant')
