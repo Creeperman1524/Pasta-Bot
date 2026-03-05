@@ -57,7 +57,7 @@ describe('birthdayDisplay', () => {
 
 	it('returns a status update object with activity set', async () => {
 		jest.setSystemTime(new Date(2026, 0, 1, 12, 0, 0));
-		const result = await birthdayModule.execute();
+		const result = await birthdayModule.execute({} as unknown as Bot);
 		expect(result).toHaveProperty('message');
 		expect(result).toHaveProperty('activity');
 	});

@@ -170,3 +170,26 @@ describe('/config', () => {
 		});
 	});
 });
+
+// ---------------------------------------------------------------------------
+
+describe('/config — database failure tests', () => {
+	it('set: replies with error content when the DB write (second findOneAndUpdate) returns null', async () => {
+		// First call (upsert) succeeds; second call (the actual update) returns null
+		mockFindOneAndUpdate
+			.mockResolvedValueOnce({ ...baseData }) // upsert
+			.mockResolvedValueOnce(null); // update write fails
+
+		const interaction = createMockInteraction({
+			subcommand: 'set',
+			getString: { rule: 'enable-logging' },
+			getBoolean: { boolean: true }
+		});
+		await command.execute(interaction);
+
+		const calls = (interaction.editReply as jest.Mock).mock.calls;
+		const lastCall = calls[calls.length - 1][0];
+		// Should reply with an error content string, not a success embed
+		expect(lastCall.content ?? '').toContain('Could not update the database');
+	});
+});

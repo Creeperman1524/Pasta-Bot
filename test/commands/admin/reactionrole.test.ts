@@ -25,7 +25,6 @@ import { ChannelType } from 'discord.js';
 import { createMockInteraction } from '../../helpers/mockInteraction';
 
 import command from '../../../src/commands/admin/reactionrole';
-import { on } from 'node:cluster';
 
 function makeTextChannel(id = 'chan-1') {
 	return { id, type: ChannelType.GuildText, send: jest.fn(), messages: { fetch: jest.fn() } };
@@ -199,6 +198,138 @@ describe('/reactionrole', () => {
 			});
 			await command.execute(interaction);
 			expect(interaction.editReply).toHaveBeenCalled();
+		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+
+describe('/reactionrole — database failure tests', () => {
+	const MSG_LINK = 'https://discord.com/channels/guild-456/chan-1/msg-99';
+
+	/**
+	 * Returns a guild setup where the channel cache contains a text channel
+	 * whose messages.fetch returns the given mock message.
+	 */
+	function makeGuildWithMessage(msgMock: object) {
+		const { ChannelType } = jest.requireActual<typeof import('discord.js')>('discord.js');
+		const channelMock = {
+			id: 'chan-1',
+			type: ChannelType.GuildText,
+			send: jest.fn(),
+			messages: { fetch: jest.fn().mockResolvedValue(msgMock) }
+		};
+		return {
+			id: 'guild-456',
+			name: 'Test Guild',
+			channels: { cache: new Map([['chan-1', channelMock]]) },
+			members: { fetch: jest.fn() },
+			roles: { fetch: jest.fn() }
+		};
+	}
+
+	describe('create', () => {
+		it('replies with error content when DB write (second findOneAndUpdate) returns null', async () => {
+			const msgMock = { id: 'msg-99', url: 'http://example.com', delete: jest.fn() };
+			const channelMock = {
+				id: 'chan-1',
+				type: (jest.requireActual('discord.js') as typeof import('discord.js')).ChannelType
+					.GuildText,
+				send: jest.fn().mockResolvedValue(msgMock)
+			};
+			// First (upsert) succeeds; second (write new message) returns null
+			mockFindOneAndUpdate
+				.mockResolvedValueOnce({ reactionMessages: {} }) // upsert
+				.mockResolvedValueOnce(null); // write fails
+
+			const interaction = createMockInteraction({
+				subcommand: 'create',
+				getString: { title: 'My Roles' },
+				getChannel: { channel: channelMock }
+			});
+			await command.execute(interaction);
+
+			const calls = (interaction.editReply as jest.Mock).mock.calls;
+			const lastCall = calls[calls.length - 1][0];
+			expect(lastCall.content ?? '').toContain('Could not update the database');
+		});
+	});
+
+	describe('delete', () => {
+		it('replies with error content when DB write returns null', async () => {
+			const msgMock = {
+				id: 'msg-99',
+				delete: jest.fn().mockResolvedValue(undefined),
+				embeds: [{ fields: [] }]
+			};
+			mockFindOne.mockResolvedValue({ reactionMessages: { 'msg-99': [] } });
+			mockFindOneAndUpdate.mockResolvedValueOnce(null); // delete write fails
+
+			const interaction = createMockInteraction({
+				subcommand: 'delete',
+				getString: { messagelink: MSG_LINK },
+				guild: makeGuildWithMessage(msgMock)
+			});
+			await command.execute(interaction);
+
+			const calls = (interaction.editReply as jest.Mock).mock.calls;
+			const lastCall = calls[calls.length - 1][0];
+			expect(lastCall.content ?? '').toContain('Could not update the database');
+		});
+	});
+
+	describe('add', () => {
+		it('replies with error content when DB write returns null', async () => {
+			const fakeEmbed = { fields: [], toJSON: () => ({ fields: [] }) };
+			const msgMock = {
+				id: 'msg-99',
+				react: jest.fn().mockResolvedValue(undefined),
+				edit: jest.fn(),
+				embeds: [fakeEmbed]
+			};
+			mockFindOne.mockResolvedValue({ reactionMessages: { 'msg-99': [] } });
+			mockFindOneAndUpdate.mockResolvedValueOnce(null); // write fails
+
+			const interaction = createMockInteraction({
+				subcommand: 'add',
+				getString: { messagelink: MSG_LINK, emoji: '🎉' },
+				getRole: { role: { id: 'role-abc', name: 'Tester' } },
+				guild: makeGuildWithMessage(msgMock)
+			});
+			await command.execute(interaction);
+
+			const calls = (interaction.editReply as jest.Mock).mock.calls;
+			const lastCall = calls[calls.length - 1][0];
+			expect(lastCall.content ?? '').toContain('Could not update the database');
+		});
+	});
+
+	describe('remove', () => {
+		it('replies with error content when DB write returns null', async () => {
+			// Use empty fields so the delete-loop doesn't create a sparse array
+			const fakeEmbed = { fields: [], toJSON: () => ({ fields: [] }) };
+			const msgMock = {
+				id: 'msg-99',
+				edit: jest.fn(),
+				embeds: [fakeEmbed],
+				reactions: { cache: { get: jest.fn().mockReturnValue({ remove: jest.fn() }) } }
+			};
+			mockFindOne.mockResolvedValue({
+				reactionMessages: { 'msg-99': [['role-abc', '🎉']] }
+			});
+			mockFindOneAndUpdate.mockResolvedValueOnce(null); // delete write fails
+
+			const interaction = createMockInteraction({
+				subcommand: 'remove',
+				getString: { messagelink: MSG_LINK },
+				getRole: { role: { id: 'role-abc', name: 'Tester' } },
+				guild: makeGuildWithMessage(msgMock)
+			});
+			await command.execute(interaction);
+
+			const calls = (interaction.editReply as jest.Mock).mock.calls;
+			const lastCall = calls[calls.length - 1][0];
+			expect(lastCall.content ?? '').toContain('Could not update the database');
 		});
 	});
 });

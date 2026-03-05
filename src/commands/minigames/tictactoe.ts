@@ -316,7 +316,10 @@ function startGameUser(game: Game) {
 				button.deferUpdate();
 				if (button.user.id !== game.player2.id) return;
 
-				if (button.customId == 'no' && !game.player2Accepted) deniedRequest(game, false);
+				if (button.customId == 'no' && !game.player2Accepted) {
+					deniedRequest(game, false);
+					return;
+				}
 
 				// Player2 accepted request
 				game.player2Accepted = true;
@@ -676,7 +679,7 @@ function gameEnded(game: Game) {
 
 	// Displays the winner
 	let description;
-	if (game.winner == 2) {
+	if (game.winner == Winner.Tie) {
 		description = 'Tie!';
 	} else {
 		description =
@@ -936,5 +939,9 @@ export const testingFuncs = {
 	findRandomMove,
 	determineMistakeChance,
 	MinimaxAlphaBeta,
-	Winner
+	Winner,
+	updateDisplay,
+	displayWinningPositions,
+	gameLoop,
+	saveData
 };

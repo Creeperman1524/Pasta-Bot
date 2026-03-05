@@ -329,10 +329,10 @@ function updatePlayer(game: Game, move: Moves) {
 	game.board[game.player.x][game.player.y].status = game.player.tileStatus;
 
 	// Extra bounds checks (even though the buttons can handle it) for sudden API lag spikes
-	if (move == 'up' && !(game.player.x <= 1)) game.player.x--;
-	else if (move == 'down' && !(game.player.x >= game.board.length - 2)) game.player.x++;
-	else if (move == 'left' && !(game.player.y <= 1)) game.player.y--;
-	else if (move == 'right' && !(game.player.y >= game.board[game.player.x].length - 2))
+	if (move == Moves.Up && !(game.player.x <= 1)) game.player.x--;
+	else if (move == Moves.Down && !(game.player.x >= game.board.length - 2)) game.player.x++;
+	else if (move == Moves.Left && !(game.player.y <= 1)) game.player.y--;
+	else if (move == Moves.Right && !(game.player.y >= game.board[game.player.x].length - 2))
 		game.player.y++;
 }
 
@@ -766,5 +766,9 @@ export const testingFuncs = {
 	floodFill,
 	positionMatch,
 	randomNumber,
-	getNumber
+	getNumber,
+	updateBoard,
+	updatePlayer,
+	generateText,
+	gameLoop
 };

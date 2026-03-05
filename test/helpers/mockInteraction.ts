@@ -3,6 +3,8 @@ import {
 	ModAutocompleteInteraction
 } from '../../src/util/types/command';
 import { createMockClient } from './mockClient';
+import { EmbedBuilder } from 'discord.js';
+import { createMockMessage } from './mockMessage';
 
 interface InteractionOverrides {
 	subcommand?: string;
@@ -24,6 +26,14 @@ interface InteractionOverrides {
 	createdTimestamp?: number;
 	clientWsPing?: number;
 	guildSize?: number;
+	/**
+	 * When true, `editReply` resolves with a MockMessage whose `embeds` are
+	 * dynamically captured from the call arguments. This allows game code that
+	 * does `game.embed = await editReply(...)` and later reads
+	 * `game.embed.embeds[0]` / calls `game.embed.createMessageComponentCollector`
+	 * to work correctly in integration tests.
+	 */
+	useMockMessage?: boolean;
 }
 
 export function createMockInteraction(
@@ -50,8 +60,18 @@ export function createMockInteraction(
 		...overrides.guild
 	};
 
+	// When useMockMessage is set, editReply resolves with a MockMessage so that
+	// game code reading game.embed.embeds[0] and calling
+	// game.embed.createMessageComponentCollector() works in integration tests.
+	const editReplyMock = overrides.useMockMessage
+		? jest.fn().mockImplementation(async (reply: { embeds?: EmbedBuilder[] }) => {
+				const embeds = reply?.embeds ?? [new EmbedBuilder()];
+				return createMockMessage(embeds);
+			})
+		: jest.fn().mockResolvedValue({});
+
 	return {
-		editReply: jest.fn().mockResolvedValue({}),
+		editReply: editReplyMock,
 		followUp: jest.fn().mockResolvedValue({}),
 		reply: jest.fn().mockResolvedValue({}),
 		deferReply: jest.fn().mockResolvedValue({}),
