@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { logger } from '../logging';
 import { TaskOnce } from '../util/types/task.js';
 
-module.exports = {
+export default {
 	name: 'databaseConnection',
 	mode: 'ONCE',
 

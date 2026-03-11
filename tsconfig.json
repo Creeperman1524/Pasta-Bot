@@ -3,7 +3,7 @@
 		"target": "ES2022",
 		"module": "commonjs",
 		"moduleResolution": "node",
-		"rootDir": "./src",
+		"rootDir": ".",
 		"outDir": "./dist",
 
 		// Recommended Options
@@ -12,14 +12,9 @@
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
 		"skipLibCheck": true,
-
-		// Temporary while we still use js in the project
-		"allowJs": true,
-		"checkJs": false,
-		"verbatimModuleSyntax": false, // turn back to true after temporary
+		"verbatimModuleSyntax": false,
 		"esModuleInterop": true,
 		"resolveJsonModule": true
 	},
-	"include": ["src"],
 	"exclude": ["node_modules", "dist"]
 }

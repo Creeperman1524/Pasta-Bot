@@ -240,7 +240,7 @@ function parseOption(
 	}
 }
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('config')
 		.setDescription('Edit specific server features')
@@ -297,10 +297,10 @@ module.exports = {
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'set':
-				setConfig(interaction);
+				await setConfig(interaction);
 				break;
 			case 'view':
-				viewConfig(interaction);
+				await viewConfig(interaction);
 				break;
 		}
 	}

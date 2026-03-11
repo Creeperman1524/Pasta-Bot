@@ -5,7 +5,7 @@ import { mcServerPort } from '../config.json';
 import { logger } from '../logging';
 import { Status, StatusUpdate } from '../util/types/status';
 
-module.exports = {
+export default {
 	name: 'displayServer',
 
 	// Returns the status info on the minecraft server

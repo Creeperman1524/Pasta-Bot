@@ -316,7 +316,10 @@ function startGameUser(game: Game) {
 				button.deferUpdate();
 				if (button.user.id !== game.player2.id) return;
 
-				if (button.customId == 'no' && !game.player2Accepted) deniedRequest(game, false);
+				if (button.customId == 'no' && !game.player2Accepted) {
+					deniedRequest(game, false);
+					return;
+				}
 
 				// Player2 accepted request
 				game.player2Accepted = true;
@@ -444,9 +447,9 @@ async function gameLoop(game: Game, move: number) {
 	let botMove = -1;
 
 	if (Math.random() > mistakeChance) {
-		botMove = findBestMove(game);
+		botMove = findBestMove(game.board);
 	} else {
-		botMove = findRandomMove(game);
+		botMove = findRandomMove(game.board);
 	}
 
 	await sleep(Math.random() * 1000);
@@ -466,12 +469,12 @@ function determineMistakeChance(winRate: number): number {
 }
 
 // Returns a random valid move
-function findRandomMove(game: Game) {
+function findRandomMove(board: Board) {
 	const validMoves = [];
 
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
-			if (game.board[y][x] != 0) continue; // Already a move there
+			if (board[y][x] != 0) continue; // Already a move there
 			validMoves.push(y * 3 + (x % 3));
 		}
 	}
@@ -485,17 +488,17 @@ function sleep(ms: number) {
 }
 
 // Finds the best move for the bot to make (minimizer)
-function findBestMove(game: Game) {
+function findBestMove(board: Board) {
 	let bestEval = 99;
 	let bestMove = -1; // 0-8
 
 	// Tries to make all possible moves
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < 3; x++) {
-			if (game.board[y][x] != 0) continue; // Already a move there
+			if (board[y][x] != 0) continue; // Already a move there
 
-			game.board[y][x] = -1; // Makes the move
-			const moveEval = MinimaxAlphaBeta(game.board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
+			board[y][x] = -1; // Makes the move
+			const moveEval = MinimaxAlphaBeta(board, 0, -99, 99, true); // Current depth is 0 (start), bot made move so it is maximizing player
 
 			if (moveEval < bestEval) {
 				// Minimizing
@@ -503,7 +506,7 @@ function findBestMove(game: Game) {
 				bestMove = y * 3 + (x % 3);
 			}
 
-			game.board[y][x] = 0; // Unmake the move
+			board[y][x] = 0; // Unmake the move
 		}
 	}
 
@@ -676,7 +679,7 @@ function gameEnded(game: Game) {
 
 	// Displays the winner
 	let description;
-	if (game.winner == 2) {
+	if (game.winner == Winner.Tie) {
 		description = 'Tie!';
 	} else {
 		description =
@@ -862,7 +865,7 @@ Human: \`${stats.totalHuman != 0 ? Math.round((stats.winsHuman / stats.totalHuma
 }
 
 // The discord command bits
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('tictactoe')
 		.setDescription('A tic-tac-toe minigame')
@@ -911,7 +914,7 @@ module.exports = {
 
 	category: 'minigames',
 
-	execute(interaction) {
+	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'start':
 				createGame(interaction);
@@ -920,11 +923,25 @@ module.exports = {
 				interaction.editReply({ embeds: [generateHelpMenu()] });
 				break;
 			case 'leaderboards':
-				leaderboards(interaction);
+				await leaderboards(interaction);
 				break;
 			case 'stats':
-				generateStatsEmbed(interaction);
+				await generateStatsEmbed(interaction);
 				break;
 		}
 	}
 } as Command;
+
+// Exported private functions for unit testing
+export const testingFuncs = {
+	checkWinner,
+	findBestMove,
+	findRandomMove,
+	determineMistakeChance,
+	MinimaxAlphaBeta,
+	Winner,
+	updateDisplay,
+	displayWinningPositions,
+	gameLoop,
+	saveData
+};

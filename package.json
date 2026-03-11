@@ -8,7 +8,9 @@
 		"dev": "ts-node src/index.ts",
 		"format": "prettier --write .",
 		"lint": "npx eslint --fix .",
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"test": "jest",
+		"test:coverage": "jest --coverage"
 	},
 	"author": "Creeperman1524",
 	"license": "ISC",
@@ -22,6 +24,7 @@
 		"winston": "^3.17.0"
 	},
 	"devDependencies": {
+		"@types/jest": "^30.0.0",
 		"@types/mcping-js": "^1.5.4",
 		"@types/node": "^25.2.3",
 		"@types/node-fetch": "^2.6.13",
@@ -29,7 +32,9 @@
 		"@typescript-eslint/parser": "^8.56.0",
 		"eslint": "~9.39.2",
 		"eslint-config-prettier": "^10.1.8",
+		"jest": "^30.2.0",
 		"prettier": "^3.8.1",
+		"ts-jest": "^29.4.6",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.9.3"
 	}

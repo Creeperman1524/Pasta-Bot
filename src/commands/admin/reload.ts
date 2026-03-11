@@ -4,7 +4,7 @@ import { newEmbed, colors } from '../../util/embeds';
 import { logger } from '../../logging';
 import { Command } from '../../util/types/command';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('reload')
 		.setDescription('Reloads a specific command script if not working properly')

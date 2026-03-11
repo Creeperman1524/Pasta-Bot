@@ -6,7 +6,7 @@ import { TaskOnce } from '../util/types/task.js';
 import database from '../util/database';
 import botConfig from '../schemas/botConfigs.schema';
 
-module.exports = {
+export default {
 	name: 'updateCommands',
 	mode: 'ONCE',
 

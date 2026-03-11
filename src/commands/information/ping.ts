@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { newEmbed, colors } from '../../util/embeds';
 import { Command } from '../../util/types/command';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder().setName('ping').setDescription('Checks the ping of the bot'),
 	category: 'information',
 
