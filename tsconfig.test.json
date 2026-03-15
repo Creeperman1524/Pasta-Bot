@@ -1,0 +1,9 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		// Allow files from both src/ and test/ — main tsconfig locks rootDir to src/
+		"rootDir": ".",
+		"noEmit": true
+	},
+	"include": ["src", "test", "jest.config.ts"]
+}
