@@ -9,7 +9,7 @@ on:
 jobs:
     build:
         name: TypeScript
-        runs-on: pi
+        runs-on: CI
 
         steps:
             - name: Checkout repository
@@ -26,6 +26,9 @@ jobs:
 
             - name: Run ESLint
               run: npx eslint .
+
+            - name: Run tests
+              run: npm test
 
             - name: Build
               run: npm run build
