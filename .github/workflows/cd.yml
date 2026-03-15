@@ -6,6 +6,10 @@ on:
         types:
             - completed
 
+permissions:
+    actions: read
+    contents: read
+
 jobs:
     deploy:
         name: Deployment
@@ -16,21 +20,27 @@ jobs:
         runs-on: CD
 
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
             - name: Download artifact
               uses: actions/download-artifact@v4
               with:
                   name: bot-build
                   run-id: ${{ github.event.workflow_run.id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Sync project files
+              run: |
+                  rsync -av --exclude 'node_modules' --exclude '.env' --exclude 'logs' --delete ./ /root/Pasta-Bot/
 
             - name: Install dependencies
               run: npm ci --omit=dev
-
-            - name: Move to PastaBot folder
-              run: rsync -av --delete \
-                  --exclude ".env" \
-                  --exclude "logs" \
-                  ./ ../Pasta-Bot
+              working-directory: /root/Pasta-Bot
 
             - name: Restart bot
               run: |
-                  pm2 restart PastaBot || pm2 start dist/index.js --name PastaBot
+                  export PM2_HOME=/root/.pm2
+                  pm2 startOrReload ecosystem.config.js
+                  pm2 save
+              working-directory: /root/Pasta-Bot
