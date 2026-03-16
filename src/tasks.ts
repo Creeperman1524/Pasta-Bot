@@ -18,28 +18,39 @@ const taskFiles = fs.readdirSync('./src/tasks');
 export default async (client: Bot) => {
 	logger.child({ mode: 'TASKS' }).info('Started running tasks...');
 
-	// Runs all tasks
-	for (const task of tasks) {
-		logger.child({ mode: 'TASKS' }).debug(`Running '${task.name}' in mode '${task.mode}'`);
-		switch (task.mode) {
-			case 'ONCE':
-				task.execute(client);
-				break;
+	const onceTasks = tasks
+		.filter((task) => task.mode === 'ONCE')
+		.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+	const recurringTasks = tasks.filter((task) => task.mode !== 'ONCE');
 
-			case 'INTERVAL':
-				// Set the interval in seconds, or defaults to 30 seconds
-				task.execute(client);
-				setInterval(task.execute, task.interval * 1000 || 30000, client);
-				break;
-			case 'TIME':
-				// Runs the task at a specified time, or defaults to midnight
-				runAtSpecificTimeOfDay(
-					task.timeHour || 0,
-					task.timeMinutes || 0,
-					task.execute,
-					client
-				);
-				break;
+	// Run all ONCE tasks in priority order
+	for (const task of onceTasks) {
+		logger
+			.child({ mode: 'TASKS' })
+			.debug(
+				`Running '${task.name}' in mode '${task.mode}' with priority '${task.priority ?? 0}'`
+			);
+		await task.execute(client);
+	}
+
+	// Initialize all recurring tasks
+	for (const task of recurringTasks) {
+		logger.child({ mode: 'TASKS' }).debug(`Running '${task.name}' in mode '${task.mode}'`);
+		if (task.mode == 'INTERVAL') {
+			// Set the interval in seconds, or defaults to 30 seconds
+			void task.execute(client);
+			setInterval(
+				() => {
+					void task.execute(client);
+				},
+				task.interval * 1000 || 30000
+			);
+			continue;
+		}
+
+		if (task.mode == 'TIME') {
+			// Runs the task at a specified time, or defaults to midnight
+			runAtSpecificTimeOfDay(task.timeHour || 0, task.timeMinutes || 0, task.execute, client);
 		}
 	}
 

@@ -9,6 +9,16 @@ jest.mock('../../../src/logging', () => ({
 	}
 }));
 
+const mockGetMinecraftRuntimeConfig = jest.fn().mockResolvedValue({
+	mcServerIP: '127.0.0.1',
+	mcServerSeed: 'test-seed-123',
+	mcServerPort: '25565',
+	mcServerVersion: '1.21.4'
+});
+jest.mock('../../../src/util/runtimeConfig', () => ({
+	getMinecraftRuntimeConfig: () => mockGetMinecraftRuntimeConfig()
+}));
+
 const mockPing = jest.fn();
 jest.mock('mcping-js', () => ({
 	MinecraftServer: jest.fn().mockImplementation(() => ({ ping: mockPing }))
@@ -36,15 +46,8 @@ function setupPing(err: Error | null, res: PingResult | null): void {
 }
 
 describe('/server', () => {
-	const origEnv = { ...process.env };
-
-	beforeEach(() => {
-		process.env.mcServerIP = '127.0.0.1';
-		process.env.mcServerSeed = 'test-seed-123';
-	});
-
 	afterEach(() => {
-		process.env = { ...origEnv };
+		jest.clearAllMocks();
 	});
 
 	describe('ip', () => {
@@ -83,7 +86,7 @@ describe('/server', () => {
 	});
 
 	describe('status', () => {
-		it('uses mcServerIP env var when no IP option is provided', async () => {
+		it('uses runtime config IP when no IP option is provided', async () => {
 			setupPing(new Error('offline'), null);
 			const interaction = createMockInteraction({
 				subcommand: 'status',
@@ -91,7 +94,7 @@ describe('/server', () => {
 			});
 			await command.execute(interaction);
 
-			// Ping was called — the MinecraftServer constructor received the env IP
+			// Ping was called — the MinecraftServer constructor received the runtime config IP
 			expect(MinecraftServer).toHaveBeenCalledWith('127.0.0.1', expect.any(Number));
 		});
 

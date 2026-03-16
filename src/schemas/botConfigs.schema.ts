@@ -17,12 +17,20 @@ export type BotConfigData = {
 	 * @example 1767225600000
 	 */
 	commandsLastUpdated: string;
+	mcServerIP?: string;
+	mcServerSeed?: string;
+	mcServerPort?: string;
+	mcServerVersion?: string;
 };
 
 // Schema type
 const BotConfigSchema: Schema = new Schema<BotConfigData>({
 	botID: { type: String, required: true, unique: true },
-	commandsLastUpdated: { type: String, required: true }
+	commandsLastUpdated: { type: String, required: true },
+	mcServerIP: { type: String, required: false },
+	mcServerSeed: { type: String, required: false },
+	mcServerPort: { type: String, required: false },
+	mcServerVersion: { type: String, required: false }
 });
 
 export default mongoose.model<BotConfigData>('botconfigs', BotConfigSchema);

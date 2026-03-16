@@ -9,6 +9,16 @@ jest.mock('../../src/logging', () => ({
 	}
 }));
 
+const mockGetMinecraftRuntimeConfig = jest.fn().mockResolvedValue({
+	mcServerIP: '127.0.0.1',
+	mcServerSeed: 'test-seed-123',
+	mcServerPort: '25565',
+	mcServerVersion: '1.21.4'
+});
+jest.mock('../../src/util/runtimeConfig', () => ({
+	getMinecraftRuntimeConfig: () => mockGetMinecraftRuntimeConfig()
+}));
+
 // Mock mcping-js
 const mockPing = jest.fn();
 jest.mock('mcping-js', () => ({
@@ -36,18 +46,12 @@ function setupPing(err: Error | undefined, result: PingResult | null): void {
 }
 
 describe('displayServer', () => {
-	const origEnv = process.env.mcServerIP;
-
-	beforeEach(() => {
-		process.env.mcServerIP = '127.0.0.1';
-	});
-
 	afterEach(() => {
-		process.env.mcServerIP = origEnv;
+		jest.clearAllMocks();
 	});
 
-	it('logs error and returns undefined when mcServerIP is missing', async () => {
-		delete process.env.mcServerIP;
+	it('logs error and returns undefined when runtime config lookup fails', async () => {
+		mockGetMinecraftRuntimeConfig.mockRejectedValueOnce(new Error('config missing'));
 		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result).toBeUndefined();
 	});

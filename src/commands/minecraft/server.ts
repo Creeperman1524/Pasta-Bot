@@ -1,11 +1,11 @@
 import mcping, { MinecraftServer } from 'mcping-js';
 import { SlashCommandBuilder } from 'discord.js';
-import { mcServerPort, mcServerVersion } from '../../config.json';
 import { newEmbed, colors } from '../../util/embeds';
 
 import fetch from 'node-fetch';
 import { logger } from '../../logging';
 import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
+import { getMinecraftRuntimeConfig } from '../../util/runtimeConfig';
 
 export default {
 	data: new SlashCommandBuilder()
@@ -51,16 +51,16 @@ export default {
 	async execute(interaction) {
 		switch (interaction.options.getSubcommand()) {
 			case 'status':
-				statusCommand(interaction);
+				await statusCommand(interaction);
 				break;
 			case 'ip':
-				ipCommand(interaction);
+				await ipCommand(interaction);
 				break;
 			case 'seed':
-				seedCommand(interaction);
+				await seedCommand(interaction);
 				break;
 			case 'map':
-				mapCommand(interaction);
+				await mapCommand(interaction);
 				break;
 			case 'wakeup':
 				interaction.editReply('This feature has been discontinued (for now). Sorry!');
@@ -71,25 +71,26 @@ export default {
 } as Command;
 
 // Status command
-function statusCommand(interaction: ModChatInputCommandInteraction) {
+async function statusCommand(interaction: ModChatInputCommandInteraction) {
+	const config = await getMinecraftRuntimeConfig();
 	const ip = interaction.options.getString('ip');
 
 	// Checks if the user input a server
 	if (ip == null) {
-		const serverIP = process.env.mcServerIP;
+		const serverIP = config.mcServerIP;
 		if (!serverIP) {
 			logger.child({ mode: 'DISPLAY SEVER' }).error('Missing default minecraft server IP');
 			return;
 		}
 
-		const server = new mcping.MinecraftServer(serverIP, parseInt(mcServerPort));
+		const server = new mcping.MinecraftServer(serverIP, parseInt(config.mcServerPort));
 
 		// Pings the server
 		pingServer(server, interaction, serverIP);
 
 		return;
 	} else {
-		const server = new mcping.MinecraftServer(ip, parseInt(mcServerPort));
+		const server = new mcping.MinecraftServer(ip, parseInt(config.mcServerPort));
 
 		// Pings the server
 		pingServer(server, interaction, ip);
@@ -174,37 +175,40 @@ function pingServer(
 }
 
 // Ip command
-function ipCommand(interaction: ModChatInputCommandInteraction) {
+async function ipCommand(interaction: ModChatInputCommandInteraction) {
+	const config = await getMinecraftRuntimeConfig();
 	const ipEmbed = newEmbed()
 		.setTitle('Connection Info')
 		.setColor(colors.serverIPCommand)
 		.addFields(
-			{ name: 'IP', value: `\`${process.env.mcServerIP}\``, inline: true },
-			{ name: 'Port', value: `\`${mcServerPort}\``, inline: true },
+			{ name: 'IP', value: `\`${config.mcServerIP}\``, inline: true },
+			{ name: 'Port', value: `\`${config.mcServerPort}\``, inline: true },
 			{ name: 'Platform', value: '`Minecraft Java Edition`', inline: true },
-			{ name: 'Version', value: `\`${mcServerVersion}\` - Fabric`, inline: true }
+			{ name: 'Version', value: `\`${config.mcServerVersion}\` - Fabric`, inline: true }
 		);
 
 	interaction.editReply({ embeds: [ipEmbed] });
 }
 
 // Seed command
-function seedCommand(interaction: ModChatInputCommandInteraction) {
+async function seedCommand(interaction: ModChatInputCommandInteraction) {
+	const config = await getMinecraftRuntimeConfig();
 	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
 		.setColor(colors.serverSeedCommand)
-		.setDescription(`Seed: \`${process.env.mcServerSeed}\``);
+		.setDescription(`Seed: \`${config.mcServerSeed}\``);
 
 	interaction.editReply({ embeds: [seedEmbed] });
 }
 
 // Map command
-function mapCommand(interaction: ModChatInputCommandInteraction) {
+async function mapCommand(interaction: ModChatInputCommandInteraction) {
+	const config = await getMinecraftRuntimeConfig();
 	const mapEmbed = newEmbed()
 		.setTitle('Server Map')
 		.setColor(colors.serverMapCommand)
 		.setDescription(
-			`Server map: [${process.env.mcServerIP}:8123/](http://${process.env.mcServerIP}:8123/)\nYou can bookmark it for ease of access!`
+			`Server map: [${config.mcServerIP}:8123/](http://${config.mcServerIP}:8123/)\nYou can bookmark it for ease of access!`
 		);
 
 	interaction.editReply({ embeds: [mapEmbed] });
@@ -213,8 +217,9 @@ function mapCommand(interaction: ModChatInputCommandInteraction) {
 // Wakeup command
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function wakeupCommand(interaction: ModChatInputCommandInteraction) {
-	const statusURL = `http://${process.env.mcServerIP}:8123/status`;
-	const wakeupURL = `http://${process.env.mcServerIP}:8123/wakeup`;
+	const config = await getMinecraftRuntimeConfig();
+	const statusURL = `http://${config.mcServerIP}:8123/status`;
+	const wakeupURL = `http://${config.mcServerIP}:8123/wakeup`;
 
 	const responseEmbed = newEmbed()
 		.setTitle('Server Sleeping Status')

@@ -1,6 +1,6 @@
 import { Bot } from './bot';
 
-export type TaskExecute = (client: Bot) => void;
+export type TaskExecute = (client: Bot) => void | Promise<void>;
 
 export interface BaseTask {
 	name: string;
@@ -10,6 +10,7 @@ export interface BaseTask {
 
 export interface TaskOnce extends BaseTask {
 	mode: 'ONCE';
+	priority?: number;
 }
 export interface TaskInterval extends BaseTask {
 	mode: 'INTERVAL';

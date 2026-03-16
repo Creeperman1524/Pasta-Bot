@@ -1,22 +1,24 @@
 import mcping from 'mcping-js';
 import { PresenceUpdateStatus } from 'discord.js';
 
-import { mcServerPort } from '../config.json';
 import { logger } from '../logging';
 import { Status, StatusUpdate } from '../util/types/status';
+import { getMinecraftRuntimeConfig } from '../util/runtimeConfig';
 
 export default {
 	name: 'displayServer',
 
 	// Returns the status info on the minecraft server
 	async execute() {
-		const serverIP = process.env.mcServerIP;
-		if (!serverIP) {
-			logger.child({ mode: 'DISPLAY SEVER' }).error('Missing default minecraft server IP');
+		let config;
+		try {
+			config = await getMinecraftRuntimeConfig();
+		} catch (error) {
+			logger.child({ mode: 'DISPLAY SEVER' }).error(error);
 			return;
 		}
 
-		const server = new mcping.MinecraftServer(serverIP, parseInt(mcServerPort));
+		const server = new mcping.MinecraftServer(config.mcServerIP, parseInt(config.mcServerPort));
 		return new Promise((resolve) => {
 			// Pings the server for information
 			server.ping(1000, 765, (err, res) => {

@@ -9,6 +9,7 @@ import botConfig from '../schemas/botConfigs.schema';
 export default {
 	name: 'updateCommands',
 	mode: 'ONCE',
+	priority: 50,
 
 	// Refreshes commands on startup
 	async execute(client) {
