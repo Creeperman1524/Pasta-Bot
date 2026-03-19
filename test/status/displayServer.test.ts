@@ -9,14 +9,14 @@ jest.mock('../../src/logging', () => ({
 	}
 }));
 
-const mockGetMinecraftRuntimeConfig = jest.fn().mockResolvedValue({
+const mockGetMCConfig = jest.fn().mockResolvedValue({
 	mcServerIP: '127.0.0.1',
 	mcServerSeed: 'test-seed-123',
 	mcServerPort: '25565',
 	mcServerVersion: '1.21.4'
 });
 jest.mock('../../src/util/runtimeConfig', () => ({
-	getMinecraftRuntimeConfig: () => mockGetMinecraftRuntimeConfig()
+	getMCConfig: () => mockGetMCConfig()
 }));
 
 // Mock mcping-js
@@ -51,7 +51,7 @@ describe('displayServer', () => {
 	});
 
 	it('logs error and returns undefined when runtime config lookup fails', async () => {
-		mockGetMinecraftRuntimeConfig.mockRejectedValueOnce(new Error('config missing'));
+		mockGetMCConfig.mockRejectedValueOnce(new Error('config missing'));
 		const result = await displayServerModule.execute({} as unknown as Bot);
 		expect(result).toBeUndefined();
 	});

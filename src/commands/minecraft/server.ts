@@ -5,7 +5,7 @@ import { newEmbed, colors } from '../../util/embeds';
 import fetch from 'node-fetch';
 import { logger } from '../../logging';
 import { Command, ModChatInputCommandInteraction } from '../../util/types/command';
-import { getMinecraftRuntimeConfig } from '../../util/runtimeConfig';
+import { getMCConfig } from '../../util/runtimeConfig';
 
 export default {
 	data: new SlashCommandBuilder()
@@ -72,7 +72,7 @@ export default {
 
 // Status command
 async function statusCommand(interaction: ModChatInputCommandInteraction) {
-	const config = await getMinecraftRuntimeConfig();
+	const config = await getMCConfig();
 	const ip = interaction.options.getString('ip');
 
 	// Checks if the user input a server
@@ -176,7 +176,7 @@ function pingServer(
 
 // Ip command
 async function ipCommand(interaction: ModChatInputCommandInteraction) {
-	const config = await getMinecraftRuntimeConfig();
+	const config = await getMCConfig();
 	const ipEmbed = newEmbed()
 		.setTitle('Connection Info')
 		.setColor(colors.serverIPCommand)
@@ -184,7 +184,7 @@ async function ipCommand(interaction: ModChatInputCommandInteraction) {
 			{ name: 'IP', value: `\`${config.mcServerIP}\``, inline: true },
 			{ name: 'Port', value: `\`${config.mcServerPort}\``, inline: true },
 			{ name: 'Platform', value: '`Minecraft Java Edition`', inline: true },
-			{ name: 'Version', value: `\`${config.mcServerVersion}\` - Fabric`, inline: true }
+			{ name: 'Version', value: `\`${config.mcServerVersion}\``, inline: true }
 		);
 
 	interaction.editReply({ embeds: [ipEmbed] });
@@ -192,7 +192,7 @@ async function ipCommand(interaction: ModChatInputCommandInteraction) {
 
 // Seed command
 async function seedCommand(interaction: ModChatInputCommandInteraction) {
-	const config = await getMinecraftRuntimeConfig();
+	const config = await getMCConfig();
 	const seedEmbed = newEmbed()
 		.setTitle('Server Seed')
 		.setColor(colors.serverSeedCommand)
@@ -203,7 +203,7 @@ async function seedCommand(interaction: ModChatInputCommandInteraction) {
 
 // Map command
 async function mapCommand(interaction: ModChatInputCommandInteraction) {
-	const config = await getMinecraftRuntimeConfig();
+	const config = await getMCConfig();
 	const mapEmbed = newEmbed()
 		.setTitle('Server Map')
 		.setColor(colors.serverMapCommand)
@@ -217,7 +217,7 @@ async function mapCommand(interaction: ModChatInputCommandInteraction) {
 // Wakeup command
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function wakeupCommand(interaction: ModChatInputCommandInteraction) {
-	const config = await getMinecraftRuntimeConfig();
+	const config = await getMCConfig();
 	const statusURL = `http://${config.mcServerIP}:8123/status`;
 	const wakeupURL = `http://${config.mcServerIP}:8123/wakeup`;
 

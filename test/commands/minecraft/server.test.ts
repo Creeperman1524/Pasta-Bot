@@ -9,14 +9,14 @@ jest.mock('../../../src/logging', () => ({
 	}
 }));
 
-const mockGetMinecraftRuntimeConfig = jest.fn().mockResolvedValue({
+const mockGetMCConfig = jest.fn().mockResolvedValue({
 	mcServerIP: '127.0.0.1',
 	mcServerSeed: 'test-seed-123',
 	mcServerPort: '25565',
 	mcServerVersion: '1.21.4'
 });
 jest.mock('../../../src/util/runtimeConfig', () => ({
-	getMinecraftRuntimeConfig: () => mockGetMinecraftRuntimeConfig()
+	getMCConfig: () => mockGetMCConfig()
 }));
 
 const mockPing = jest.fn();

@@ -29,10 +29,7 @@ jest.mock('../../src/util/database', () => ({
 	}
 }));
 
-import {
-	getMinecraftRuntimeConfig,
-	invalidateMinecraftRuntimeConfigCache
-} from '../../src/util/runtimeConfig';
+import { getMCConfig, invalidateMCConfigCache } from '../../src/util/runtimeConfig';
 
 describe('runtimeConfig', () => {
 	const originalEnv = { ...process.env };
@@ -42,7 +39,7 @@ describe('runtimeConfig', () => {
 		process.env.clientID = 'bot-123';
 		process.env.mcServerIP = '127.0.0.1';
 		process.env.mcServerSeed = 'test-seed';
-		invalidateMinecraftRuntimeConfigCache();
+		invalidateMCConfigCache();
 		jest.clearAllMocks();
 	});
 
@@ -58,8 +55,8 @@ describe('runtimeConfig', () => {
 			mcServerVersion: '1.21.4'
 		});
 
-		const first = await getMinecraftRuntimeConfig();
-		const second = await getMinecraftRuntimeConfig();
+		const first = await getMCConfig();
+		const second = await getMCConfig();
 
 		expect(first).toEqual(second);
 		expect(mockFindOne).toHaveBeenCalledTimes(1);
@@ -74,7 +71,7 @@ describe('runtimeConfig', () => {
 			mcServerVersion: '1.21.4'
 		});
 
-		const config = await getMinecraftRuntimeConfig();
+		const config = await getMCConfig();
 
 		expect(mockCreate).toHaveBeenCalled();
 		expect(config.mcServerIP).toBe('127.0.0.1');

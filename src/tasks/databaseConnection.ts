@@ -16,7 +16,7 @@ export default {
 	priority: 100,
 
 	async execute() {
-		// Connects to the database
+		// Checks for database string
 		const connectionString = process.env.mongoDB;
 		if (!connectionString) {
 			logger.child({ mode: 'DATABASE' }).error('Missing connection string for MongoDB');
@@ -24,33 +24,29 @@ export default {
 			process.exit(1);
 		}
 
+		// Mongoose settings
 		mongoose.Promise = global.Promise;
 		mongoose.set('strictQuery', true);
 
+		// Attempts to connect to the database
+		// Uses exponential backoff to not overwhelm the server
 		for (let attempt = 1; attempt <= MAX_CONNECTION_ATTEMPTS; attempt++) {
 			try {
 				logger
 					.child({
 						mode: 'DATABASE',
-						metaData: {
-							attempt,
-							maxAttempts: MAX_CONNECTION_ATTEMPTS
-						}
+						metaData: { attempt, maxAttempts: MAX_CONNECTION_ATTEMPTS }
 					})
-					.info(`Connecting to MongoDB (attempt ${attempt}/${MAX_CONNECTION_ATTEMPTS})`);
+					.info(`Connecting to MongoDB (${attempt}/${MAX_CONNECTION_ATTEMPTS})...`);
 				await mongoose.connect(connectionString, {});
 				return;
 			} catch (error) {
 				logger
 					.child({
 						mode: 'DATABASE',
-						metaData: {
-							attempt,
-							maxAttempts: MAX_CONNECTION_ATTEMPTS
-						}
+						metaData: { attempt, maxAttempts: MAX_CONNECTION_ATTEMPTS }
 					})
 					.error(error);
-
 				if (attempt == MAX_CONNECTION_ATTEMPTS) {
 					logger
 						.child({ mode: 'DATABASE' })

@@ -3,7 +3,7 @@ import { PresenceUpdateStatus } from 'discord.js';
 
 import { logger } from '../logging';
 import { Status, StatusUpdate } from '../util/types/status';
-import { getMinecraftRuntimeConfig } from '../util/runtimeConfig';
+import { getMCConfig } from '../util/runtimeConfig';
 
 export default {
 	name: 'displayServer',
@@ -12,7 +12,7 @@ export default {
 	async execute() {
 		let config;
 		try {
-			config = await getMinecraftRuntimeConfig();
+			config = await getMCConfig();
 		} catch (error) {
 			logger.child({ mode: 'DISPLAY SEVER' }).error(error);
 			return;
