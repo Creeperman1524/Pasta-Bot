@@ -84,7 +84,8 @@ describe('/valorant', () => {
 			await command.execute(interaction);
 			expect(mockValorantUpdate).toHaveBeenCalledWith(
 				{ userID: 'user-123' },
-				{ puuid: 'test-puuid-abc' }
+				{ puuid: 'test-puuid-abc' },
+				{ upsert: true, new: true }
 			);
 			const calls = (interaction.editReply as jest.Mock).mock.calls;
 			const lastEmbed = calls[calls.length - 1][0].embeds?.[0];

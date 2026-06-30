@@ -75,7 +75,8 @@ async function linkCommand(interaction: ModChatInputCommandInteraction) {
 	// Saves the account information to the valorant config
 	const newValorantConfig = await valorantConfigSchema.findOneAndUpdate(
 		{ userID: interaction.user.id },
-		{ puuid: PUUID }
+		{ puuid: PUUID },
+		{ upsert: true, new: true }
 	);
 	if (!newValorantConfig) {
 		interaction.editReply({
